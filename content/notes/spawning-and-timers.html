@@ -1,0 +1,35 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to make enemies/coins appear over time. Combines <a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">instancing</a>, <code>Timer</code> nodes, and <a class="wikilink" href="#/signals" data-note="signals">Signals</a>.</p>
+<h2 id="a-timer-that-does-something-repeatedly" class="heading"><a class="heading__anchor" href="#/spawning-and-timers#a-timer-that-does-something-repeatedly" aria-label="Link to this section">#</a>A Timer that does something repeatedly</h2><ol>
+<li>Add a <strong><code>Timer</code></strong> node.</li>
+<li>In the Inspector: set <strong>Wait Time</strong> (e.g. <code>1.0</code> second), check <strong>Autostart</strong>, check <strong>One Shot = off</strong> (so it repeats).</li>
+<li>Connect its <strong><code>timeout</code></strong> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>) to a function:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_timer_timeout():
+	spawn_enemy()</code></pre></div><h2 id="spawning-a-scene-instancing-in-code" class="heading"><a class="heading__anchor" href="#/spawning-and-timers#spawning-a-scene-instancing-in-code" aria-label="Link to this section">#</a>Spawning a scene (instancing in code)</h2><p>First, make the thing its own scene (<a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a> → Save Branch as Scene). Then preload and spawn copies:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+@export var enemy_scene: PackedScene   # drag Enemy.tscn here in the Inspector
+
+func spawn_enemy():
+	var enemy = enemy_scene.instantiate()      # make a copy
+	enemy.position = Vector2(randi() % 480, 0) # random x, top of screen
+	add_child(enemy)                           # put it in the game</code></pre></div><ul>
+<li><code>instantiate()</code> = make one copy of the scene.</li>
+<li><code>add_child()</code> = actually place it into the running game.</li>
+<li><code>randi() % 480</code> = a random number 0–479 (random horizontal spot).</li>
+</ul>
+<h2 id="making-the-enemy-move-on-its-own" class="heading"><a class="heading__anchor" href="#/spawning-and-timers#making-the-enemy-move-on-its-own" aria-label="Link to this section">#</a>Making the enemy move on its own</h2><p>On the Enemy scene&#39;s script:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var fall_speed = 200
+
+func _process(delta):
+	position.y += fall_speed * delta   # move down every frame
+	if position.y &gt; 720:               # off the bottom of the screen?
+		queue_free()                   # delete it so it doesn't pile up</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Always clean up</span></div><div class="callout__body"><p>If you spawn things but never <code>queue_free()</code> them when they leave the screen, you&#39;ll have thousands of invisible nodes and the game will slow to a crawl.</p>
+</div></div><h2 id="speeding-up-over-time-game-gets-harder" class="heading"><a class="heading__anchor" href="#/spawning-and-timers#speeding-up-over-time-game-gets-harder" aria-label="Link to this section">#</a>Speeding up over time (game gets harder)</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_difficulty_timer_timeout():
+	$Timer.wait_time = max(0.2, $Timer.wait_time - 0.1)  # spawn faster, floor at 0.2s</code></pre></div><p><code>$Timer</code> means &quot;the child node named Timer.&quot; <code>max(...)</code> stops it getting impossibly fast.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Random values (Godot 4)</span></div><div class="callout__body"><p><code>randi()</code> = random whole number. <code>randf()</code> = random decimal 0–1. <code>randi() % N</code> = 0 to N-1. <code>randf_range(a, b)</code> = random decimal between a and b. <code>Array.pick_random()</code> = random item from a list.
+In Godot 4, the random seed is automatically randomized — you <strong>do not need</strong> to call <code>randomize()</code> in <code>_ready()</code>.</p>
+</div></div>

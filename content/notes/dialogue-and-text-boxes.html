@@ -1,0 +1,131 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-3-index" data-note="tier-3-index">Tier 3 — Genre Unlocks</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ high · <strong>Time:</strong> 45 minutes</p>
+<p>A character speaks, text types out one letter at a time, you press a key to continue. This unlocks <strong>narrative games</strong> — and for Girls Who Game specifically, it&#39;s the bridge from the Twine work students already know how to design to the engine they&#39;re learning this week.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">You already know how to write these</span></div><div class="callout__body"><p>If you&#39;ve made a Twine game, you&#39;ve written branching dialogue. This note is only about <em>displaying</em> it in Godot. The hard part — writing something worth reading — you&#39;ve already practised.</p>
+</div></div><h2 id="the-dialogue-box-scene" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#the-dialogue-box-scene" aria-label="Link to this section">#</a>The dialogue box scene</h2><p><strong>Scene → New Scene → CanvasLayer</strong>, save as <code>dialogue_box.tscn</code>.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">DialogueBox        (CanvasLayer)   Process Mode: Always
+└── Panel           (Panel)         anchored bottom, ~200px tall
+    ├── Portrait     (TextureRect)
+    ├── SpeakerName  (Label)
+    ├── Text         (RichTextLabel)
+    └── Indicator    (Label)  &quot;▼&quot;   ← the blinking &quot;press to continue&quot;</code></pre></div><p>Use a <strong>RichTextLabel</strong>, not a Label — it supports <code>[b]bold[/b]</code>, <code>[color=red]red[/color]</code>, and shaky text, and it wraps properly. Check <strong>Fit Content</strong> and turn on <strong>BBCode Enabled</strong>.</p>
+<h2 id="the-typewriter-effect" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#the-typewriter-effect" aria-label="Link to this section">#</a>The typewriter effect</h2><p>Text appearing one character at a time is the whole feel of dialogue. It&#39;s five lines.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CanvasLayer
+
+signal finished
+
+@export var characters_per_second = 40.0
+
+var lines: Array = []
+var current_line = 0
+var is_typing = false
+
+func _ready():
+	hide()
+
+func start(dialogue_lines: Array):
+	lines = dialogue_lines
+	current_line = 0
+	show()
+	get_tree().paused = true
+	show_line()
+
+func show_line():
+	var entry = lines[current_line]
+	$Panel/SpeakerName.text = entry.get(&quot;name&quot;, &quot;&quot;)
+	$Panel/Text.text = entry[&quot;text&quot;]
+	$Panel/Text.visible_ratio = 0.0
+	$Panel/Indicator.hide()
+	is_typing = true
+
+	var duration = entry[&quot;text&quot;].length() / characters_per_second
+	var tween = create_tween()
+	tween.tween_property($Panel/Text, &quot;visible_ratio&quot;, 1.0, duration)
+	await tween.finished
+
+	is_typing = false
+	$Panel/Indicator.show()</code></pre></div><p><strong><code>visible_ratio</code></strong> is the trick — a RichTextLabel property from 0 to 1 controlling how much of the text is shown. Tween it and you have a typewriter with no per-character loop (<a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>).</p>
+<p>Set the CanvasLayer&#39;s <strong>Process Mode to Always</strong> or the tween freezes with the paused game (<a class="wikilink" href="#/pause-menu" data-note="pause-menu">Pause Menu</a>).</p>
+<h2 id="advancing-and-skipping" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#advancing-and-skipping" aria-label="Link to this section">#</a>Advancing, and skipping</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _unhandled_input(event):
+	if not visible or not event.is_action_pressed(&quot;ui_accept&quot;):
+		return
+
+	if is_typing:
+		# first press: skip to the end of this line
+		$Panel/Text.visible_ratio = 1.0
+		is_typing = false
+		$Panel/Indicator.show()
+	else:
+		next_line()
+
+func next_line():
+	current_line += 1
+	if current_line &gt;= lines.size():
+		close()
+	else:
+		show_line()
+
+func close():
+	hide()
+	get_tree().paused = false
+	finished.emit()</code></pre></div><p><strong>The skip-on-first-press behaviour is not optional.</strong> Players who read faster than 40 characters a second will mash the key, and without it they&#39;ll blow straight past three lines of your story.</p>
+<h2 id="triggering-it" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#triggering-it" aria-label="Link to this section">#</a>Triggering it</h2><p>An <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> the player walks into, or an <a class="wikilink" href="#/doors-and-keys" data-note="doors-and-keys">interact</a> press near an NPC:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var speaker = &quot;Old Wizard&quot;
+@export_multiline var line_1 = &quot;You again.&quot;
+@export_multiline var line_2 = &quot;The bridge is out. You'll have to find another way.&quot;
+
+var used = false
+
+func _on_body_entered(body):
+	if used or not body.is_in_group(&quot;player&quot;):
+		return
+	used = true
+	Global.dialogue.start([
+		{&quot;name&quot;: speaker, &quot;text&quot;: line_1},
+		{&quot;name&quot;: speaker, &quot;text&quot;: line_2},
+	])</code></pre></div><p><code>@export_multiline</code> gives you a <strong>proper multi-line text box in the Inspector</strong> — the writer on the team can edit dialogue without opening a script. That&#39;s the single most useful line in this note for a mixed-skill team.</p>
+<p>Make the dialogue box an <a class="wikilink" href="#/autoload-and-global" data-note="autoload-and-global">autoload</a> so any scene can call it.</p>
+<h2 id="writing-dialogue-in-a-separate-file" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#writing-dialogue-in-a-separate-file" aria-label="Link to this section">#</a>Writing dialogue in a separate file</h2><p>Once you have more than a few conversations, put them in JSON instead of scattering them across scenes. Create <code>res://dialogue.json</code>:</p>
+<div class="codeblock" data-lang="JSON"><pre><code class="lang-json">{
+  &quot;wizard_intro&quot;: [
+    {&quot;name&quot;: &quot;Wizard&quot;, &quot;text&quot;: &quot;You again.&quot;},
+    {&quot;name&quot;: &quot;Wizard&quot;, &quot;text&quot;: &quot;The bridge is out.&quot;},
+    {&quot;name&quot;: &quot;You&quot;, &quot;text&quot;: &quot;...I noticed.&quot;}
+  ],
+  &quot;sign_1&quot;: [
+    {&quot;name&quot;: &quot;&quot;, &quot;text&quot;: &quot;DANGER: LAVA&quot;}
+  ]
+}</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var all_dialogue = {}
+
+func _ready():
+	var f = FileAccess.open(&quot;res://dialogue.json&quot;, FileAccess.READ)
+	all_dialogue = JSON.parse_string(f.get_as_text())
+	f.close()
+
+func play(key):
+	start(all_dialogue[key])</code></pre></div><p>Now the whole script of your game lives in one readable file. <code>Global.dialogue.play(&quot;wizard_intro&quot;)</code> from anywhere. <strong>This is how real narrative games do it</strong> — reading from <code>res://</code> is fine because you never write to it (<a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a> explains why writing there fails).</p>
+<h2 id="branching-choices-the-twine-part" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#branching-choices-the-twine-part" aria-label="Link to this section">#</a>Branching choices (the Twine part)</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># an entry can offer choices instead of just continuing
+{&quot;name&quot;: &quot;Wizard&quot;, &quot;text&quot;: &quot;Will you help?&quot;, &quot;choices&quot;: [
+	{&quot;text&quot;: &quot;Yes.&quot;,  &quot;goto&quot;: &quot;wizard_accept&quot;},
+	{&quot;text&quot;: &quot;No.&quot;,   &quot;goto&quot;: &quot;wizard_refuse&quot;}
+]}</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func show_choices(choices):
+	$Panel/Indicator.hide()
+	for choice in choices:
+		var b = Button.new()
+		b.text = choice[&quot;text&quot;]
+		b.pressed.connect(func(): pick(choice[&quot;goto&quot;]))
+		$Panel/Choices.add_child(b)
+
+func pick(key):
+	for c in $Panel/Choices.get_children():
+		c.queue_free()
+	play(key)</code></pre></div><p><code>&quot;goto&quot;</code> naming another key in the JSON is exactly a Twine passage link. Put the Buttons in a <strong>VBoxContainer</strong> so they arrange themselves (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>).</p>
+<h2 id="polish-that-matters" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#polish-that-matters" aria-label="Link to this section">#</a>Polish that matters</h2><ul>
+<li><strong>A blip sound per character.</strong> Play a short click every few letters — it&#39;s the difference between text and <em>a character talking</em>. Keep it quiet and vary <code>pitch_scale</code> slightly.</li>
+<li><strong>A portrait</strong> that changes with the speaker. One <code>TextureRect</code>, swap the texture per line.</li>
+<li><strong>BBCode for emphasis:</strong> <code>&quot;That was [shake rate=20]terrifying[/shake].&quot;</code> RichTextLabel animates it for free.</li>
+<li><strong>Blink the ▼ indicator</strong> with a looping <a class="wikilink" href="#/tweens" data-note="tweens">tween</a> so players know to press something.</li>
+</ul>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/dialogue-and-text-boxes#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Text appears instantly</td><td>Use <code>visible_ratio</code>, not <code>visible_characters</code>, and make sure the tween runs</td></tr><tr><td>Typewriter freezes</td><td>Process Mode isn&#39;t <strong>Always</strong> while paused</td></tr><tr><td>Mashing the key skips whole lines</td><td>Missing the skip-first / advance-second branch</td></tr><tr><td>BBCode shows as literal <code>[b]</code></td><td><strong>BBCode Enabled</strong> is off on the RichTextLabel</td></tr><tr><td>Dialogue replays forever</td><td>No <code>used = true</code> guard on the trigger</td></tr><tr><td>Player keeps moving while talking</td><td>Pause, or disable player input during dialogue</td></tr></tbody></table></div>

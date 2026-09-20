@@ -1,0 +1,30 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-5-index" data-note="tier-5-index">Tier 5 — After Camp</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐⭐⭐⭐ very hard · <strong>Camp verdict:</strong> ❌ definitely not · <strong>Do instead:</strong> <a class="wikilink" href="#/two-player-and-gamepad" data-note="two-player-and-gamepad">Two-Player and Gamepad</a></p>
+<h2 id="what-it-is" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#what-it-is" aria-label="Link to this section">#</a>What it is</h2><p>Two people on <strong>two different computers</strong> playing the same game together. Godot has real support for it — <code>ENetMultiplayerPeer</code>, <code>MultiplayerSynchronizer</code>, RPCs — and it works.</p>
+<h2 id="why-definitely-not" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#why-definitely-not" aria-label="Link to this section">#</a>Why definitely not</h2><p>Networking is the hardest thing in this reference by a wide margin, and it&#39;s hard in a way that doesn&#39;t shrink for small games:</p>
+<ul>
+<li><strong>Two computers disagree about reality.</strong> Every problem downstream comes from this.</li>
+<li><strong>Latency.</strong> Your input arrives 80ms late. Do you rewind time and replay? Real games do.</li>
+<li><strong>Authority.</strong> Who decides whether the shot hit? If it&#39;s the shooter, players can cheat. If it&#39;s the server, shooting feels laggy.</li>
+<li><strong>Debugging requires two running games</strong>, two sets of logs, and bugs that only appear under real network delay.</li>
+<li><strong>School networks block things.</strong> Firewalls, client isolation on guest wifi, no port forwarding. You can lose a day to infrastructure you don&#39;t control before writing a line of game code.</li>
+</ul>
+<p>Professional teams staff specialists for this. It is not a five-day-camp topic and it&#39;s not a &quot;stretch goal&quot; — it&#39;s a different discipline.</p>
+<h2 id="the-thing-they-actually-want" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#the-thing-they-actually-want" aria-label="Link to this section">#</a>The thing they actually want</h2><p>Almost always: <strong>&quot;I want to play with my friend.&quot;</strong></p>
+<p>That&#39;s <a class="wikilink" href="#/two-player-and-gamepad" data-note="two-player-and-gamepad">Two-Player and Gamepad</a>, and it&#39;s <em>better</em> for a camp. Two players on one keyboard or two controllers, one screen, twenty minutes of work. At the showcase, local multiplayer draws a crowd around the table in a way netplay never could — the fun of two people elbowing each other is the point.</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>Local (same screen)</th><th>Networked</th></tr></thead><tbody><tr><td>Setup</td><td>20 minutes</td><td>days</td></tr><tr><td>Debugging</td><td>watch the screen</td><td>two logs and a packet capture</td></tr><tr><td>Works on school wifi</td><td>always</td><td>often not</td></tr><tr><td>Good at a showcase</td><td>✅ a crowd forms</td><td>❌ needs two setups</td></tr></tbody></table></div><h2 id="if-they-want-the-co-op-feeling" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#if-they-want-the-co-op-feeling" aria-label="Link to this section">#</a>If they want the co-op feeling</h2><ul>
+<li><strong>Shared-screen co-op</strong> — both players in one camera. <a class="wikilink" href="#/two-player-and-gamepad" data-note="two-player-and-gamepad">Two-Player and Gamepad</a> has the midpoint-camera code.</li>
+<li><strong>Asymmetric co-op</strong> — one drives, one shoots. Genuinely interesting design, zero networking.</li>
+<li><strong>Hot-seat</strong> — alternate turns on one machine. Perfect for <a class="wikilink" href="#/grid-based-movement" data-note="grid-based-movement">Grid-Based Movement</a> puzzle and strategy games.</li>
+<li><strong>Async competition</strong> — a shared <a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">leaderboard</a>. Players compete without ever being online at the same time, and this is what most arcade &quot;multiplayer&quot; actually was.</li>
+</ul>
+<p>That last one is worth emphasizing: <strong>the original arcade multiplayer was a high score table.</strong> You never met the person who set it. You just wanted to beat them.</p>
+<h2 id="if-a-student-is-determined-after-camp" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#if-a-student-is-determined-after-camp" aria-label="Link to this section">#</a>If a student is determined, after camp</h2><ul>
+<li>Godot docs → <strong>High-level multiplayer</strong> — start here, it&#39;s good</li>
+<li>The <code>MultiplayerSpawner</code> / <code>MultiplayerSynchronizer</code> nodes handle a lot automatically</li>
+<li>Steam and Nakama both offer easier hosting than raw IP connections</li>
+<li>Advise building a <strong>complete single-player game first</strong>, then adding networking to it. Learning networking and game design at once is two hard things at once.</li>
+</ul>
+<h2 id="what-to-say-in-the-moment" class="heading"><a class="heading__anchor" href="#/multiplayer-networking#what-to-say-in-the-moment" aria-label="Link to this section">#</a>What to say in the moment</h2><blockquote>
+<p>&quot;You want to play with your friend, right? Let&#39;s put you both on one screen — it&#39;s twenty minutes instead of a week, and honestly it&#39;s more fun at the showcase because you&#39;re sitting next to each other. Online play is a summer-long project; I can point you at where to start if you want it.&quot;</p>
+</blockquote>

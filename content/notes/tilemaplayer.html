@@ -1,0 +1,49 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to paint a whole level — floors, walls, platforms — instead of dragging in fifty StaticBody2D walls one at a time. Tiles can carry their own collision, so the level is solid for free. Pairs with <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> and <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a>.</p>
+<h2 id="the-pieces" class="heading"><a class="heading__anchor" href="#/tilemaplayer#the-pieces" aria-label="Link to this section">#</a>The pieces</h2><ul>
+<li><strong><code>TileMapLayer</code></strong> — the node you paint on. One layer of tiles (add more TileMapLayer nodes for background/foreground).</li>
+<li><strong><code>TileSet</code></strong> — a resource that holds your tile images and their collision shapes. Lives <em>inside</em> the TileMapLayer&#39;s Inspector.</li>
+<li><strong>Atlas</strong> — one image containing many tiles in a grid (e.g. a 16×16-per-tile sheet). This is how most free tile art comes (<a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a>).</li>
+</ul>
+<div class="callout callout--note"><div class="callout__head"><span class="callout__icon">🗒️</span><span class="callout__title">TileMap vs TileMapLayer</span></div><div class="callout__body"><p>Older tutorials use a node called <strong>TileMap</strong> — it&#39;s deprecated. In our Godot (4.6) use <strong>TileMapLayer</strong>. Everything works the same; one node per layer instead of one node with internal layers.</p>
+</div></div><h2 id="setup-step-by-step" class="heading"><a class="heading__anchor" href="#/tilemaplayer#setup-step-by-step" aria-label="Link to this section">#</a>Setup, step by step</h2><p><strong>1. Add the node.</strong> In your Main scene, add a child → <strong>TileMapLayer</strong>. Rename it <code>Level</code>.</p>
+<p><strong>2. Create the TileSet.</strong> With <code>Level</code> selected: Inspector → <strong>Tile Set</strong> → <code>&lt;empty&gt;</code> → <strong>New TileSet</strong>. Click it to expand and set <strong>Tile Size</strong> to match your art (e.g. 16×16 — check the asset pack&#39;s description).</p>
+<p><strong>3. Add your tile art.</strong> Two panels open at the bottom of the editor:</p>
+<ul>
+<li><strong>TileSet</strong> panel (bottom) — where you <em>define</em> tiles.</li>
+<li><strong>TileMap</strong> panel (bottom) — where you <em>paint</em> tiles.</li>
+</ul>
+<p>Open the <strong>TileSet</strong> panel and drag your tilesheet PNG from the FileSystem dock into the left column. When Godot asks <em>&quot;Would you like to automatically create tiles in the atlas?&quot;</em> → <strong>Yes</strong>. It slices the image into tiles on its own.</p>
+<p><strong>4. Paint.</strong> Switch to the <strong>TileMap</strong> panel, click a tile to select it, then click/drag in the viewport to paint. Hold <strong>Right-click</strong> to erase. <strong>Rect tool</strong> (in the panel toolbar) fills big areas fast.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Painting quality of life</span></div><div class="callout__body"><ul>
+<li>Hold <strong>Shift</strong> while clicking to draw a straight line of tiles.</li>
+<li>Pick the eyedropper in the TileMap panel to grab a tile already painted in the level.</li>
+<li>If the grid doesn&#39;t match your art (tiles look cut off), the <strong>Tile Size</strong> from step 2 is wrong.</li>
+</ul>
+</div></div><h2 id="making-tiles-solid-collision" class="heading"><a class="heading__anchor" href="#/tilemaplayer#making-tiles-solid-collision" aria-label="Link to this section">#</a>Making tiles solid (collision)</h2><p>Painted tiles are just pictures until you give them physics:</p>
+<ol>
+<li>Select the <code>Level</code> node → Inspector → expand <strong>Tile Set</strong>.</li>
+<li><strong>Physics Layers → Add Element.</strong> This creates <em>physics layer 0</em> on the TileSet. Set its <strong>Collision Layer</strong> to your <em>world</em> layer (see <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>) and clear its Mask.</li>
+<li>Open the <strong>TileSet</strong> panel (bottom) → click <strong>Select</strong> mode → click a tile that should be solid.</li>
+<li>In the tile&#39;s properties, expand <strong>Physics → Physics Layer 0</strong>. A drawing area appears — the default is a full square covering the tile. That&#39;s usually exactly what you want; click the tile and the square shape is added.</li>
+<li>Repeat for every solid tile (walls, ground). Leave decorations (grass, flowers, background) with no physics.</li>
+</ol>
+<p>Now a <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> with <em>world</em> in its mask stops on those tiles automatically. No walls to build, no script on the level at all.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">&quot;My player falls through the floor&quot;</span></div><div class="callout__body"><p>Check, in order: (1) Did you add a <strong>physics layer to the TileSet</strong> (step 2)? (2) Does the <em>tile you painted with</em> have a collision polygon (steps 3–5)? (3) Does the player&#39;s <strong>mask</strong> include the TileSet&#39;s <strong>collision layer</strong>? Painting with the one tile you forgot to give physics is the classic version of this bug.</p>
+</div></div><h2 id="placing-tiles-from-code-optional" class="heading"><a class="heading__anchor" href="#/tilemaplayer#placing-tiles-from-code-optional" aria-label="Link to this section">#</a>Placing tiles from code (optional)</h2><p>You rarely need this, but for procedural stuff:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># on the TileMapLayer node
+# set_cell(grid_position, source_id, atlas_coords)
+set_cell(Vector2i(5, 3), 0, Vector2i(0, 0))   # place tile
+erase_cell(Vector2i(5, 3))                      # remove tile
+
+# convert between pixel space and grid space
+var grid_pos = local_to_map(get_local_mouse_position())
+var pixel_pos = map_to_local(grid_pos)</code></pre></div><ul>
+<li><code>source_id</code> — which atlas (0 if you only added one image).</li>
+<li><code>atlas_coords</code> — which tile <em>within</em> the sheet, in tile units: <code>Vector2i(0, 0)</code> is top-left.</li>
+</ul>
+<h2 id="multiple-layers" class="heading"><a class="heading__anchor" href="#/tilemaplayer#multiple-layers" aria-label="Link to this section">#</a>Multiple layers</h2><p>Add more TileMapLayer nodes for depth — order in the scene tree = draw order (lower in the tree draws on top):</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Background   (TileMapLayer)  ← sky, distant scenery, no physics
+├── Level        (TileMapLayer)  ← solid ground/walls, physics layer
+└── Foreground   (TileMapLayer)  ← vines, overhangs drawn over the player</code></pre></div>

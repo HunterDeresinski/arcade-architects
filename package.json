@@ -1,0 +1,15 @@
+{
+  "name": "arcade-architects",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Arcade Architects camp curriculum, published from an Obsidian vault to GitHub Pages.",
+  "scripts": {
+    "sync": "node tools/sync.mjs",
+    "start": "node tools/serve.mjs",
+    "dev": "node tools/sync.mjs && node tools/serve.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

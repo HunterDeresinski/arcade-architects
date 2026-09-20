@@ -1,0 +1,76 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Space Invaders enemies: spawn a whole <strong>line</strong> of aliens at once and march them <strong>down</strong> toward the player. The partner note to <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> (Example 1 is the ship that shoots these). Builds on <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>.</p>
+<h2 id="the-big-idea-move-the-parent-not-the-aliens" class="heading"><a class="heading__anchor" href="#/enemy-formations#the-big-idea-move-the-parent-not-the-aliens" aria-label="Link to this section">#</a>The big idea: move the parent, not the aliens</h2><p>Don&#39;t give every alien its own movement script. Spawn them all as children of <strong>one Node2D</strong>, then move <em>that</em>. One script moves fifty aliens, and they stay in perfect formation for free.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Player       ← the ship from Making Bullets, Example 1
+└── Fleet        (Node2D)   ← script goes HERE; aliens spawn inside</code></pre></div><h2 id="the-alien-scene" class="heading"><a class="heading__anchor" href="#/enemy-formations#the-alien-scene" aria-label="Link to this section">#</a>The alien scene</h2><div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Alien           (Area2D)            Layer: mobs, Mask: player
+├── Sprite      (AnimatedSprite2D)  ← 2-frame wiggle sells the invader look
+└── Shape       (CollisionShape2D)</code></pre></div><p><strong>No script needed on the alien</strong> — the Fleet moves it, the bullet kills it. Optionally connect its <code>body_entered</code> to hurt the player on touch (<code>body.take_damage()</code>, see <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a> and <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>). Save as <code>alien.tscn</code>.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Area2D aliens need the bullet&#39;s OTHER signal</span></div><div class="callout__body"><p>The <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> bullet connects <code>body_entered</code> — but an Area2D alien is not a body, so that signal never fires (<a class="wikilink" href="#/area2d#the-four-signals" data-note="area2d">Area2D → The four signals</a>). In the Bullet scene, also connect <strong><code>area_entered</code></strong>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_area_entered(area):
+	area.queue_free()   # kill the alien
+	queue_free()        # remove the bullet</code></pre></div></div></div><h2 id="spawning-a-line" class="heading"><a class="heading__anchor" href="#/enemy-formations#spawning-a-line" aria-label="Link to this section">#</a>Spawning a line</h2><p>Script on the <strong>Fleet</strong> node. A <code>for</code> loop plus multiplication is the whole trick:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+@export var alien_scene: PackedScene   # drag alien.tscn here in the Inspector
+@export var columns = 8
+@export var spacing = 60               # pixels between aliens
+
+func _ready():
+	spawn_row(60)   # one row near the top
+
+func spawn_row(y):
+	var screen_width = get_viewport_rect().size.x
+	var row_width = (columns - 1) * spacing
+	var start_x = (screen_width - row_width) / 2   # centers the row
+
+	for i in columns:
+		var alien = alien_scene.instantiate()
+		alien.position = Vector2(start_x + i * spacing, y)
+		add_child(alien)</code></pre></div><ul>
+<li><strong><code>start_x + i * spacing</code></strong> — alien 0 at the left end, each next one <code>spacing</code> pixels over. That&#39;s the entire &quot;line&quot; mechanic.</li>
+<li><strong><code>start_x</code> math</strong> — total row width is <code>(columns - 1) * spacing</code> (gaps, not aliens); subtracting from the screen width and halving centers it. Skip it and hardcode <code>start_x = 80</code> if the math distracts.</li>
+<li>Want a <strong>grid</strong> instead of one line? Wrap it in a second loop:</li>
+</ul>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func spawn_grid(rows = 3):
+	for r in rows:
+		spawn_row(60 + r * 50)   # each row 50px lower</code></pre></div><h2 id="version-a-the-fleet-marches-down" class="heading"><a class="heading__anchor" href="#/enemy-formations#version-a-the-fleet-marches-down" aria-label="Link to this section">#</a>Version A: the fleet marches down</h2><p>Simplest — the whole formation descends. Add to the Fleet script:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var descend_speed = 20   # pixels per second — slow is scary
+
+func _process(delta):
+	position.y += descend_speed * delta</code></pre></div><p>That&#39;s it — the parent moves, every alien inside moves with it.</p>
+<p><strong>Lose condition</strong> — an alien reached the bottom:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	# add inside _process, after the movement
+	for alien in get_children():
+		if alien.global_position.y &gt; 600:   # your &quot;they got through&quot; line
+			get_tree().change_scene_to_file(&quot;res://game_over.tscn&quot;)  # see Scene Switching
+			break</code></pre></div><p><strong>Endless waves</strong> (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>) — add a <code>Timer</code> child (Wait Time <code>4</code>, Autostart ✓, repeat), connect <code>timeout</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_timer_timeout():
+	spawn_row(0)   # new row appears at the top as the fleet descends</code></pre></div><p><strong>Win condition</strong> — every alien in the fleet is dead:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	# also inside _process
+	if get_child_count() == 0:
+		get_tree().change_scene_to_file(&quot;res://win_screen.tscn&quot;)</code></pre></div><p>(If the wave Timer is a child of Fleet, count it out: <code>get_child_count() == 1</code>. Cleaner: keep the Timer on Main instead.)</p>
+<h2 id="version-b-the-classic-space-invaders-march" class="heading"><a class="heading__anchor" href="#/enemy-formations#version-b-the-classic-space-invaders-march" aria-label="Link to this section">#</a>Version B: the classic Space Invaders march</h2><p>Side to side, and <strong>drop down + reverse + speed up</strong> every time the formation touches a screen edge. Replace Version A&#39;s <code>_process</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var speed = 60      # sideways speed
+@export var drop = 24       # pixels down per edge-hit
+
+var direction = 1           # 1 = right, -1 = left
+
+func _process(delta):
+	position.x += speed * direction * delta
+
+	var screen_width = get_viewport_rect().size.x
+	for alien in get_children():
+		var x = alien.global_position.x
+		if (direction == 1 and x &gt; screen_width - 40) or (direction == -1 and x &lt; 40):
+			direction *= -1              # turn around
+			position.y += drop           # step down
+			speed += 8                   # the famous speed-up
+			break</code></pre></div><ul>
+<li>The edge check looks at <strong>alien</strong> positions, not the Fleet&#39;s — as you shoot the outer columns, the formation gets narrower and marches further before turning, exactly like the arcade original.</li>
+<li><strong><code>break</code></strong> — one alien touching the edge is enough; without it, ten aliens each trigger the turn on the same frame and the fleet nosedives.</li>
+<li><strong><code>speed += 8</code></strong> — fewer aliens = faster march happens naturally in real Space Invaders; this simpler version speeds up per drop instead. Delete the line for a fixed pace.</li>
+<li>Same lose/win checks as Version A still apply.</li>
+</ul>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Tuning the panic</span></div><div class="callout__body"><p>Three knobs: <code>speed</code> (how fast the wall closes in), <code>drop</code> (how much each edge-hit costs the player), and in Version A <code>descend_speed</code>. Small <code>drop</code> + rising <code>speed</code> = slow dread. Big <code>drop</code> = sudden panic. Playtest both (<a class="wikilink" href="#/playtesting" data-note="playtesting">Playtesting</a>).</p>
+</div></div>

@@ -1,0 +1,66 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-2-index" data-note="tier-2-index">Tier 2 — Showcase Payoff</a></p>
+<p><strong>Difficulty:</strong> ⭐ easy · <strong>Payoff:</strong> ⭐⭐ solid · <strong>Time:</strong> 15 minutes</p>
+<p>Press Escape, everything freezes, a menu appears. Small feature, and it&#39;s one of the clearest signals that a game is <em>finished</em> rather than a prototype. Builds on <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a> and <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>.</p>
+<h2 id="godot-pauses-the-whole-tree-for-you" class="heading"><a class="heading__anchor" href="#/pause-menu#godot-pauses-the-whole-tree-for-you" aria-label="Link to this section">#</a>Godot pauses the whole tree for you</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">get_tree().paused = true</code></pre></div><p>One line stops <code>_process</code>, <code>_physics_process</code>, <a class="wikilink" href="#/timer" data-note="timer">Timer</a>s, animations, and input handling across the entire scene tree.</p>
+<p><strong>Which is the problem</strong> — it also freezes your pause menu, so nothing can unpause it. That&#39;s the soft-lock every team hits.</p>
+<h2 id="the-fix-process-modes" class="heading"><a class="heading__anchor" href="#/pause-menu#the-fix-process-modes" aria-label="Link to this section">#</a>The fix: Process Modes</h2><p>Every node has <strong>Inspector → Process → Mode</strong>:</p>
+<div class="table-wrap"><table><thead><tr><th>Mode</th><th>Behaviour</th></tr></thead><tbody><tr><td><strong>Inherit</strong></td><td>same as its parent (the default)</td></tr><tr><td><strong>Pausable</strong></td><td>stops when paused — the normal game</td></tr><tr><td><strong>When Paused</strong></td><td>runs <strong>only</strong> when paused</td></tr><tr><td><strong>Always</strong></td><td>runs no matter what</td></tr></tbody></table></div><p><strong>Set your pause menu&#39;s CanvasLayer to <code>Always</code></strong> (or <code>When Paused</code>). Now it keeps running while everything else is frozen.</p>
+<h2 id="the-scene" class="heading"><a class="heading__anchor" href="#/pause-menu#the-scene" aria-label="Link to this section">#</a>The scene</h2><div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Player, enemies, level...          ← all default (Pausable)
+└── PauseLayer      (CanvasLayer)      ← Process Mode: ALWAYS
+    ├── Dim          (ColorRect)        ← black, alpha ~0.6, full screen
+    └── Panel        (Panel)
+        ├── Title     (Label)  &quot;PAUSED&quot;
+        ├── Resume    (Button)
+        ├── Restart   (Button)
+        └── Quit      (Button)</code></pre></div><p>The <code>Dim</code> ColorRect behind the panel is the whole visual trick — it separates the menu from the frozen game underneath and takes ten seconds.</p>
+<h2 id="the-script" class="heading"><a class="heading__anchor" href="#/pause-menu#the-script" aria-label="Link to this section">#</a>The script</h2><p>Put this on your Main scene (or on the PauseLayer itself):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+func _ready():
+	$PauseLayer.hide()
+
+func _unhandled_input(event):
+	if event.is_action_pressed(&quot;ui_cancel&quot;):     # Escape, free by default
+		toggle_pause()
+
+func toggle_pause():
+	var paused = not get_tree().paused
+	get_tree().paused = paused
+	$PauseLayer.visible = paused
+
+func _on_resume_pressed():
+	toggle_pause()
+
+func _on_restart_pressed():
+	get_tree().paused = false                    # ALWAYS unpause before switching
+	get_tree().reload_current_scene()
+
+func _on_quit_pressed():
+	get_tree().paused = false
+	get_tree().change_scene_to_file(&quot;res://title.tscn&quot;)</code></pre></div><p>Connect each Button&#39;s <strong><code>pressed</code></strong> <a class="wikilink" href="#/signals" data-note="signals">signal</a> (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>).</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Unpause before you change scenes</span></div><div class="callout__body"><p><code>get_tree().paused</code> is <strong>not</strong> reset by loading a new scene. Forget the <code>paused = false</code> line and your restarted game loads permanently frozen, with no menu to unpause it. This is the single most common bug in this note.</p>
+</div></div><h2 id="use-unhandled-input-not-input" class="heading"><a class="heading__anchor" href="#/pause-menu#use-unhandled-input-not-input" aria-label="Link to this section">#</a>Use <code>_unhandled_input</code>, not <code>_input</code></h2><p><code>_unhandled_input</code> only fires if no UI element already consumed the event, so a focused Button won&#39;t swallow your Escape key. It&#39;s the right choice for any global hotkey.</p>
+<h2 id="nice-additions" class="heading"><a class="heading__anchor" href="#/pause-menu#nice-additions" aria-label="Link to this section">#</a>Nice additions</h2><p><strong>Fade the dim panel in</strong> (<a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>) instead of snapping:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func toggle_pause():
+	var paused = not get_tree().paused
+	get_tree().paused = paused
+	if paused:
+		$PauseLayer.show()
+		$PauseLayer/Dim.modulate.a = 0.0
+		create_tween().tween_property($PauseLayer/Dim, &quot;modulate:a&quot;, 0.6, 0.2)
+	else:
+		$PauseLayer.hide()</code></pre></div><p>Tweens need <code>Process Mode: Always</code> on the node running them, or they freeze too.</p>
+<p><strong>Duck the music</strong> while paused (<a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$Music.volume_db = -20 if paused else 0</code></pre></div><p><strong>Pause automatically when the window loses focus</strong> — genuinely useful at a showcase when someone walks away mid-game:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _notification(what):
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT and not get_tree().paused:
+		toggle_pause()</code></pre></div><p><strong>Keyboard/controller navigation:</strong> click the Resume button → Inspector → <strong>Focus → Neighbour Top/Bottom</strong> to link the buttons, and call <code>$PauseLayer/Panel/Resume.grab_focus()</code> when the menu opens. Now the menu works on a gamepad (<a class="wikilink" href="#/two-player-and-gamepad" data-note="two-player-and-gamepad">Two-Player and Gamepad</a>).</p>
+<h2 id="also-useful-for" class="heading"><a class="heading__anchor" href="#/pause-menu#also-useful-for" aria-label="Link to this section">#</a>Also useful for</h2><p>Same Process Mode trick, different content:</p>
+<ul>
+<li>A <strong>game over</strong> overlay that freezes the action behind it</li>
+<li>A <strong>level complete</strong> screen with a score tally</li>
+<li>A <strong>cutscene or dialogue</strong> box that pauses gameplay (<a class="wikilink" href="#/dialogue-and-text-boxes" data-note="dialogue-and-text-boxes">Dialogue and Text Boxes</a>)</li>
+<li>A <strong>settings</strong> panel — volume sliders, fullscreen toggle</li>
+</ul>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/pause-menu#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Menu appears but nothing responds</td><td>PauseLayer&#39;s Process Mode isn&#39;t <strong>Always</strong></td></tr><tr><td>Restarted game is frozen forever</td><td>Missing <code>get_tree().paused = false</code> before the scene change</td></tr><tr><td>Escape does nothing</td><td>Using <code>_input</code> and a Button is eating it — use <code>_unhandled_input</code></td></tr><tr><td>Menu shows but the game keeps running</td><td>You showed the menu without setting <code>get_tree().paused = true</code></td></tr><tr><td>Pause fade animation is frozen</td><td>The tweening node also needs Process Mode <strong>Always</strong></td></tr><tr><td>Menu is behind the game</td><td>It&#39;s not under a <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">CanvasLayer</a></td></tr></tbody></table></div>

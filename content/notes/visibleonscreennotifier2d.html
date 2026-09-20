@@ -1,0 +1,36 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-4-index" data-note="tier-4-index">Tier 4 — Worth Knowing</a></p>
+<p><strong>Difficulty:</strong> ⭐ easy · <strong>Payoff:</strong> ⭐⭐ solid · <strong>Time:</strong> 10 minutes</p>
+<p>Tells you when something enters or leaves the screen. Small node, and it quietly solves the most common performance bug in a camp game: <strong>bullets that never die.</strong></p>
+<h2 id="the-problem-it-solves" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#the-problem-it-solves" aria-label="Link to this section">#</a>The problem it solves</h2><p>Every bullet you fire in <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> flies off screen and keeps existing forever. Fire for two minutes and you have a thousand invisible bullets, each running <code>_physics_process</code> every frame. The game slows down and nobody can see why.</p>
+<h2 id="setup" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#setup" aria-label="Link to this section">#</a>Setup</h2><p>Add a <strong>VisibleOnScreenNotifier2D</strong> as a child. Size its rectangle in the viewport to roughly cover the sprite. Then connect one of two <a class="wikilink" href="#/signals" data-note="signals">signals</a>:</p>
+<ul>
+<li><strong><code>screen_entered</code></strong> — became visible</li>
+<li><strong><code>screen_exited</code></strong> — left the view</li>
+</ul>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_visible_on_screen_notifier_2d_screen_exited():
+	queue_free()</code></pre></div><p><strong>One node, one signal, one line.</strong> Add it to your bullet scene and the problem is gone permanently.</p>
+<h2 id="what-people-actually-use-it-for" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#what-people-actually-use-it-for" aria-label="Link to this section">#</a>What people actually use it for</h2><p><strong>Cleaning up bullets</strong> — as above. Do this on every bullet scene (<a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>).</p>
+<p><strong>Removing off-screen enemies</strong> — a mob that drifted away and is never coming back (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_screen_exited():
+	queue_free()</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Don&#39;t free things that start off screen</span></div><div class="callout__body"><p>An enemy spawned outside the view fires <code>screen_exited</code> immediately — or never fires <code>screen_entered</code> — and deletes itself before it ever arrives. Guard it:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var has_been_seen = false
+
+func _on_screen_entered():
+	has_been_seen = true
+
+func _on_screen_exited():
+	if has_been_seen:
+		queue_free()</code></pre></div></div></div><p><strong>Waking enemies only when visible</strong> — a big level with fifty enemies runs badly if all fifty are thinking at once:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_screen_entered():
+	set_physics_process(true)
+
+func _on_screen_exited():
+	set_physics_process(false)</code></pre></div><p>This is the classic optimization for a large <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a> level. Combine with <a class="wikilink" href="#/enemy-states" data-note="enemy-states">Enemy States</a> so an enemy resumes patrolling where it left off.</p>
+<p><strong>Keeping the player on screen</strong> — flip an enemy or wrap a ship at the boundary (<a class="wikilink" href="#/screen-wrap-and-thrust" data-note="screen-wrap-and-thrust">Screen Wrap and Thrust</a>).</p>
+<p><strong>Triggering a boss or a checkpoint</strong> when the player scrolls it into view — a nicer trigger than an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> because it reacts to the <em>camera</em>, not to touch.</p>
+<p><strong>Pausing off-screen <a class="wikilink" href="#/particles" data-note="particles">Particles</a></strong> to save frames:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_screen_exited():
+	$Particles.emitting = false</code></pre></div><h2 id="checking-without-a-signal" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#checking-without-a-signal" aria-label="Link to this section">#</a>Checking without a signal</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if $Notifier.is_on_screen():
+	# ...</code></pre></div><h2 id="visibleonscreenenabler2d-the-no-code-version" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#visibleonscreenenabler2d-the-no-code-version" aria-label="Link to this section">#</a>VisibleOnScreenEnabler2D — the no-code version</h2><p>There&#39;s a sibling node, <strong>VisibleOnScreenEnabler2D</strong>, that automatically switches its parent&#39;s process mode on and off based on visibility. Set <strong>Enable Node Path</strong> to the node you want managed, and you get the wake-when-visible behaviour with zero script.</p>
+<p>Use the Enabler when you just want the optimization; use the Notifier when you want to <em>do</em> something specific.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/visibleonscreennotifier2d#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Signal never fires</td><td>The notifier&#39;s rectangle is tiny or zero-sized — size it in the viewport</td></tr><tr><td>Enemies vanish before appearing</td><td>They spawned off screen. Use the <code>has_been_seen</code> guard</td></tr><tr><td>Bullets still pile up</td><td>Signal connected on the wrong node, or connected to nothing</td></tr><tr><td>Works in the editor, not in game</td><td>Rectangle is positioned away from the sprite — check its offset</td></tr><tr><td>&quot;Screen&quot; seems wrong</td><td>It means the <strong>camera&#39;s</strong> view, not the window. A zoomed-out <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> sees more</td></tr></tbody></table></div>

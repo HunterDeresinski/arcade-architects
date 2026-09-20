@@ -1,0 +1,137 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a>, <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p>Two abilities that make a platformer feel <em>good</em> to control. Both are short, both bolt onto the script in <a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>, and both are the kind of thing playtesters notice immediately. Uses <a class="wikilink" href="#/timer" data-note="timer">Timer</a> and <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Add these after your game works</span></div><div class="callout__body"><p>These are <em>feel</em> upgrades, not features. Get the level, the enemies, and the win condition working first — then spend twenty minutes here and watch the game get twice as fun.</p>
+</div></div><hr>
+<h1 id="double-jump" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#double-jump" aria-label="Link to this section">#</a>Double Jump</h1><h2 id="the-idea" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#the-idea" aria-label="Link to this section">#</a>The idea</h2><p>You already have <code>is_on_floor()</code> gating your jump. A double jump just means <strong>counting</strong> jumps instead of asking about the floor.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 300.0
+@export var jump_velocity = -400.0
+@export var max_jumps = 2          # 2 = double jump. 3 = triple. Try it.
+
+var jumps_left = 0
+
+func _physics_process(delta):
+	if not is_on_floor():
+		velocity += get_gravity() * delta
+	else:
+		jumps_left = max_jumps         # touching ground refills your jumps
+
+	if Input.is_action_just_pressed(&quot;jump&quot;) and jumps_left &gt; 0:
+		velocity.y = jump_velocity
+		jumps_left -= 1
+		if jumps_left &lt; max_jumps - 1:
+			double_jump_effect()        # only on the airborne ones
+
+	var direction = Input.get_axis(&quot;move_left&quot;, &quot;move_right&quot;)
+	velocity.x = direction * speed if direction else move_toward(velocity.x, 0, speed)
+
+	move_and_slide()</code></pre></div><p><code>is_action_just_pressed</code> (not <code>is_action_pressed</code>) is essential — otherwise holding the button burns every jump in one frame.</p>
+<h2 id="make-the-second-jump-readable" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#make-the-second-jump-readable" aria-label="Link to this section">#</a>Make the second jump readable</h2><p>The air jump should <em>look</em> different from the ground jump, or players won&#39;t realize they have one:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func double_jump_effect():
+	$JumpSound.pitch_scale = 1.3        # higher pitch for the air jump
+	$JumpSound.play()
+	var t = create_tween()
+	t.tween_property($Sprite, &quot;scale&quot;, Vector2(0.7, 1.3), 0.08)   # stretch up
+	t.tween_property($Sprite, &quot;scale&quot;, Vector2(1, 1), 0.12)</code></pre></div><p>More in <a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a> and <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>.</p>
+<h2 id="coyote-time-the-one-every-platformer-needs" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#coyote-time-the-one-every-platformer-needs" aria-label="Link to this section">#</a>Coyote time (the one every platformer needs)</h2><p>Players constantly press jump a frame or two <em>after</em> walking off a ledge, and a game that refuses feels stiff and unfair. Give them a grace window.</p>
+<p>Add a <code>CoyoteTimer</code> (<a class="wikilink" href="#/timer" data-note="timer">Timer</a>, One Shot <strong>on</strong>, Wait Time <code>0.12</code>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var was_on_floor = false
+
+func _physics_process(delta):
+	var on_floor = is_on_floor()
+	if was_on_floor and not on_floor and velocity.y &gt;= 0:
+		$CoyoteTimer.start()          # just walked off a ledge
+	was_on_floor = on_floor
+
+	var can_ground_jump = on_floor or not $CoyoteTimer.is_stopped()
+	if Input.is_action_just_pressed(&quot;jump&quot;):
+		if can_ground_jump:
+			velocity.y = jump_velocity
+			jumps_left = max_jumps - 1
+			$CoyoteTimer.stop()
+		elif jumps_left &gt; 0:
+			velocity.y = jump_velocity
+			jumps_left -= 1
+			double_jump_effect()</code></pre></div><p>Nobody will ever say &quot;I love your coyote time.&quot; They&#39;ll say the controls feel good. That&#39;s the point.</p>
+<h2 id="variable-jump-height" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#variable-jump-height" aria-label="Link to this section">#</a>Variable jump height</h2><p>Tap for a short hop, hold for a full jump. Two lines:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if Input.is_action_just_released(&quot;jump&quot;) and velocity.y &lt; 0:
+	velocity.y *= 0.4    # let go early, cut the rise short</code></pre></div><p>Coyote time and variable jump height together are the two highest-value additions to any platformer in this camp.</p>
+<hr>
+<h1 id="dash" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#dash" aria-label="Link to this section">#</a>Dash</h1><h2 id="the-idea-2" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#the-idea-2" aria-label="Link to this section">#</a>The idea</h2><p>A dash is a <strong>short burst at high speed in a fixed direction, with a cooldown.</strong> Three pieces of state: are we dashing, which way, and can we dash again yet.</p>
+<p>Add two <a class="wikilink" href="#/timer" data-note="timer">Timer</a> nodes, both One Shot <strong>on</strong>, Autostart <strong>off</strong>:</p>
+<ul>
+<li><code>DashTimer</code> — Wait Time <code>0.15</code> (how long the dash lasts)</li>
+<li><code>DashCooldown</code> — Wait Time <code>0.6</code> (how long until you can dash again)</li>
+</ul>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var dash_speed = 900.0
+
+var is_dashing = false
+var dash_direction = Vector2.ZERO
+
+func _physics_process(delta):
+	if is_dashing:
+		velocity = dash_direction * dash_speed
+		move_and_slide()
+		return                    # skip gravity and normal input entirely
+
+	# ---- normal movement here (gravity, walk, jump) ----
+
+	if Input.is_action_just_pressed(&quot;dash&quot;) and $DashCooldown.is_stopped():
+		start_dash()
+
+	move_and_slide()
+
+func start_dash():
+	var input_dir = Input.get_vector(&quot;move_left&quot;, &quot;move_right&quot;, &quot;move_up&quot;, &quot;move_down&quot;)
+	if input_dir == Vector2.ZERO:
+		input_dir = Vector2.RIGHT * (-1 if $Sprite.flip_h else 1)   # dash where you face
+	dash_direction = input_dir.normalized()
+	is_dashing = true
+	velocity = dash_direction * dash_speed
+
+	$DashTimer.start()
+	$DashCooldown.start()
+	$DashSound.play()
+	$Ghosts.emitting = true          # optional trail, see below
+
+func _on_dash_timer_timeout():
+	is_dashing = false
+	velocity *= 0.3                  # bleed off speed so you don't rocket away
+	$Ghosts.emitting = false</code></pre></div><p>Add <code>dash</code> to <strong>Project Settings → Input Map</strong> (Shift is the convention).</p>
+<p>The <code>is_stopped()</code> cooldown check is the same <a class="wikilink" href="#/timer" data-note="timer">Timer</a> pattern as a weapon&#39;s fire rate in <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> — once students have it, they reuse it everywhere.</p>
+<h2 id="invincible-dash" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#invincible-dash" aria-label="Link to this section">#</a>Invincible dash</h2><p>Let the player dash <em>through</em> enemies. Wire it to the hurtbox from <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func start_dash():
+	# ...as above...
+	invincible = true
+
+func _on_dash_timer_timeout():
+	is_dashing = false
+	invincible = false</code></pre></div><p>This changes the dash from a movement tool into a <strong>defensive skill</strong>, and instantly makes combat more interesting. Great design conversation: the same mechanic can be about getting somewhere or about surviving, depending on one flag.</p>
+<h2 id="air-dash-one-per-jump" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#air-dash-one-per-jump" aria-label="Link to this section">#</a>Air dash (one per jump)</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var can_air_dash = true
+
+# in _physics_process, when on the floor:
+can_air_dash = true
+
+if Input.is_action_just_pressed(&quot;dash&quot;) and $DashCooldown.is_stopped():
+	if is_on_floor() or can_air_dash:
+		if not is_on_floor():
+			can_air_dash = false
+		start_dash()</code></pre></div><p>Air dash plus double jump gives a platformer a real movement <em>vocabulary</em> — suddenly there are multiple ways to cross a gap, and level design gets more interesting.</p>
+<h2 id="the-ghost-trail" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#the-ghost-trail" aria-label="Link to this section">#</a>The ghost trail</h2><p>The cheapest way to make a dash look expensive:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func spawn_ghost():
+	var ghost = Sprite2D.new()
+	ghost.texture = $Sprite.texture
+	ghost.global_position = global_position
+	ghost.flip_h = $Sprite.flip_h
+	ghost.modulate = Color(0.6, 0.8, 1.0, 0.6)
+	ghost.z_index = z_index - 1
+	get_tree().current_scene.add_child(ghost)
+	var t = ghost.create_tween()
+	t.tween_property(ghost, &quot;modulate:a&quot;, 0.0, 0.3)
+	t.tween_callback(ghost.queue_free)</code></pre></div><p>Call it every couple of frames while dashing:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if is_dashing and Engine.get_physics_frames() % 2 == 0:
+	spawn_ghost()</code></pre></div><p>Also worth adding: a short <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> shake and a brief slow-motion via <code>Engine.time_scale</code> (<a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>).</p>
+<h2 id="a-cooldown-the-player-can-see" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#a-cooldown-the-player-can-see" aria-label="Link to this section">#</a>A cooldown the player can see</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	$UI/DashBar.value = 1.0 - ($DashCooldown.time_left / $DashCooldown.wait_time)</code></pre></div><p>A ProgressBar under a CanvasLayer (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>). Players will use an ability far more often when they can see it&#39;s ready.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/dash-and-double-jump#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Dash never stops</td><td><code>DashTimer</code>&#39;s <code>timeout</code> isn&#39;t connected, or One Shot is off</td></tr><tr><td>Dashes forever while holding the key</td><td>Use <code>is_action_just_pressed</code>, not <code>is_action_pressed</code></td></tr><tr><td>Dash goes nowhere when standing still</td><td>Add the fallback direction based on facing</td></tr><tr><td>Player rockets off after dashing</td><td>Add <code>velocity *= 0.3</code> on dash end</td></tr><tr><td>Double jump gives infinite jumps</td><td><code>jumps_left</code> is being reset somewhere every frame — check it&#39;s only reset when <code>is_on_floor()</code></td></tr><tr><td>Dash phases through walls</td><td><code>move_and_slide()</code> handles it; if it still tunnels, lower <code>dash_speed</code> or thicken walls</td></tr></tbody></table></div>

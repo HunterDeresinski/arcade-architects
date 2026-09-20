@@ -1,0 +1,90 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Platforms that slide back and forth, elevators, falling platforms, conveyor belts. The classic way to make a platformer level feel alive instead of static. Builds on <a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a> and <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Node2D and Marker2D</a>.</p>
+<h2 id="use-animatablebody2d-not-staticbody2d" class="heading"><a class="heading__anchor" href="#/moving-platforms#use-animatablebody2d-not-staticbody2d" aria-label="Link to this section">#</a>Use AnimatableBody2D, not StaticBody2D</h2><p>This is the whole trick and it saves an hour of pain.</p>
+<div class="table-wrap"><table><thead><tr><th>Node</th><th>Result</th></tr></thead><tbody><tr><td><strong>StaticBody2D</strong> you move in code</td><td>The player <strong>doesn&#39;t</strong> ride it. Platform slides out from under them, or squishes them into the ceiling.</td></tr><tr><td><strong>CharacterBody2D</strong></td><td>Works, but you&#39;re re-implementing what the engine already does.</td></tr><tr><td><strong>AnimatableBody2D</strong></td><td>✅ Built exactly for this. Moves where you tell it and <strong>carries whatever is standing on it.</strong></td></tr></tbody></table></div><p><strong>AnimatableBody2D</strong> is a physics body designed to be moved by code or an AnimationPlayer while still pushing other bodies properly. Its <strong>Sync to Physics</strong> property (on by default) is what makes the player ride along.</p>
+<h2 id="the-platform-scene" class="heading"><a class="heading__anchor" href="#/moving-platforms#the-platform-scene" aria-label="Link to this section">#</a>The platform scene</h2><p><strong>Scene → New Scene → Other Node → AnimatableBody2D</strong>, save as <code>moving_platform.tscn</code>.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">MovingPlatform    (AnimatableBody2D)  Layer: obstacles, Mask: none
+├── Sprite         (Sprite2D)
+└── Shape          (CollisionShape2D)  ← RectangleShape2D</code></pre></div><h2 id="version-a-between-two-markers-most-flexible" class="heading"><a class="heading__anchor" href="#/moving-platforms#version-a-between-two-markers-most-flexible" aria-label="Link to this section">#</a>Version A: between two markers (most flexible)</h2><p>In your <strong>level</strong> scene, add two <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Marker2D</a>s — <code>PointA</code> and <code>PointB</code> — and drag them where the platform should travel.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends AnimatableBody2D
+
+@export var point_a: NodePath
+@export var point_b: NodePath
+@export var speed = 100.0
+@export var wait_time = 0.5
+
+var target: Vector2
+var other: Vector2
+var waiting = false
+
+func _ready():
+	target = get_node(point_b).global_position
+	other  = get_node(point_a).global_position
+	global_position = other
+
+func _physics_process(delta):
+	if waiting:
+		return
+	global_position = global_position.move_toward(target, speed * delta)
+	if global_position.distance_to(target) &lt; 1.0:
+		var swap = target
+		target = other
+		other = swap
+		if wait_time &gt; 0:
+			waiting = true
+			await get_tree().create_timer(wait_time).timeout
+			waiting = false</code></pre></div><p><code>move_toward()</code> walks a value toward a target at a fixed rate and stops exactly there — no overshoot. It&#39;s the same function <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a> uses.</p>
+<p>The <code>@export ... NodePath</code> lines give you <strong>drag-and-drop slots in the Inspector</strong>: drop in PointA and PointB and the platform is configured. Drag one platform scene into a level four times, point each at different markers, and you have four platforms with zero extra code.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Parent the markers to the level, not the platform</span></div><div class="callout__body"><p>A marker parented to the platform moves <em>with</em> it, so the platform chases a target it can never reach and drifts off screen forever.</p>
+</div></div><h2 id="version-b-no-markers-just-a-distance" class="heading"><a class="heading__anchor" href="#/moving-platforms#version-b-no-markers-just-a-distance" aria-label="Link to this section">#</a>Version B: no markers, just a distance</h2><p>Fewer moving parts, good for a team in a hurry.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends AnimatableBody2D
+
+@export var travel = Vector2(200, 0)   # (200,0) horizontal, (0,-200) elevator
+@export var speed = 100.0
+
+var start_pos: Vector2
+var going_out = true
+
+func _ready():
+	start_pos = global_position
+
+func _physics_process(delta):
+	var target = start_pos + travel if going_out else start_pos
+	global_position = global_position.move_toward(target, speed * delta)
+	if global_position.distance_to(target) &lt; 1.0:
+		going_out = not going_out</code></pre></div><p>Set <code>travel</code> in the Inspector per instance. <code>(0, -300)</code> makes an elevator; <code>(200, 0)</code> makes a slider.</p>
+<h2 id="version-c-zero-code-animationplayer" class="heading"><a class="heading__anchor" href="#/moving-platforms#version-c-zero-code-animationplayer" aria-label="Link to this section">#</a>Version C: zero code (AnimationPlayer)</h2><p>Add an <strong>AnimationPlayer</strong> child, new animation <code>move</code>, <strong>Loop on</strong>, <strong>Autoplay on</strong>. Key <code>position</code> at 0s and 2s at one end, and at 1s at the other end. Set the interpolation curve to <strong>Ease In-Out</strong> for a smooth glide.</p>
+<p>Genuinely the best option for a team with a strong artist and a nervous programmer — and it&#39;s the option Godot&#39;s AnimatableBody2D was designed around.</p>
+<h2 id="variations" class="heading"><a class="heading__anchor" href="#/moving-platforms#variations" aria-label="Link to this section">#</a>Variations</h2><p><strong>A falling platform</strong> — stand on it, it shakes, then drops:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends AnimatableBody2D
+
+var triggered = false
+
+func _on_top_detector_body_entered(body):
+	if triggered or not body.is_in_group(&quot;player&quot;):
+		return
+	triggered = true
+	var t = create_tween().set_loops(6)
+	t.tween_property(self, &quot;position:x&quot;,  3, 0.05).as_relative()
+	t.tween_property(self, &quot;position:x&quot;, -3, 0.05).as_relative()
+	await t.finished
+	sync_to_physics = false        # required before free-falling
+	while true:
+		global_position.y += 600 * get_physics_process_delta_time()
+		await get_tree().physics_frame
+		if global_position.y &gt; 2000:
+			queue_free()</code></pre></div><p>Add a thin <code>TopDetector</code> <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> just above the platform surface. The shake is a <strong>warning</strong> — a platform that falls with no telegraph feels unfair.</p>
+<p><strong>A one-way moving platform</strong> — check <strong>One Way Collision</strong> on the CollisionShape2D so you can jump up through it (<a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a>).</p>
+<p><strong>A conveyor belt</strong> — a StaticBody2D with <strong>Physics Material Override → Friction 0</strong>, plus a nudge in the player&#39;s script while <code>is_on_floor()</code>.</p>
+<p><strong>A crumbling platform</strong> — like the falling one, but <code>queue_free()</code> instead of dropping, with a fade-out tween.</p>
+<p><strong>A platform on a circular path:</strong></p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var radius = 120.0
+@export var rotation_speed = 1.0
+var angle = 0.0
+var center: Vector2
+
+func _ready(): center = global_position
+
+func _physics_process(delta):
+	angle += rotation_speed * delta
+	global_position = center + Vector2(cos(angle), sin(angle)) * radius</code></pre></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/moving-platforms#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Player doesn&#39;t move with the platform</td><td>It&#39;s a StaticBody2D — change it to <strong>AnimatableBody2D</strong></td></tr><tr><td>Player jitters while riding</td><td>Move it in <code>_physics_process</code>, never <code>_process</code>. Confirm <strong>Sync to Physics</strong> is on.</td></tr><tr><td>Platform pushes the player into a wall and they vibrate</td><td>Give the player a <strong>CapsuleShape2D</strong> and leave clearance at the end of the run</td></tr><tr><td>Platform drifts away forever</td><td>Markers parented to the platform instead of the level</td></tr><tr><td>Player slides off a horizontal platform</td><td>Expected in some engines — AnimatableBody2D handles it. If it persists, check the player is a <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> using <code>move_and_slide()</code></td></tr><tr><td>Jumping off feels weak</td><td>Known platformer quirk: the player doesn&#39;t inherit platform momentum. Usually fine; ignore it on Day 4.</td></tr></tbody></table></div>

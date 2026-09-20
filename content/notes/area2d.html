@@ -1,0 +1,54 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>The <strong>detector</strong>. An Area2D notices when something overlaps it and fires a <a class="wikilink" href="#/signals" data-note="signals">signal</a> — but it never blocks anything. Getting hit, collecting a coin, walking into lava, reaching the goal: all Area2D.</p>
+<h2 id="area2d-is-not-a-body" class="heading"><a class="heading__anchor" href="#/area2d#area2d-is-not-a-body" aria-label="Link to this section">#</a>Area2D is not a body</h2><p>This is the thing to understand first. Godot&#39;s physics bodies (<a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>, <a class="wikilink" href="#/rigidbody2d-and-staticbody2d" data-note="rigidbody2d-and-staticbody2d">StaticBody2D and RigidBody2D</a>) have <strong>physical presence</strong> — they stop things. An Area2D has <strong>awareness</strong> — it notices things and does nothing about it.</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>Blocks movement</th><th>Detects overlaps</th></tr></thead><tbody><tr><td>Area2D</td><td>❌</td><td>✅</td></tr><tr><td>StaticBody2D</td><td>✅</td><td>❌</td></tr><tr><td>CharacterBody2D</td><td>✅</td><td>❌ (by itself)</td></tr></tbody></table></div><p>That&#39;s why the Day 1 Area2D player walks straight through walls (<a class="wikilink" href="#/obstacles" data-note="obstacles">Obstacles</a> fixes this), and why a CharacterBody2D player needs a <strong>child Area2D</strong> to notice it got hit.</p>
+<h2 id="the-setup" class="heading"><a class="heading__anchor" href="#/area2d#the-setup" aria-label="Link to this section">#</a>The setup</h2><p>An Area2D needs a <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a> child. Without one it detects nothing — <strong>this is the #1 mistake in the camp.</strong></p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Coin            (Area2D)
+├── Sprite       (Sprite2D)
+└── Shape        (CollisionShape2D)  ← assign a CircleShape2D in the Inspector</code></pre></div><h2 id="the-four-signals" class="heading"><a class="heading__anchor" href="#/area2d#the-four-signals" aria-label="Link to this section">#</a>The four signals</h2><p>Connect these in the Node dock (<a class="wikilink" href="#/signals" data-note="signals">Signals → Connecting a signal in the editor the easy way</a>):</p>
+<div class="table-wrap"><table><thead><tr><th>Signal</th><th>Fires when</th></tr></thead><tbody><tr><td><code>body_entered(body)</code></td><td>a <strong>PhysicsBody</strong> enters — the CharacterBody2D player, a RigidBody2D mob</td></tr><tr><td><code>body_exited(body)</code></td><td>that body leaves</td></tr><tr><td><code>area_entered(area)</code></td><td>another <strong>Area2D</strong> enters — a bullet, another hurtbox</td></tr><tr><td><code>area_exited(area)</code></td><td>that area leaves</td></tr></tbody></table></div><p><strong>Body or area?</strong> Look at what&#39;s coming <em>in</em>. A CharacterBody2D player → <code>body_entered</code>. A bullet that&#39;s an Area2D → <code>area_entered</code>. If your signal never fires, this is the second thing to check (after the missing shape).</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+func _on_body_entered(body):
+	print(&quot;Something touched me: &quot;, body.name)</code></pre></div><h2 id="making-sure-it-s-the-player" class="heading"><a class="heading__anchor" href="#/area2d#making-sure-it-s-the-player" aria-label="Link to this section">#</a>Making sure it&#39;s the player</h2><p>Three ways, worst to best:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if body.name == &quot;Player&quot;:          # breaks the moment someone renames the node
+if body is CharacterBody2D:        # true of enemies too
+if body.is_in_group(&quot;player&quot;):     # ✅ use this one</code></pre></div><p>Put the player in a group: select the Player node → <strong>Node dock → Groups tab</strong> → type <code>player</code> → <strong>Add</strong>. Now every pickup, hazard, and trigger in the game can ask the same question, and it keeps working when someone renames things on Day 4.</p>
+<p>Better still, skip the check entirely by setting up <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a> so only the player can ever trigger it. Then the signal firing <em>is</em> the answer.</p>
+<h2 id="what-people-actually-do-with-an-area2d" class="heading"><a class="heading__anchor" href="#/area2d#what-people-actually-do-with-an-area2d" aria-label="Link to this section">#</a>What people actually do with an Area2D</h2><p><strong>Pickups</strong> — coin, heart, key. Add points, then delete itself. Full build in <a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+signal collected
+
+func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		collected.emit()
+		queue_free()</code></pre></div><p><code>queue_free()</code> removes the node from the game. It&#39;s what makes a coin actually disappear.</p>
+<p><strong>A hurtbox</strong> — a child Area2D whose only job is noticing damage, so the parent body can focus on moving. The core pattern of <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a> and <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hurtbox_area_entered(area):
+	take_damage(1)</code></pre></div><p><strong>A hazard</strong> — lava, spikes, a bottomless pit. Doesn&#39;t block, just hurts (<a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>).</p>
+<p><strong>A trigger zone</strong> — an invisible Area2D with no sprite. Walk in, and something happens: a door opens, a boss wakes up, a checkpoint saves, the level ends.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		get_tree().change_scene_to_file(&quot;res://level_2.tscn&quot;)</code></pre></div><p><strong>A bullet</strong> — bullets are almost always Area2Ds. You want them to <em>notice</em> a hit, not physically shove the enemy across the room (<a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>).</p>
+<p><strong>A screen-exit cleanup zone</strong> — or use <code>VisibleOnScreenNotifier2D</code>, which does the same job with less setup.</p>
+<p><strong>An enemy&#39;s aggro range</strong> — a big circle around the enemy. Player enters, the enemy starts chasing (<a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">Homing Enemies</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_aggro_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		chasing = true
+
+func _on_aggro_body_exited(body):
+	if body.is_in_group(&quot;player&quot;):
+		chasing = false</code></pre></div><h2 id="asking-who-s-in-here-right-now" class="heading"><a class="heading__anchor" href="#/area2d#asking-who-s-in-here-right-now" aria-label="Link to this section">#</a>Asking &quot;who&#39;s in here right now?&quot;</h2><p>Signals tell you the <em>moment</em> something enters. Sometimes you want to know the current state instead:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var bodies = $Hurtbox.get_overlapping_bodies()
+var areas  = $Hurtbox.get_overlapping_areas()
+if bodies.size() &gt; 0:
+	take_damage(1)   # continuous damage while standing in lava</code></pre></div><p>This is how you make lava hurt every frame instead of only on the first touch.</p>
+<h2 id="turning-one-off" class="heading"><a class="heading__anchor" href="#/area2d#turning-one-off" aria-label="Link to this section">#</a>Turning one off</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$Hurtbox.monitoring = false   # stop detecting (i-frames, dash-through-enemies)
+$Hurtbox.monitoring = true    # back on</code></pre></div><p>Cleaner than disabling the <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a> and doesn&#39;t need <code>set_deferred</code>.</p>
+<h2 id="other-area2d-properties" class="heading"><a class="heading__anchor" href="#/area2d#other-area2d-properties" aria-label="Link to this section">#</a>Other Area2D properties</h2><ul>
+<li><strong>Priority</strong> — which area wins when several overlap.</li>
+<li><strong>Gravity / Gravity Point</strong> — an Area2D can override gravity inside it. A gravity point makes a little planet that pulls RigidBody2Ds toward its center. Rarely needed, always a hit.</li>
+<li><strong>Audio Bus Override</strong> — reverb inside a cave. Pure polish (<a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a>).</li>
+</ul>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">If nothing happens when things overlap</span></div><div class="callout__body"><p>Check in this order: <strong>(1)</strong> Is there a <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a> with an actual <strong>Shape</strong> assigned? <strong>(2)</strong> Did you connect the signal, and is it the right one (<code>body_</code> vs <code>area_</code>)? <strong>(3)</strong> Do the <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">layers and masks</a> let them see each other? <strong>(4)</strong> Turn on <strong>Debug → Visible Collision Shapes</strong> and look.</p>
+</div></div>

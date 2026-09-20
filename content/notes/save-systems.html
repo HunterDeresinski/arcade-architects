@@ -1,0 +1,26 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-5-index" data-note="tier-5-index">Tier 5 — After Camp</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐⭐⭐ hard · <strong>Camp verdict:</strong> ❌ don&#39;t · <strong>Do instead:</strong> <a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a></p>
+<h2 id="what-it-is" class="heading"><a class="heading__anchor" href="#/save-systems#what-it-is" aria-label="Link to this section">#</a>What it is</h2><p>Saving the <strong>whole game state</strong> — where the player is standing, which enemies are dead, which chests are open, inventory contents, quest progress — and restoring it exactly on load. Save slots, autosaves, &quot;continue where you left off.&quot;</p>
+<h2 id="why-not-this-week" class="heading"><a class="heading__anchor" href="#/save-systems#why-not-this-week" aria-label="Link to this section">#</a>Why not this week</h2><p>The file writing is easy — <a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a> shows the whole technique in about fifteen lines, and it&#39;s the same <code>FileAccess</code> and JSON either way.</p>
+<p><strong>The hard part isn&#39;t saving. It&#39;s deciding what counts as &quot;the state of the game.&quot;</strong> Every object needs to describe itself as data and rebuild itself from that data. Every new feature added on Thursday needs a save/load path too, or loading silently breaks. It&#39;s an architectural commitment made on day one, and camp games are built by improvisation — which is the correct way to build them in five days.</p>
+<p>There&#39;s also no need. A tiny game is 3–10 minutes long. Nobody needs to save halfway through, and a save system solves a problem your game doesn&#39;t have.</p>
+<h2 id="what-to-build-instead" class="heading"><a class="heading__anchor" href="#/save-systems#what-to-build-instead" aria-label="Link to this section">#</a>What to build instead</h2><div class="table-wrap"><table><thead><tr><th>The want</th><th>The five-minute version</th></tr></thead><tbody><tr><td>&quot;I want progress to persist&quot;</td><td><a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a> — a high score is progress</td></tr><tr><td>&quot;I want to unlock levels&quot;</td><td>Save one number, <code>levels_unlocked</code>, in your <a class="wikilink" href="#/autoload-and-global" data-note="autoload-and-global">Autoload and Global</a></td></tr><tr><td>&quot;I want to keep my settings&quot;</td><td>Same file, a dictionary with volume and difficulty</td></tr><tr><td>&quot;I want to continue where I left off&quot;</td><td>Save the level number only, and restart that level from the beginning</td></tr></tbody></table></div><p>That last row is the good compromise. <strong>Saving &quot;you were on level 4&quot; is 95% of the feeling of a save system for 5% of the work</strong>, and plenty of real arcade and mobile games do exactly that.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># in your Global autoload
+func save_progress():
+	var f = FileAccess.open(&quot;user://progress.json&quot;, FileAccess.WRITE)
+	f.store_string(JSON.stringify({
+		&quot;level&quot;: current_level,
+		&quot;levels_unlocked&quot;: levels_unlocked,
+		&quot;high_score&quot;: high_score,
+		&quot;music_volume&quot;: music_volume,
+	}))
+	f.close()</code></pre></div><p>Genuinely, that&#39;s enough for almost any small game.</p>
+<h2 id="if-someone-goes-further-after-camp" class="heading"><a class="heading__anchor" href="#/save-systems#if-someone-goes-further-after-camp" aria-label="Link to this section">#</a>If someone goes further after camp</h2><p>The standard Godot approach: give every saveable node a <code>save()</code> method returning a dictionary and a <code>load(data)</code> method that restores it, put them all in a <code>persist</code> group, and iterate.</p>
+<ul>
+<li>Godot docs → <strong>Saving games</strong></li>
+<li>Look up <code>godot 4 save system resource</code> for the <code>Resource</code>-based approach, which is cleaner</li>
+<li>Warn them about <strong><code>store_var</code> with objects</strong> — it can execute arbitrary code on load and is a real security issue in a shared game. JSON is safer.</li>
+</ul>
+<h2 id="what-to-say-in-the-moment" class="heading"><a class="heading__anchor" href="#/save-systems#what-to-say-in-the-moment" aria-label="Link to this section">#</a>What to say in the moment</h2><blockquote>
+<p>&quot;Writing the file is easy — you already know how from the high score note. The hard part is describing your whole game as data, and that&#39;s a design decision you&#39;d have to make before you started building. How about we save which level you reached? That&#39;s most of the feeling, and it&#39;s ten minutes.&quot;</p>
+</blockquote>

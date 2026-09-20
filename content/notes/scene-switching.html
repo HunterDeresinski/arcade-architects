@@ -1,0 +1,65 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a>, <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p>How to move between screens: Title → Game → Game Over → restart. This is what makes a project feel like a real, finished game.</p>
+<h2 id="the-three-screens-of-a-tiny-game" class="heading"><a class="heading__anchor" href="#/scene-switching#the-three-screens-of-a-tiny-game" aria-label="Link to this section">#</a>The three screens of a tiny game</h2><div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">TitleScreen.tscn   ← name, &quot;Press Start&quot;
+Game.tscn          ← the actual game
+GameOver.tscn      ← score + &quot;Play Again&quot;  (optional; can reuse Title)</code></pre></div><p>Each is its own scene (<a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a>).</p>
+<h2 id="switch-to-another-scene" class="heading"><a class="heading__anchor" href="#/scene-switching#switch-to-another-scene" aria-label="Link to this section">#</a>Switch to another scene</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func start_game():
+	get_tree().change_scene_to_file(&quot;res://Game.tscn&quot;)</code></pre></div><p><code>res://</code> means &quot;from the project root.&quot; The path must match the file in the FileSystem dock exactly.</p>
+<h2 id="a-title-screen-with-a-start-button" class="heading"><a class="heading__anchor" href="#/scene-switching#a-title-screen-with-a-start-button" aria-label="Link to this section">#</a>A title screen with a Start button</h2><p>On <code>TitleScreen.tscn</code>, add a <code>Button</code>, connect its <code>pressed</code> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_start_button_pressed():
+	get_tree().change_scene_to_file(&quot;res://Game.tscn&quot;)</code></pre></div><p>Or start on any key (good for a <a class="wikilink" href="#/constraint-cards" data-note="constraint-cards">one-button game</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(delta):
+	if Input.is_action_just_pressed(&quot;ui_accept&quot;):
+		get_tree().change_scene_to_file(&quot;res://Game.tscn&quot;)</code></pre></div><h2 id="restart-the-current-game" class="heading"><a class="heading__anchor" href="#/scene-switching#restart-the-current-game" aria-label="Link to this section">#</a>Restart the current game</h2><p>Simplest restart — reload the scene you&#39;re in:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_retry_pressed():
+	get_tree().reload_current_scene()</code></pre></div><h2 id="multiple-levels-swap-the-tilemap-keep-everything-else" class="heading"><a class="heading__anchor" href="#/scene-switching#multiple-levels-swap-the-tilemap-keep-everything-else" aria-label="Link to this section">#</a>Multiple levels: swap the tilemap, keep everything else</h2><p>For games where the &quot;levels&quot; are just different <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">tilemaps</a> — <code>level_1.tscn</code>, <code>level_2.tscn</code>, each a painted TileMapLayer — and the <strong>start and exit are in the same place every level</strong>. The player touches the exit, the old tilemap is swapped for the next one, and the player teleports back to the start.</p>
+<p>Because the player never gets destroyed, <strong>score, lives, and power-ups carry over automatically</strong> — no autoload needed.</p>
+<p><strong>The level scenes:</strong> each is a scene whose root is a <strong>TileMapLayer</strong> (<a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a>) with the level painted on it. Nothing else in them — no player, no exit. Design rule: every level&#39;s path must <em>start</em> and <em>end</em> at the same two spots.</p>
+<p><strong>The Main scene</strong> owns everything permanent:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main             (Node2D)      ← script below goes here
+├── Player                     ← never destroyed, never re-placed
+├── StartPoint   (Marker2D)    ← same start spot, every level
+├── Exit         (Area2D)      Layer: (none), Mask: player
+│   ├── Sprite                 ← door / portal / flag art
+│   └── Shape    (CollisionShape2D)
+└── LevelHolder  (Node2D)      ← the current tilemap lives here</code></pre></div><p><strong>Script on Main</strong> — connect the Exit&#39;s <code>body_entered</code> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>) <strong>to the Main node</strong> (in the connect dialog, pick Main instead of Exit):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+@export var levels: Array[PackedScene]   # drag level_1, level_2... here IN ORDER
+var current = 0
+
+func _ready():
+	load_level(0)
+
+func load_level(index):
+	# throw out the old tilemap
+	for child in $LevelHolder.get_children():
+		child.queue_free()
+	# bring in the new one
+	var level = levels[index].instantiate()
+	$LevelHolder.add_child(level)
+	# put the player at the start
+	$Player.global_position = $StartPoint.global_position
+	$Player.velocity = Vector2.ZERO
+
+func _on_exit_body_entered(body):
+	next_level.call_deferred()
+
+func next_level():
+	current += 1
+	if current &gt;= levels.size():
+		get_tree().change_scene_to_file(&quot;res://win_screen.tscn&quot;)  # beat them all!
+	else:
+		load_level(current)</code></pre></div><ul>
+<li><strong><code>@export var levels: Array[PackedScene]</code></strong> — in the Inspector, set the array size and drag each level&#39;s .tscn into a slot. <strong>The array order IS the level order</strong> — rearranging your game is drag-and-drop, no code.</li>
+<li><strong><code>$Player.velocity = Vector2.ZERO</code></strong> — without it, a player who ran into the exit at full speed keeps that momentum into the next level.</li>
+<li><strong><code>call_deferred()</code></strong> — swapping physics objects (the tilemap) <em>during</em> a collision callback makes Godot complain (&quot;flushing queries&quot; error). Deferring waits for the physics step to finish. Needed any time <code>body_entered</code> triggers scene surgery.</li>
+<li><strong>Mask: player</strong> on the Exit — a mob wandering into the door won&#39;t finish the level (<a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>).</li>
+<li>When the array runs out, the win screen loads — that&#39;s the one real <code>change_scene_to_file</code> left in the flow.</li>
+</ul>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Testing a specific level</span></div><div class="callout__body"><p>Change <code>load_level(0)</code> in <code>_ready()</code> to <code>load_level(2)</code> to jump straight to level 3 while testing. Just change it back before the showcase.</p>
+</div></div><h2 id="go-to-a-game-over-screen" class="heading"><a class="heading__anchor" href="#/scene-switching#go-to-a-game-over-screen" aria-label="Link to this section">#</a>Go to a game-over screen</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	get_tree().change_scene_to_file(&quot;res://GameOver.tscn&quot;)</code></pre></div><h2 id="quit-optional" class="heading"><a class="heading__anchor" href="#/scene-switching#quit-optional" aria-label="Link to this section">#</a>Quit (optional)</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_quit_pressed():
+	get_tree().quit()</code></pre></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Minimum for &quot;looks finished&quot;</span></div><div class="callout__body"><p>A <strong>title screen with your game&#39;s name + team names</strong>, and a way to <strong>restart</strong>. That&#39;s the Day 5 polish bar (<a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a>). You don&#39;t need a separate game-over scene — reusing the title screen is fine.</p>
+</div></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Carrying the score between scenes</span></div><div class="callout__body"><p>When you <code>change_scene_to_file</code>, the old scene (and its variables) is destroyed, so the score resets. To show the final score on a game-over screen, store it in an <strong>autoload/global</strong> script — that&#39;s <a class="wikilink" href="#/autoload-and-global" data-note="autoload-and-global">Autoload and Global</a>. Only attempt it if your team has time.</p>
+</div></div>

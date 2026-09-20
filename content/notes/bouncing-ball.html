@@ -1,0 +1,115 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>A ball that flies around and bounces off walls — Pong, Breakout, Arkanoid, and any game with a projectile that ricochets. Built on <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> and <code>move_and_collide()</code>.</p>
+<h2 id="why-not-just-use-a-rigidbody2d" class="heading"><a class="heading__anchor" href="#/bouncing-ball#why-not-just-use-a-rigidbody2d" aria-label="Link to this section">#</a>Why not just use a RigidBody2D?</h2><p>You can. Set Bounce to <code>1.0</code>, Gravity Scale to <code>0</code>, Linear Damp to <code>0</code>, kick it once, and the engine does it (<a class="wikilink" href="#/rigidbody2d-and-staticbody2d" data-note="rigidbody2d-and-staticbody2d">RigidBody2D and StaticBody2D</a>).</p>
+<p>But you&#39;ll fight it. Pong needs the ball to keep a <strong>constant speed</strong> forever, to speed up over time, and to change angle based on <em>where</em> it hit the paddle. A RigidBody2D bleeds energy, gets stuck in horizontal loops, and won&#39;t let you set those rules. Twelve lines of your own code gives you total control.</p>
+<p><strong>Rule of thumb:</strong> physics ball for a toy, coded ball for a game.</p>
+<h2 id="the-ball-scene" class="heading"><a class="heading__anchor" href="#/bouncing-ball#the-ball-scene" aria-label="Link to this section">#</a>The ball scene</h2><p><strong>Scene → New Scene → Other Node → <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a></strong>, name it <code>Ball</code>, save as <code>ball.tscn</code>.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Ball            (CharacterBody2D)   Layer: obstacles, Mask: obstacles
+├── Sprite       (Sprite2D)
+└── Shape        (CollisionShape2D)  ← CircleShape2D</code></pre></div><p><strong>Use a circle.</strong> A rectangle ball catches on corners and produces bounces that look wrong.</p>
+<h2 id="the-core-script" class="heading"><a class="heading__anchor" href="#/bouncing-ball#the-core-script" aria-label="Link to this section">#</a>The core script</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 400.0
+@export var max_speed = 900.0
+@export var speedup_per_hit = 15.0
+
+func _ready():
+	launch()
+
+func launch():
+	# random angle, but never too vertical (a near-vertical serve is unplayable)
+	var angle = randf_range(-PI / 4, PI / 4)
+	if randi() % 2 == 0:
+		angle += PI            # half the time, serve the other way
+	velocity = Vector2.RIGHT.rotated(angle) * speed
+
+func _physics_process(delta):
+	var collision = move_and_collide(velocity * delta)
+	if collision:
+		velocity = velocity.bounce(collision.get_normal())
+		speed = min(speed + speedup_per_hit, max_speed)
+		velocity = velocity.normalized() * speed
+		$HitSound.play()</code></pre></div><p>That&#39;s the whole mechanic. The important bits:</p>
+<ul>
+<li><strong><code>move_and_collide()</code>, not <code>move_and_slide()</code>.</strong> Slide is for characters — it <em>slides along</em> walls, which is the exact opposite of bouncing. <code>move_and_collide()</code> stops at the impact and hands you the collision.</li>
+<li><strong><code>velocity.bounce(normal)</code></strong> does the reflection math for you. The <strong>normal</strong> is the arrow pointing straight out of the surface you hit; <code>bounce()</code> mirrors your velocity around it. This is the one line people expect to be hard.</li>
+<li><strong>Re-normalizing to <code>speed</code></strong> every bounce is what keeps a constant, arcade-feeling pace. Without it the ball slowly drifts faster or slower.</li>
+</ul>
+<p>Walls are plain <strong>StaticBody2D</strong>s on layer <em>obstacles</em> (<a class="wikilink" href="#/rigidbody2d-and-staticbody2d" data-note="rigidbody2d-and-staticbody2d">RigidBody2D and StaticBody2D</a>), or a <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a> with collision.</p>
+<h2 id="pong-paddles-and-english" class="heading"><a class="heading__anchor" href="#/bouncing-ball#pong-paddles-and-english" aria-label="Link to this section">#</a>Pong: paddles and English</h2><p>The magic of Pong isn&#39;t the bounce — it&#39;s that <strong>where</strong> the ball hits the paddle changes the angle. That&#39;s what turns it from a physics demo into a game with skill.</p>
+<p>The paddle is a CharacterBody2D on layer <em>obstacles</em>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 500.0
+@export var up_action = &quot;p1_up&quot;
+@export var down_action = &quot;p1_down&quot;
+
+func _physics_process(_delta):
+	var dir = Input.get_axis(up_action, down_action)
+	velocity = Vector2(0, dir * speed)
+	move_and_slide()</code></pre></div><p><code>@export</code> on the action names means <strong>one paddle scene serves both players</strong> — drag in two instances and set <code>p1_up</code>/<code>p1_down</code> on one and <code>p2_up</code>/<code>p2_down</code> on the other in the Inspector. Add all four to <strong>Project Settings → Input Map</strong>.</p>
+<p>Now replace the ball&#39;s bounce block to handle paddles specially:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _physics_process(delta):
+	var collision = move_and_collide(velocity * delta)
+	if not collision:
+		return
+
+	var hit = collision.get_collider()
+	if hit.is_in_group(&quot;paddles&quot;):
+		# where on the paddle did we land? -1 = top edge, 0 = middle, 1 = bottom
+		var paddle_height = hit.get_node(&quot;Shape&quot;).shape.size.y
+		var offset = (global_position.y - hit.global_position.y) / (paddle_height / 2.0)
+		offset = clamp(offset, -1.0, 1.0)
+
+		var bounce_angle = offset * deg_to_rad(60)      # up to 60 degrees
+		var direction = -1.0 if velocity.x &gt; 0 else 1.0 # send it back the other way
+		velocity = Vector2(cos(bounce_angle) * direction, sin(bounce_angle))
+	else:
+		velocity = velocity.bounce(collision.get_normal())
+
+	speed = min(speed + speedup_per_hit, max_speed)
+	velocity = velocity.normalized() * speed
+	$HitSound.play()</code></pre></div><p>Put both paddles in a group called <code>paddles</code> (Node dock → Groups). Hit the paddle&#39;s center and the ball goes back flat; hit the edge and it fires off at a steep angle. <strong>That one rule is the entire game of Pong.</strong></p>
+<h2 id="scoring-goal-zones" class="heading"><a class="heading__anchor" href="#/bouncing-ball#scoring-goal-zones" aria-label="Link to this section">#</a>Scoring: goal zones</h2><p>An <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> behind each paddle, stretched to cover the whole side:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var scores_for_player = 1
+
+func _on_body_entered(body):
+	if body.is_in_group(&quot;ball&quot;):
+		get_parent().add_score(scores_for_player)
+		body.reset()</code></pre></div><p>And in the ball:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func reset():
+	global_position = get_viewport_rect().size / 2
+	velocity = Vector2.ZERO
+	speed = 400.0
+	await get_tree().create_timer(1.0).timeout   # a beat before the serve
+	launch()</code></pre></div><p>Display the score with <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>.</p>
+<h2 id="breakout-bricks-that-break" class="heading"><a class="heading__anchor" href="#/bouncing-ball#breakout-bricks-that-break" aria-label="Link to this section">#</a>Breakout: bricks that break</h2><p>Same ball, different targets. A brick is a <strong>StaticBody2D</strong> on layer <em>obstacles</em> with a script:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends StaticBody2D
+
+@export var points = 10
+
+func destroy():
+	get_tree().call_group(&quot;game&quot;, &quot;add_score&quot;, points)
+	queue_free()</code></pre></div><p>In the ball&#39;s collision handler:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if hit.has_method(&quot;destroy&quot;):
+	hit.destroy()</code></pre></div><p><code>has_method()</code> is a nice trick — the ball doesn&#39;t need to know what a brick <em>is</em>, only that it knows how to be destroyed. Walls don&#39;t have <code>destroy()</code>, so they just bounce.</p>
+<p>Lay out a grid of bricks from code so you&#39;re not dragging fifty by hand:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">const BrickScene = preload(&quot;res://brick.tscn&quot;)
+
+func build_wall():
+	for row in 5:
+		for col in 10:
+			var b = BrickScene.instantiate()
+			b.position = Vector2(80 + col * 72, 80 + row * 32)
+			b.points = (5 - row) * 10       # top rows worth more
+			$Bricks.add_child(b)</code></pre></div><p><code>$Bricks</code> is a plain <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Node2D</a> container. Win when <code>$Bricks.get_child_count() == 0</code>.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/bouncing-ball#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Ball sticks to a wall and vibrates</td><td>You used <code>move_and_slide()</code>. Use <code>move_and_collide()</code>.</td></tr><tr><td>Ball tunnels straight through a wall at high speed</td><td>Cap <code>max_speed</code>, thicken the walls, or turn on the ball&#39;s <strong>Continuous CD</strong> in the Inspector</td></tr><tr><td>Ball gets stuck bouncing perfectly horizontally, forever</td><td>After bouncing, force a minimum vertical component (below)</td></tr><tr><td>Ball speeds up until it&#39;s invisible</td><td>You forgot <code>min(..., max_speed)</code></td></tr><tr><td>Bounces look wrong / catch on corners</td><td>Use a <strong>CircleShape2D</strong>, not a rectangle</td></tr></tbody></table></div><p>The anti-horizontal fix, worth adding to any Pong:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if abs(velocity.y) &lt; 60:
+	velocity.y = 60 * sign(velocity.y) if velocity.y != 0 else 60
+	velocity = velocity.normalized() * speed</code></pre></div><h2 id="where-else-this-shows-up" class="heading"><a class="heading__anchor" href="#/bouncing-ball#where-else-this-shows-up" aria-label="Link to this section">#</a>Where else this shows up</h2><ul>
+<li><strong>Bouncing bullets</strong> — a shot that ricochets off walls (<a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>).</li>
+<li><strong>A bouncing enemy</strong> — a slime that ping-pongs around the room.</li>
+<li><strong>Breakout powerups</strong> — a brick drops a <a class="wikilink" href="#/collectables" data-note="collectables">collectable</a> that widens the paddle.</li>
+</ul>

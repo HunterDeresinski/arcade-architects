@@ -1,0 +1,100 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to shoot things — one reusable bullet scene, then two complete builds: a Space Invaders shooter (you shoot up) and a bullet-dodging boss (it shoots at <em>you</em>). Builds on <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> and <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>.</p>
+<h2 id="layer-setup-first" class="heading"><a class="heading__anchor" href="#/making-bullets#layer-setup-first" aria-label="Link to this section">#</a>Layer setup first</h2><p>Set up the camp-wide layer names once, from <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a>. Bullets use layer <strong>4 — bullets</strong>.</p>
+<p>The whole trick of this note: <strong>a bullet&#39;s mask decides what it can hit.</strong> Both kinds of bullet sit on the same <em>bullets</em> layer; only the mask differs.</p>
+<div class="table-wrap"><table><thead><tr><th>Bullet</th><th>Layer</th><th>Mask</th></tr></thead><tbody><tr><td>Player&#39;s bullet</td><td>bullets</td><td>mobs, obstacles</td></tr><tr><td>Enemy&#39;s bullet</td><td>bullets</td><td>player, obstacles</td></tr></tbody></table></div><p>Nothing else needs an <code>if</code> check — if the signal fires, it hit something it was allowed to hit.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Give every bullet a <a class="wikilink" href="#/visibleonscreennotifier2d" data-note="visibleonscreennotifier2d">VisibleOnScreenNotifier2D</a></span></div><div class="callout__body"><p>Bullets that fly off screen keep existing forever, and the game slowly grinds to a halt. One node, one signal, one line of cleanup — do it now, not when it breaks.</p>
+</div></div><h2 id="the-bullet-scene-used-by-both-examples" class="heading"><a class="heading__anchor" href="#/making-bullets#the-bullet-scene-used-by-both-examples" aria-label="Link to this section">#</a>The bullet scene (used by both examples)</h2><p>New scene: <strong>Area2D</strong> root named <code>Bullet</code>, with three children:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Bullet          (Area2D)                    Layer: bullets, Mask: mobs
+├── Sprite      (Sprite2D)
+├── Shape       (CollisionShape2D)
+└── Notifier    (VisibleOnScreenNotifier2D) ← auto-cleanup when off screen</code></pre></div><p>Script on the root — connect <strong>both signals in this scene</strong>: the Bullet&#39;s own <code>body_entered</code>, and the Notifier&#39;s <code>screen_exited</code> (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var speed = 750
+var direction = Vector2.RIGHT   # whoever spawns the bullet sets this
+
+func _ready():
+	rotation = direction.angle()   # point the sprite the way it flies
+
+func _process(delta):
+	position += direction * speed * delta
+
+func _on_body_entered(body):
+	body.queue_free()   # kill the mob
+	queue_free()        # remove the bullet
+
+func _on_visible_on_screen_notifier_2d_screen_exited():
+	queue_free()</code></pre></div><p>Because the mask only includes <em>mobs</em>, <code>body_entered</code> never fires for the player or walls — no group checks needed. That&#39;s conditional collision doing the work for you. The Notifier prevents the classic &quot;1,000 invisible bullets flying to infinity&quot; slowdown.</p>
+<p>Save as <code>bullet.tscn</code>.</p>
+<h2 id="example-1-space-invaders-shoot-straight-up" class="heading"><a class="heading__anchor" href="#/making-bullets#example-1-space-invaders-shoot-straight-up" aria-label="Link to this section">#</a>Example 1: Space Invaders (shoot straight up)</h2><p>Aliens come down from the top; the player slides along the bottom and shoots up.</p>
+<p><strong>Input Map:</strong> add a <code>shoot</code> action (Space) next to <code>move_left</code>/<code>move_right</code>.</p>
+<p><strong>Player script</strong> (on a <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> — horizontal only):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 400
+@export var bullet_scene: PackedScene   # drag bullet.tscn here in the Inspector
+
+func _physics_process(delta):
+	velocity.x = Input.get_axis(&quot;move_left&quot;, &quot;move_right&quot;) * speed
+	move_and_slide()
+
+	if Input.is_action_just_pressed(&quot;shoot&quot;):
+		shoot()
+
+func shoot():
+	var bullet = bullet_scene.instantiate()
+	bullet.global_position = global_position + Vector2(0, -30)  # spawn above the ship
+	bullet.direction = Vector2.UP
+	get_tree().current_scene.add_child(bullet)</code></pre></div><ul>
+<li><strong>Drag <code>bullet.tscn</code> into the <code>bullet_scene</code> slot</strong> in the Inspector — forgetting this is the #1 crash (<code>instantiate()</code> on null).</li>
+<li><code>Vector2.UP</code> — remember y is negative-up in 2D (<a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>).</li>
+<li>The <code>+ Vector2(0, -30)</code> offset spawns the bullet at the ship&#39;s nose instead of its center, so it can&#39;t clip the shooter.</li>
+<li>Bullets are added to the <strong>current scene</strong>, not the player — they keep flying even if the player dies.</li>
+</ul>
+<p><strong>The aliens:</strong> any descending mob on the <em>mobs</em> layer works — reuse the pattern from <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a> with <code>direction = Vector2.DOWN</code>. Bullet mask = mobs → bullets pop aliens, aliens ignore each other.</p>
+<p><strong>Fire-rate limit (optional)</strong> — hold to shoot, but not a laser hose. Add a <code>Timer</code> child named <code>Cooldown</code> (Wait Time <code>0.25</code>, One Shot ✓):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	# replace the is_action_just_pressed check with:
+	if Input.is_action_pressed(&quot;shoot&quot;) and $Cooldown.is_stopped():
+		shoot()
+		$Cooldown.start()</code></pre></div><h2 id="example-2-boss-that-shoots-at-the-player" class="heading"><a class="heading__anchor" href="#/making-bullets#example-2-boss-that-shoots-at-the-player" aria-label="Link to this section">#</a>Example 2: Boss that shoots at the player</h2><p>A boss stands in one place, fires bullets <strong>aimed at wherever the player is</strong>, and the player dodges.</p>
+<p><strong>Enemy bullet variant.</strong> Duplicate the bullet scene (FileSystem → right-click <code>bullet.tscn</code> → Duplicate → <code>boss_bullet.tscn</code>) and change two things in the Inspector:</p>
+<ul>
+<li><strong>Mask: player</strong> (instead of mobs) — now it only hits the player.</li>
+<li>Different sprite color so players can read danger at a glance.</li>
+</ul>
+<p>The <em>script is identical</em> — only layers and art change. Adjust its hit code to tell the player it&#39;s been hit instead of instantly deleting it:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(body):
+	body.take_damage()   # the player script decides what being hit means -- see Health and Lives
+	queue_free()</code></pre></div><p><strong>Boss scene:</strong> it never moves, so it&#39;s simple — no CharacterBody2D needed:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Boss            (StaticBody2D)   Layer: mobs, Mask: (none)
+├── Sprite      (Sprite2D)
+├── Shape       (CollisionShape2D)
+└── ShootTimer  (Timer)          Wait Time: 1.5, Autostart ✓</code></pre></div><p>Script on the Boss root — connect the Timer&#39;s <code>timeout</code> signal (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends StaticBody2D
+
+@export var bullet_scene: PackedScene   # drag boss_bullet.tscn here
+
+func _on_shoot_timer_timeout():
+	var player = get_tree().get_first_node_in_group(&quot;player&quot;)
+	if player == null:
+		return   # player is dead — stop shooting
+
+	var bullet = bullet_scene.instantiate()
+	bullet.global_position = global_position
+	bullet.direction = (player.global_position - global_position).normalized()
+	get_tree().current_scene.add_child(bullet)</code></pre></div><ul>
+<li><strong><code>(player.global_position - global_position).normalized()</code></strong> — the aiming line. Target minus me = direction to target; <code>normalized()</code> makes it length 1 so <code>speed</code> stays in charge.</li>
+<li><strong>Add the player to the &quot;player&quot; group:</strong> select the Player root → Node dock → Groups → type <code>player</code> → Add. That&#39;s how the boss finds it without a hard-coded path.</li>
+<li>The <code>null</code> check stops the boss from crashing (and rudely shooting) after the player dies.</li>
+</ul>
+<p><strong>Player side:</strong> the player needs the <code>take_damage()</code> function the bullet calls. Build the real one — hearts, i-frames, respawn — in <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>. The bare minimum to get bullets working today:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># in the player script
+signal hit_by_bullet
+
+func take_damage(_amount = 1):
+	hit_by_bullet.emit()   # wire this to lives / game over (see Score and UI)
+	# or for instant death: queue_free()</code></pre></div><p><strong>Tuning the dodge:</strong> the whole game feel lives in two numbers — boss bullet <code>speed</code> (slower = more readable, try 300) and <code>ShootTimer</code> wait time (shorter = more frantic). Slow bullets + fast timer = bullet-hell curtain; fast bullets + slow timer = sniper duel. Both are fun; they&#39;re different games.</p>
+<p><strong>Want the player to shoot back?</strong> Give the player Example 1&#39;s shoot code (aimed with the mouse if you like: <code>direction = (get_global_mouse_position() - global_position).normalized()</code>), give the Boss a health variable, and have the player-bullet&#39;s <code>body_entered</code> call a <code>take_damage()</code> on it instead of <code>queue_free()</code>. Boss fight complete.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">&quot;My bullets hit the wrong things&quot;</span></div><div class="callout__body"><p>It&#39;s always layers. Player bullet: <strong>Layer bullets, Mask mobs.</strong> Boss bullet: <strong>Layer bullets, Mask player.</strong> Neither bullet should mask <em>bullets</em> — otherwise bullets annihilate each other mid-air (which, granted, is a mechanic in some games — do it on purpose or not at all).</p>
+</div></div>

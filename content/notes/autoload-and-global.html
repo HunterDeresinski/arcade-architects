@@ -1,0 +1,82 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a></p>
+<p><strong>How to keep score, lives, and settings alive across scene changes.</strong> The partner note to <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>.</p>
+<p>A script that is <strong>always loaded, in every scene, and never destroyed.</strong> It&#39;s the answer to &quot;how do I keep the score when I go to the next level?&quot; — a question <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a> raises three times and defers to an instructor. This is that answer.</p>
+<h2 id="the-problem-it-solves" class="heading"><a class="heading__anchor" href="#/autoload-and-global#the-problem-it-solves" aria-label="Link to this section">#</a>The problem it solves</h2><p><code>change_scene_to_file()</code> <strong>destroys the old scene and everything in it.</strong> Your score variable lived in the old scene. It&#39;s gone.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Level 1  (score = 250)  →  change scene  →  Level 2  (score = 0)  😞</code></pre></div><p>An autoload lives <em>outside</em> all scenes, so it survives the switch.</p>
+<h2 id="setting-one-up" class="heading"><a class="heading__anchor" href="#/autoload-and-global#setting-one-up" aria-label="Link to this section">#</a>Setting one up</h2><ol>
+<li>Create a new script anywhere in the project. Call it <code>global.gd</code>. Don&#39;t attach it to anything.</li>
+<li><strong>Project → Project Settings → Globals → Autoload</strong> tab.</li>
+<li>Click the folder icon, pick <code>global.gd</code>.</li>
+<li><strong>Node Name:</strong> <code>Global</code>. Click <strong>Add</strong>.</li>
+</ol>
+<p>That&#39;s it. Now <code>Global</code> works from <em>any</em> script in the project, with no <code>$</code> path and no <code>get_node()</code>.</p>
+<div class="callout callout--important"><div class="callout__head"><span class="callout__icon">❗</span><span class="callout__title">Name it something obvious</span></div><div class="callout__body"><p><code>Global</code>, <code>GameState</code>, or <code>GameManager</code>. The Node Name field is what you type in code — if you name it <code>g</code> you will regret it by Thursday.</p>
+</div></div><h2 id="a-game-state-autoload" class="heading"><a class="heading__anchor" href="#/autoload-and-global#a-game-state-autoload" aria-label="Link to this section">#</a>A game state autoload</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># global.gd
+extends Node
+
+signal score_changed(new_score)
+signal lives_changed(new_lives)
+
+var score = 0
+var high_score = 0
+var lives = 3
+var current_level = 1
+
+func add_score(amount):
+	score += amount
+	if score &gt; high_score:
+		high_score = score
+	score_changed.emit(score)
+
+func lose_life():
+	lives -= 1
+	lives_changed.emit(lives)
+	if lives &lt;= 0:
+		game_over()
+
+func game_over():
+	get_tree().change_scene_to_file(&quot;res://game_over.tscn&quot;)
+
+func reset_game():
+	score = 0
+	lives = 3
+	current_level = 1</code></pre></div><p>Use it from anywhere — no path, no reference, no setup:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># in a coin script (see Collectables)
+Global.add_score(10)
+
+# in the player (see Health and Lives)
+Global.lose_life()
+
+# on the game over screen
+$FinalScore.text = &quot;Final Score: %d&quot; % Global.score</code></pre></div><h2 id="wiring-the-ui-to-it" class="heading"><a class="heading__anchor" href="#/autoload-and-global#wiring-the-ui-to-it" aria-label="Link to this section">#</a>Wiring the UI to it</h2><p>Each scene connects to the autoload&#39;s signals when it loads:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># in your Main scene
+func _ready():
+	Global.score_changed.connect(_on_score_changed)
+	_on_score_changed(Global.score)      # show the current value right away
+
+func _on_score_changed(value):
+	$UI/ScoreLabel.text = &quot;Score: %d&quot; % value</code></pre></div><p>That second line matters — connecting only tells you about <em>future</em> changes, so call it once manually to display what&#39;s already there.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Always reset before a new game</span></div><div class="callout__body"><p><code>Global</code> never resets by itself. Without <code>Global.reset_game()</code> on your title screen&#39;s Start button, the second playthrough begins with the first one&#39;s score and zero lives. This is the #1 autoload bug.</p>
+</div></div><h2 id="what-belongs-in-an-autoload" class="heading"><a class="heading__anchor" href="#/autoload-and-global#what-belongs-in-an-autoload" aria-label="Link to this section">#</a>What belongs in an autoload</h2><p><strong>Good:</strong></p>
+<ul>
+<li>Score, lives, current level, unlocked abilities</li>
+<li>Settings — music volume, difficulty</li>
+<li>Saved data (<a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a>)</li>
+<li>A music player that keeps playing across scene changes (below)</li>
+</ul>
+<p><strong>Bad:</strong></p>
+<ul>
+<li>The player node, or anything visual — those belong in the scene</li>
+<li>Everything, because it&#39;s convenient. An autoload that knows about all of your game becomes the tangle every bug lives in</li>
+</ul>
+<h2 id="music-that-survives-scene-changes" class="heading"><a class="heading__anchor" href="#/autoload-and-global#music-that-survives-scene-changes" aria-label="Link to this section">#</a>Music that survives scene changes</h2><p>The classic use, and it&#39;s three lines. Make an autoload scene instead of a bare script: a <code>Node</code> root with an <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> child, saved as <code>music.tscn</code>, then autoload the <strong>scene</strong> file.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node
+
+func play(track: AudioStream):
+	if $Player.stream == track and $Player.playing:
+		return                     # already playing this -- don't restart it
+	$Player.stream = track
+	$Player.play()</code></pre></div><p>Without this, changing scenes restarts your music from the top every time — which sounds broken.</p>
+<h2 id="the-simpler-alternative-use-it-when-you-can" class="heading"><a class="heading__anchor" href="#/autoload-and-global#the-simpler-alternative-use-it-when-you-can" aria-label="Link to this section">#</a>The simpler alternative (use it when you can)</h2><p>You often don&#39;t need an autoload at all. If your levels are just <strong>swapped tilemaps inside one persistent Main scene</strong> — the pattern in <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a> — the player and score are never destroyed, so nothing needs saving.</p>
+<p><strong>Rule:</strong> if you can avoid changing scenes, avoid the autoload too. Reach for this when you genuinely have separate Title / Game / Game Over scenes and need something to survive between them.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/autoload-and-global#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>&quot;Identifier Global not declared&quot;</td><td>Autoload isn&#39;t registered, or the Node Name doesn&#39;t match what you typed</td></tr><tr><td>Score keeps climbing across playthroughs</td><td>Missing <code>Global.reset_game()</code> on the start button</td></tr><tr><td>UI shows 0 until the first change</td><td>Call your handler once manually in <code>_ready()</code> after connecting</td></tr><tr><td>Music restarts on every scene change</td><td>Autoload the <em>scene</em>, and guard with the <code>if already playing</code> check</td></tr><tr><td>Changes to <code>global.gd</code> seem ignored</td><td>Godot caches autoloads — reload the project after editing the autoload list</td></tr></tbody></table></div>

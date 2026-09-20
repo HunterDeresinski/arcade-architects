@@ -1,0 +1,28 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a>, <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p>Sound is the cheapest way to make a game feel alive. One coin &quot;ding&quot; does more than an hour of art. Get free sounds from <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a>.</p>
+<h2 id="the-two-player-nodes" class="heading"><a class="heading__anchor" href="#/audiostreamplayer#the-two-player-nodes" aria-label="Link to this section">#</a>The two player nodes</h2><ul>
+<li><strong><code>AudioStreamPlayer</code></strong> — non-positional sound. Use for <strong>music</strong> and <strong>UI sounds</strong> (most tiny games only need this).</li>
+<li><strong><code>AudioStreamPlayer2D</code></strong> — sound that gets quieter with distance. Usually overkill for a one-screen game.</li>
+</ul>
+<h2 id="add-a-sound-effect" class="heading"><a class="heading__anchor" href="#/audiostreamplayer#add-a-sound-effect" aria-label="Link to this section">#</a>Add a sound effect</h2><ol>
+<li>Drag a <code>.wav</code> or <code>.ogg</code> file into your project (FileSystem dock).</li>
+<li>Add an <strong><code>AudioStreamPlayer</code></strong> node.</li>
+<li>In the Inspector, set its <strong>Stream</strong> to your sound file.</li>
+<li>Play it from code when something happens:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(body):
+	$CoinSound.play()   # the AudioStreamPlayer child named CoinSound</code></pre></div><h2 id="background-music-loops" class="heading"><a class="heading__anchor" href="#/audiostreamplayer#background-music-loops" aria-label="Link to this section">#</a>Background music (loops)</h2><ol>
+<li>Add an <code>AudioStreamPlayer</code>, set Stream to your music.</li>
+<li>Check <strong>Autoplay</strong> in the Inspector to start it on scene load, <strong>or</strong> start it in code:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	$Music.play()</code></pre></div><ol start="3">
+<li>To loop: select the audio file in FileSystem → <strong>Import</strong> tab → check <strong>Loop</strong> → <strong>Reimport</strong>.</li>
+</ol>
+<h2 id="stop-or-change-volume" class="heading"><a class="heading__anchor" href="#/audiostreamplayer#stop-or-change-volume" aria-label="Link to this section">#</a>Stop or change volume</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$Music.stop()
+$Music.volume_db = -10   # quieter (negative = softer, 0 = full)</code></pre></div><h2 id="make-your-own-sound-effects-free-fast-fun" class="heading"><a class="heading__anchor" href="#/audiostreamplayer#make-your-own-sound-effects-free-fast-fun" aria-label="Link to this section">#</a>Make your own sound effects (free, fast, fun)</h2><ul>
+<li><strong>jsfxr</strong> or <strong>ChipTone</strong> — click a button, get a retro &quot;pew/coin/jump&quot; sound in seconds. Export <code>.wav</code>, drag into Godot. Links in <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a>.</li>
+</ul>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Showcase polish</span></div><div class="callout__body"><p>For Friday, aim for: one music loop + 2–3 sound effects (point, hit, win). That alone makes a game feel finished (<a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a>).</p>
+</div></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Headphones / volume</span></div><div class="callout__body"><p>12 games playing at once is chaos. Use headphones during work time, and keep showcase volume reasonable.</p>
+</div></div>

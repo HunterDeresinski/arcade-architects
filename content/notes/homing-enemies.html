@@ -1,0 +1,36 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>An enemy that <em>chases you</em>. The Day 1 tutorial mobs are <code>RigidBody2D</code>s that get a velocity once and drift in a straight line forever. A homing mob steers toward the player every frame instead. Builds on <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>; the predictable cousin that walks a fixed route is <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a>, and <a class="wikilink" href="#/enemy-states" data-note="enemy-states">Enemy States</a> combines the two.</p>
+<h2 id="step-1-put-the-player-in-a-group" class="heading"><a class="heading__anchor" href="#/homing-enemies#step-1-put-the-player-in-a-group" aria-label="Link to this section">#</a>Step 1: put the player in a group</h2><p>The mob needs a way to find the player. Groups are the easiest way:</p>
+<ol>
+<li>Select your <strong>Player</strong> node.</li>
+<li>In the <strong>Node</strong> panel (right side, next to the Inspector) → <strong>Groups</strong> tab.</li>
+<li>Type <code>player</code> → <strong>Add</strong>.</li>
+</ol>
+<p>Now any script in the game can ask for it by name. Do this before anything else — it&#39;s the step everyone forgets.</p>
+<h2 id="step-2-the-homing-script" class="heading"><a class="heading__anchor" href="#/homing-enemies#step-2-the-homing-script" aria-label="Link to this section">#</a>Step 2: the homing script</h2><p>Attach this to the mob&#39;s <code>RigidBody2D</code> root (or duplicate <code>mob.tscn</code> first and attach it to the copy):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends RigidBody2D
+
+@export var speed = 180.0
+@export var turn_rate = 0.04  # lower = wider, lazier turns
+var player: Node2D
+
+func _ready():
+	player = get_tree().get_first_node_in_group(&quot;player&quot;)
+
+func _physics_process(delta):
+	if player and player.visible:
+		var target_dir = (player.global_position - global_position).normalized()
+		linear_velocity = linear_velocity.lerp(target_dir * speed, turn_rate)
+		rotation = linear_velocity.angle()</code></pre></div><p>Line by line:</p>
+<ul>
+<li><strong><code>get_first_node_in_group(&quot;player&quot;)</code></strong> — grabs the player without hardcoding a path like <code>$&quot;../../Player&quot;</code>, which breaks the moment a mob is spawned into a different parent.</li>
+<li><strong><code>.normalized()</code></strong> — turns &quot;the player is 300 pixels that way&quot; into a pure direction of length 1, so <code>speed</code> is the only thing controlling how fast the mob moves.</li>
+<li><strong><code>.lerp(..., turn_rate)</code></strong> — this is the line that makes it feel good. Snapping <code>linear_velocity</code> straight to the target direction gives you an unavoidable heat-seeker. Lerping gives the mob turning <em>momentum</em>, so a quick sidestep can make it overshoot and swing around. Tune <code>turn_rate</code> between about <code>0.02</code> and <code>0.1</code> to taste.</li>
+<li><strong><code>player.visible</code></strong> — stops mobs from swarming your corpse after a hit, since the tutorial hides the player on death.</li>
+<li><strong><code>rotation = linear_velocity.angle()</code></strong> — points the sprite where it&#39;s heading. Delete this line if your art shouldn&#39;t rotate.</li>
+</ul>
+<h2 id="mixing-chasers-and-drifters" class="heading"><a class="heading__anchor" href="#/homing-enemies#mixing-chasers-and-drifters" aria-label="Link to this section">#</a>Mixing chasers and drifters</h2><p>You don&#39;t need two separate mob scenes. Add an exported flag to your existing mob and only run the steering when it&#39;s on:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var is_homing = false</code></pre></div><p>Then in your spawn code (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>), flip a coin so some creeps drift and some chase:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">mob.is_homing = randf() &lt; 0.3   # about 1 in 3 hunts you</code></pre></div><p>A field of drifters with the occasional hunter reads as much more dangerous than a field of pure hunters — the player can&#39;t tell which is which until it turns.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Homing mobs get stuck on walls</span></div><div class="callout__body"><p>If your mobs&#39; collision mask includes the obstacles layer (<a class="wikilink" href="#/obstacles" data-note="obstacles">Obstacles</a>), homing mobs will grind against walls forever — RigidBodies don&#39;t path around things. Either let mobs ignore obstacles (mask excludes the obstacles layer, so they pass through) or accept that walls double as mob shields, which honestly can be a fun mechanic. Decide on purpose. See <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>.</p>
+</div></div>

@@ -1,0 +1,39 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-2-index" data-note="tier-2-index">Tier 2 — Showcase Payoff</a></p>
+<p><strong>Difficulty:</strong> ⭐ easy · <strong>Payoff:</strong> ⭐⭐⭐ huge · <strong>Time:</strong> 10 minutes</p>
+<p>Backgrounds that scroll <strong>slower than the foreground</strong>, creating an illusion of depth. Distant mountains drift; nearby bushes rush past. It costs almost nothing and it&#39;s the closest thing to a cheat code for making a game look finished.</p>
+<h2 id="the-idea" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#the-idea" aria-label="Link to this section">#</a>The idea</h2><p>Look out a car window. Fence posts blur past. Mountains barely move. Your brain reads that speed difference as <em>distance</em>. Parallax fakes it in 2D.</p>
+<h2 id="setup-in-godot-4-3" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#setup-in-godot-4-3" aria-label="Link to this section">#</a>Setup in Godot 4.3+</h2><p>Use <strong>Parallax2D</strong> — one node per layer, no wrapper needed.</p>
+<ol>
+<li>Add a <strong>Parallax2D</strong> node to your scene.</li>
+<li>Add a <strong>Sprite2D</strong> child and drop your background art in.</li>
+<li>Set Parallax2D&#39;s <strong>Scroll Scale</strong> — <code>Vector2(0.2, 0.2)</code> means &quot;move at 20% of camera speed.&quot;</li>
+<li>Repeat for each layer.</li>
+</ol>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Sky          (Parallax2D)  Scroll Scale: (0.1, 0.1)   ← barely moves
+│   └── Sprite
+├── Mountains    (Parallax2D)  Scroll Scale: (0.3, 0.3)
+│   └── Sprite
+├── Trees        (Parallax2D)  Scroll Scale: (0.6, 0.6)
+│   └── Sprite
+├── TileMapLayer                                          ← the actual level (1.0)
+└── Player
+    └── Camera2D</code></pre></div><p><strong>Rule: farther away = smaller Scroll Scale.</strong> <code>0.0</code> is painted on the screen and never moves; <code>1.0</code> moves exactly with the world.</p>
+<h2 id="making-it-repeat-forever" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#making-it-repeat-forever" aria-label="Link to this section">#</a>Making it repeat forever</h2><p>Set <strong>Repeat Size</strong> to your image&#39;s width (e.g. <code>Vector2(1920, 0)</code> for a 1920px-wide image) and Godot tiles it endlessly as you scroll. Set only the x for horizontal-scrolling games.</p>
+<p>For this to look seamless the art must be <strong>tileable</strong> — the right edge has to line up with the left. Most free parallax packs on <a class="wikilink" href="#/asset-resources" data-note="asset-resources">itch.io</a> already are; look for &quot;seamless&quot; or &quot;loopable&quot; in the description.</p>
+<h2 id="older-godot-4-parallaxbackground" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#older-godot-4-parallaxbackground" aria-label="Link to this section">#</a>Older Godot 4 (ParallaxBackground)</h2><p>If you&#39;re on 4.0–4.2, the older pair still works:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">ParallaxBackground
+├── ParallaxLayer   Motion Scale: (0.2, 0.2)  Motion Mirroring: (1920, 0)
+│   └── Sprite2D
+└── ParallaxLayer   Motion Scale: (0.5, 0.5)
+    └── Sprite2D</code></pre></div><p>Same concepts, different property names: <strong>Motion Scale</strong> = Scroll Scale, <strong>Motion Mirroring</strong> = Repeat Size.</p>
+<h2 id="it-needs-a-camera" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#it-needs-a-camera" aria-label="Link to this section">#</a>It needs a camera</h2><p>Parallax reacts to a moving <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a>. In a single-screen game (Pong, Space Invaders, Dodge the Creeps) nothing scrolls, so nothing parallaxes. For those, scroll the background yourself:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Parallax2D
+
+@export var auto_speed = Vector2(-40, 0)   # negative = drifts left
+
+func _process(delta):
+	scroll_offset += auto_speed * delta</code></pre></div><p><strong>This is arguably better than real parallax for an arcade game.</strong> An endlessly drifting starfield behind a fixed-screen shooter looks fantastic and works with zero camera setup.</p>
+<h2 id="choosing-layers" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#choosing-layers" aria-label="Link to this section">#</a>Choosing layers</h2><p>Three layers is the sweet spot. More is rarely worth the effort.</p>
+<div class="table-wrap"><table><thead><tr><th>Layer</th><th>Scroll Scale</th><th>Content</th></tr></thead><tbody><tr><td>Sky / gradient</td><td>0.0 – 0.1</td><td>flat colour, stars, sun</td></tr><tr><td>Far</td><td>0.2 – 0.4</td><td>mountains, city skyline, distant trees</td></tr><tr><td>Near</td><td>0.5 – 0.8</td><td>bushes, fences, foreground grass</td></tr><tr><td>World</td><td>1.0</td><td>your <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a></td></tr></tbody></table></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Fade the distance</span></div><div class="callout__body"><p>Set far layers&#39; <code>modulate</code> to a slightly washed-out tint (<code>Color(0.8, 0.85, 1.0)</code>). Real distance desaturates and blues things — this is called atmospheric perspective, and it sells depth even harder than the motion does.</p>
+</div></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/parallax-backgrounds#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Background doesn&#39;t move at all</td><td>No <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a>, or the camera isn&#39;t moving. Use the auto-scroll script instead</td></tr><tr><td>Visible seam when it repeats</td><td>Art isn&#39;t tileable, or Repeat Size doesn&#39;t exactly match the image width</td></tr><tr><td>Background covers the level</td><td>Set the Parallax2D&#39;s <code>z_index</code> to a negative number</td></tr><tr><td>Layers move the wrong relative amounts</td><td>Far layers need <em>smaller</em> scroll scales — it&#39;s easy to get backwards</td></tr><tr><td>Repeat looks stretched</td><td>Don&#39;t scale the sprite; set Repeat Size to the <strong>scaled</strong> width if you must</td></tr></tbody></table></div>

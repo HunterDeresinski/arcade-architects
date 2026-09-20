@@ -1,0 +1,134 @@
+<p>⬅️ <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a> · 🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a></p>
+<p><strong>Today you will:</strong> finish, present, and celebrate. <strong>Feature freeze is in effect from minute one.</strong> The Arcade Showcase is <strong>4:00–6:00 PM</strong> and families are coming.</p>
+<p><strong>References today:</strong> <a class="wikilink" href="#/mvp-checklist" data-note="mvp-checklist">MVP Checklist</a> · <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a> · <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> · <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a> · <a class="wikilink" href="#/exporting-your-game" data-note="exporting-your-game">Exporting Your Game</a> · <a class="wikilink" href="#/where-to-keep-going" data-note="where-to-keep-going">Where to Keep Going</a> · <a class="wikilink" href="#/one-sentence-pitch" data-note="one-sentence-pitch">One-Sentence Pitch</a></p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Use your checklist</span></div><div class="callout__body"><p>Pick up the <strong>Day 5 Student Checklist</strong> from your instructor. The 3 PM deadline is real — use the checklist to make sure you hit every item in time.</p>
+</div></div><hr>
+<h2 id="the-big-idea" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#the-big-idea" aria-label="Link to this section">#</a>The big idea</h2><p>A &quot;finished&quot; tiny game isn&#39;t one with the most features — it&#39;s one that <strong>doesn&#39;t break, has a name, and lets the player start over.</strong> Your game is already playable. Today you make it <em>feel</em> done. No new mechanics. Bug fixes, title screen, sound, and a little juice only.</p>
+<p>INSERT IMAGE HERE</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Feature freeze — this means you</span></div><div class="callout__body"><p>If it wasn&#39;t playable yesterday, it is being <strong>cut</strong>, not added. Adding new features today is how games crash in front of an audience. If you catch yourself saying &quot;we just need to add one more thing&quot; — that&#39;s the freeze talking. The answer is no.</p>
+</div></div><hr>
+<h2 id="the-clock-today" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#the-clock-today" aria-label="Link to this section">#</a>The Clock Today</h2><div class="table-wrap"><table><thead><tr><th>Block</th></tr></thead><tbody><tr><td>Stand-up + feature freeze reminder</td></tr><tr><td>Polish sprint</td></tr><tr><td>☕ Break</td></tr><tr><td>Presentation prep</td></tr><tr><td>Dress rehearsal (each team ~5 min)</td></tr><tr><td>Final polish · Load build onto demo machine</td></tr><tr><td>🚨 Hard build deadline</td></tr><tr><td>Set up arcade stations · Break + get ready</td></tr><tr><td>🕹️ Arcade Showcase</td></tr></tbody></table></div><hr>
+<h2 id="stand-up-feature-freeze-reminder" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#stand-up-feature-freeze-reminder" aria-label="Link to this section">#</a>Stand-Up + Feature Freeze Reminder</h2><p>Same format as Day 4 — 60 seconds per team, Producer speaks:</p>
+<ol>
+<li>What state is the game in right now?</li>
+<li>What&#39;s the one most important polish item for this morning?</li>
+<li>Is there anything that might prevent a working build by 3 PM?</li>
+</ol>
+<p>After each team: your instructor confirms the feature freeze. <strong>You are building nothing new today — only making what exists better or more stable.</strong></p>
+<hr>
+<h2 id="polish-sprint" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#polish-sprint" aria-label="Link to this section">#</a>Polish Sprint</h2><p>Work through the polish checklist in <strong>this order.</strong> Do not skip ahead.</p>
+<h3 id="polish-checklist-priority-order" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#polish-checklist-priority-order" aria-label="Link to this section">#</a>Polish checklist (priority order)</h3><p><strong>1. No crashes</strong> — play your game for 3 full minutes. Write down every crash or softlock. Fix those first. Nothing else matters if the game crashes in front of an audience.</p>
+<p><strong>2. Title screen</strong> — does your game have one? It needs:</p>
+<ul>
+<li>Your game&#39;s name (big and readable)</li>
+<li>Your team members&#39; names</li>
+<li>A &quot;Press any key&quot; or &quot;Start&quot; button that leads to the game</li>
+<li>See <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a> for how to load scenes on button press.</li>
+</ul>
+<p><strong>3. Restart works cleanly</strong> — after losing (or winning), can the player try again? Test the full loop: start → play → lose → restart → play again. Does it work every time?</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># Simplest restart button in a game-over screen:
+func _on_restart_button_pressed():
+	get_tree().reload_current_scene()</code></pre></div><p><strong>4. Sound</strong> — at least one of these:</p>
+<ul>
+<li>Background music that plays during the game (see <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a>)</li>
+<li>A sound effect when the player dies, wins, collects something, or scores</li>
+<li>Both is better than one, but one is required</li>
+</ul>
+<p><strong>5. Juice (only if 1–4 are completely solid):</strong></p>
+<p>Pick whichever fits your game — each is a self-contained addition to a script you already have. Full code and setup steps for all four are in <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>:</p>
+<ul>
+<li><strong>Camera shake when the player is hit</strong> — a <code>Camera2D</code> + a short tween. Biggest wow for the least code.</li>
+<li><strong>A scale pop when a pickup is collected</strong> — the pickup grows for a split second before it <code>queue_free()</code>s.</li>
+<li><strong>A flashing player when in danger</strong> — a <code>Timer</code> toggling sprite visibility.</li>
+<li><strong>A particle burst on death</strong> — a <code>GPUParticles2D</code> in your main scene, triggered from <code>game_over()</code>.</li>
+</ul>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Juice is last for a reason</span></div><div class="callout__body"><p>Juice can break your game if added quickly. If any of items 1–4 aren&#39;t solid, skip juice entirely. A stable boring game beats a sparkly crashing one.</p>
+</div></div><h3 id="other-polish-ideas-if-you-have-time" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#other-polish-ideas-if-you-have-time" aria-label="Link to this section">#</a>Other polish ideas (if you have time)</h3><ul>
+<li>Add credits to your title screen or a pause screen</li>
+<li>Smooth out any visual jitter in your player&#39;s movement</li>
+<li>Add a high score that persists through restarts (see <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a>)</li>
+<li>Make sure all text is readable — white on light = invisible</li>
+</ul>
+<hr>
+<h2 id="break" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#break" aria-label="Link to this section">#</a>☕ Break</h2><p>Step away for 10 minutes. Come back fresh for presentation prep.</p>
+<hr>
+<h2 id="presentation-prep" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#presentation-prep" aria-label="Link to this section">#</a>Presentation Prep</h2><p>Your presentation will be <strong>3–4 minutes</strong> during the showcase. Every team member has a role. Decide now who does what.</p>
+<h3 id="your-presentation-has-four-parts" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#your-presentation-has-four-parts" aria-label="Link to this section">#</a>Your presentation has four parts</h3><p>Write each one on an index card:</p>
+<p><strong>Part 1: Game name + one-sentence pitch</strong>
+Say your game&#39;s name. Then say your pitch from <a class="wikilink" href="#/one-sentence-pitch" data-note="one-sentence-pitch">One-Sentence Pitch</a>.
+<em>&quot;Our game is called Lantern Run. You are a single firefly who must light 10 lanterns before dawn.&quot;</em></p>
+<p><strong>Part 2: Live demo</strong>
+One teammate plays the game live. One teammate narrates what&#39;s happening — point out the mechanic, the tension, the win/lose state. Don&#39;t over-explain. Let the game speak.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Demo tip</span></div><div class="callout__body"><p>Play for 60–90 seconds max. Reach a game-over state on purpose if you can — it shows the full loop.</p>
+</div></div><p><strong>Part 3: One hard thing</strong>
+Pick one thing that was genuinely difficult to build — a bug that took an hour, a mechanic that required a new idea, a design decision your team disagreed on. Tell that story in 30 seconds.</p>
+<p><strong>Part 4: One wish</strong>
+If you had one more week, what&#39;s the one feature you&#39;d add? One sentence. Make it specific — not &quot;more levels&quot; but &quot;a level where the gravity flips.&quot;</p>
+<h3 id="practice-your-parts" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#practice-your-parts" aria-label="Link to this section">#</a>Practice your parts</h3><ol>
+<li>Each person says their part out loud — not to each other, to the room (or to a pretend audience).</li>
+<li>Set a timer for <strong>4 minutes</strong> and do a quick run-through together. Are you over? Cut something.</li>
+<li>Decide: who holds the keyboard during the demo? Who narrates? Who presents parts 3 and 4?</li>
+</ol>
+<hr>
+<h2 id="dress-rehearsal" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#dress-rehearsal" aria-label="Link to this section">#</a>Dress Rehearsal</h2><p>Full run-through for every team. Your instructor watches and gives feedback.</p>
+<p><strong>For each team (~5 minutes):</strong></p>
+<ol>
+<li>Stand up. Introduce your team.</li>
+<li>Say your pitch.</li>
+<li>Play the demo.</li>
+<li>Tell the hard thing.</li>
+<li>Tell the wish.</li>
+<li>Your instructor gives 1 minute of feedback: <em>what worked, what to tighten.</em></li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">The most common feedback</span></div><div class="callout__body"><ul>
+<li>&quot;We couldn&#39;t see the screen well enough — can you make the window bigger?&quot;</li>
+<li>&quot;The demo went too long — pick a shorter gameplay loop.&quot;</li>
+<li>&quot;We didn&#39;t know the game&#39;s name — say it louder and earlier.&quot;</li>
+</ul>
+</div></div><p>After dress rehearsal: write down the one thing you&#39;re changing based on feedback. Then go fix it.</p>
+<p><strong>Checkpoint:</strong> ✅ All four presentation parts prepared · ✅ Full rehearsal completed · ✅ Team knows who does what.</p>
+<hr>
+<h2 id="final-polish-load-onto-demo-machine" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#final-polish-load-onto-demo-machine" aria-label="Link to this section">#</a>Final Polish + Load onto Demo Machine</h2><h3 id="get-your-build-on-the-demo-machine" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#get-your-build-on-the-demo-machine" aria-label="Link to this section">#</a>Get your build on the demo machine</h3><p>This is the most important task of the afternoon. Do not leave it until 2:45.</p>
+<ol>
+<li><strong>Export your game OR prepare to run from the editor</strong> on the showcase machine. See <a class="wikilink" href="#/exporting-your-game" data-note="exporting-your-game">Exporting Your Game</a>.</li>
+<li>If exporting: <strong>Project → Export</strong> → add a preset for your platform → Export Project. Test the exported file on the demo machine before calling it done.</li>
+<li>If running from the editor: copy your entire project folder to the showcase machine. Open it in Godot. Press <strong>F5</strong> and make sure it runs.</li>
+<li>Play the full loop on the showcase machine once: start, play, die, restart. Confirm it works.</li>
+</ol>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Export early</span></div><div class="callout__body"><p>Export issues are the #1 last-minute crisis. Audio not loading, a missing asset, a path that only worked on your machine — these all take time to debug. Start this process by 1 PM at the latest.</p>
+</div></div><h3 id="final-polish-window-12-00-3-00" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#final-polish-window-12-00-3-00" aria-label="Link to this section">#</a>Final polish window (12:00–3:00)</h3><p>While one person handles the build export, the rest of the team does final polish from the checklist. <strong>No new features.</strong> This means:</p>
+<ul>
+<li>Bug fixes only</li>
+<li>Text readability</li>
+<li>Volume levels on audio</li>
+<li>Making sure the title screen looks clean</li>
+</ul>
+<h3 id="3-pm-hard-deadline" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#3-pm-hard-deadline" aria-label="Link to this section">#</a>3 PM — 🚨 Hard deadline</h3><p>At 3:00 PM, all changes stop. The build on the demo machine is the build. Practice your presentation one more time, then set up your station.</p>
+<hr>
+<h2 id="arcade-station-setup-break" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#arcade-station-setup-break" aria-label="Link to this section">#</a>Arcade Station Setup + Break</h2><ol>
+<li><strong>Set up your arcade station:</strong><ul>
+<li>Position the demo machine so the screen faces the room</li>
+<li>Put a printed or handwritten <strong>name card</strong> for your game at the station</li>
+<li>If you have controllers or special input, set them up and label them</li>
+</ul>
+</li>
+<li><strong>Break:</strong> you&#39;ve been working all day. Eat something, take a breath. The showcase is yours to enjoy.</li>
+<li><strong>Take your game home:</strong> before the showcase, email yourself the project folder, put it on a USB, or upload to itch.io. See <a class="wikilink" href="#/exporting-your-game" data-note="exporting-your-game">Exporting Your Game</a> and <a class="wikilink" href="#/where-to-keep-going" data-note="where-to-keep-going">Where to Keep Going</a>.</li>
+</ol>
+<hr>
+<h2 id="arcade-showcase" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#arcade-showcase" aria-label="Link to this section">#</a>🕹️ Arcade Showcase</h2><h3 id="run-of-show" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#run-of-show" aria-label="Link to this section">#</a>Run of show</h3><div class="table-wrap"><table><thead><tr><th>Time</th><th>What happens</th></tr></thead><tbody><tr><td>4:00–4:15</td><td>Doors open · Games running at stations · Families explore freely</td></tr><tr><td>4:15–5:00</td><td>Team presentations (3–4 min each + applause)</td></tr><tr><td>5:00–5:45</td><td>Open arcade — everyone plays everything · Audience votes with tickets</td></tr><tr><td>5:45–6:00</td><td>Awards, superlatives, certificates, and what&#39;s next</td></tr></tbody></table></div><h3 id="the-presentations" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#the-presentations" aria-label="Link to this section">#</a>The presentations</h3><p>Stay at your station until your team is called. When it&#39;s your turn:</p>
+<ol>
+<li>Walk to the front (or stay at your station — your instructor will direct you).</li>
+<li>Deliver your four-part presentation. You&#39;ve rehearsed this. You&#39;ve got it.</li>
+<li>Take questions from the audience if there are any — &quot;what made that hard?&quot; is a great answer.</li>
+</ol>
+<h3 id="open-arcade-voting" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#open-arcade-voting" aria-label="Link to this section">#</a>Open arcade + voting</h3><p>During the open arcade, <strong>play every other team&#39;s game</strong> — your Day 2 remixes are also on display. Families and guests will vote for superlatives using tickets:</p>
+<ul>
+<li>🏆 Most Creative</li>
+<li>🎮 Best Feel (most fun to play)</li>
+<li>😂 Funniest</li>
+<li>🎨 Best Title Screen</li>
+</ul>
+<p>You can vote too — not for your own game.</p>
+<h3 id="awards-certificates" class="heading"><a class="heading__anchor" href="#/day-5-polish-and-showcase#awards-certificates" aria-label="Link to this section">#</a>Awards + certificates</h3><p>Every team wins at least one superlative. Every camper gets a <strong>Girls Who Game certificate</strong> for completing the camp.</p>
+<p>Before you leave: pick up a copy of <strong><a class="wikilink" href="#/where-to-keep-going" data-note="where-to-keep-going">Where to Keep Going</a></strong> — it has Godot tutorials, game jam info, and communities to join so this week isn&#39;t the end.</p>

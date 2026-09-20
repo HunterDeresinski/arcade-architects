@@ -1,0 +1,63 @@
+{
+  "vaultPath": "/home/phantumdev/Documents/Obsidian Vaults/My Vault",
+  "curriculumPath": "02 - Projects/Girls Who Game/Curriculum Development/Arcade Architects",
+
+  "siteTitle": "Arcade Architects",
+  "siteTagline": "A five-day tiny games camp, built in Godot 4",
+  "siteFooter": "COMO Girls Who Game — an independent nonprofit in Columbia, Missouri",
+
+  "excludePaths": [
+    "3 - Instructor Guides"
+  ],
+
+  "excludeNotes": [],
+
+  "stripSections": [
+    "Instructor Notes",
+    "Instructor notes",
+    "Facilitator prep",
+    "Pacing notes",
+    "Differentiation",
+    "Differentiation Cheat Sheet",
+    "Materials & Prep Checklist",
+    "Assessment (informal)"
+  ],
+
+  "stripLines": [
+    "INSERT IMAGE HERE!"
+  ],
+
+  "sections": {
+    "1 - Daily Lessons": {
+      "title": "Daily Lessons",
+      "icon": "📅",
+      "blurb": "Monday through Friday, start to finish."
+    },
+    "2 - Godot Reference": {
+      "title": "Godot Reference",
+      "icon": "🎮",
+      "blurb": "How do I actually do it? Copy-paste Godot 4 code."
+    },
+    "0 - Foundations": { "title": "Foundations", "icon": "🧱" },
+    "1 - Node Info": { "title": "Node Info", "icon": "🧩" },
+    "2 - Mechanics": { "title": "Mechanics", "icon": "⚙️" },
+    "3 - Extras": { "title": "Extras", "icon": "🧰" },
+    "Tier 2 - Showcase Payoff": { "title": "Tier 2 — Showcase Payoff", "icon": "⭐" },
+    "Tier 3 - Genre Unlocks": { "title": "Tier 3 — Genre Unlocks", "icon": "🔓" },
+    "Tier 4 - Worth Knowing": { "title": "Tier 4 — Worth Knowing", "icon": "📘" },
+    "Tier 5 - After Camp": { "title": "Tier 5 — After Camp", "icon": "🚀" },
+    "3 - Design & Teamwork": {
+      "title": "Design & Teamwork",
+      "icon": "🧠",
+      "blurb": "How to make a good tiny game with other people."
+    },
+    "4 - Resources": {
+      "title": "Resources",
+      "icon": "📚",
+      "blurb": "Assets, glossary, and where to go next."
+    }
+  },
+
+  "homeNote": "Curriculum Map",
+  "startHereNote": "Day 1 - Meet Godot"
+}

@@ -1,0 +1,115 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-3-index" data-note="tier-3-index">Tier 3 — Genre Unlocks</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ high · <strong>Time:</strong> 40 minutes</p>
+<p>A sword swing, a punch, a spear jab. <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> covers shooting; this covers hitting things that are right in front of you — which is what roughly half of teams actually want.</p>
+<h2 id="the-idea-a-hitbox-that-turns-on-briefly" class="heading"><a class="heading__anchor" href="#/melee-attacks#the-idea-a-hitbox-that-turns-on-briefly" aria-label="Link to this section">#</a>The idea: a hitbox that turns on briefly</h2><p>A melee attack is an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> that is <strong>off most of the time</strong> and <strong>on for a fraction of a second</strong>. Everything else is timing and feel.</p>
+<p><strong>Hitbox</strong> = deals damage. <strong>Hurtbox</strong> = receives it. Keep the words straight and the rest follows (<a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a>).</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player                 (CharacterBody2D)  Layer: player, Mask: obstacles
+├── Sprite              (AnimatedSprite2D)
+├── Shape               (CollisionShape2D)
+├── Hurtbox             (Area2D)  Mask: mobs, hazards       ← takes damage
+│   └── HurtShape
+└── SwordPivot          (Node2D)                            ← rotate this to aim
+    └── Hitbox          (Area2D)  Layer: none, Mask: mobs   ← deals damage
+        └── HitShape    (CollisionShape2D)  disabled by default</code></pre></div><p>The <strong>SwordPivot</strong> is a plain <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Node2D</a> with the Hitbox offset to the right of it. Rotate the pivot and the whole swing arc rotates with it — the same trick as the orbiting spike ball.</p>
+<h2 id="the-attack-script" class="heading"><a class="heading__anchor" href="#/melee-attacks#the-attack-script" aria-label="Link to this section">#</a>The attack script</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var damage = 1
+@export var attack_duration = 0.15
+
+var is_attacking = false
+
+func _ready():
+	$SwordPivot/Hitbox.monitoring = false
+	$SwordPivot.hide()
+
+func _physics_process(_delta):
+	# ...your normal movement...
+	face_attack_direction()
+
+	if Input.is_action_just_pressed(&quot;attack&quot;) and not is_attacking and $AttackCooldown.is_stopped():
+		attack()
+
+func face_attack_direction():
+	if is_attacking:
+		return                                   # don't re-aim mid-swing
+	var aim = Input.get_vector(&quot;move_left&quot;, &quot;move_right&quot;, &quot;move_up&quot;, &quot;move_down&quot;)
+	if aim != Vector2.ZERO:
+		$SwordPivot.rotation = aim.angle()
+
+func attack():
+	is_attacking = true
+	$AttackCooldown.start()
+	$SwingSound.play()
+	$Sprite.play(&quot;attack&quot;)
+
+	$SwordPivot.show()
+	$SwordPivot/Hitbox.monitoring = true
+	swing_animation()
+
+	await get_tree().create_timer(attack_duration).timeout
+
+	$SwordPivot/Hitbox.monitoring = false
+	$SwordPivot.hide()
+	is_attacking = false
+
+func swing_animation():
+	var start = $SwordPivot.rotation - 0.7
+	var end   = $SwordPivot.rotation + 0.7
+	$SwordPivot.rotation = start
+	create_tween().tween_property($SwordPivot, &quot;rotation&quot;, end, attack_duration)</code></pre></div><p>Add <code>attack</code> to <strong>Project Settings → Input Map</strong> (J, Z, or left mouse are all fine), and an <code>AttackCooldown</code> <a class="wikilink" href="#/timer" data-note="timer">Timer</a> (One Shot ✅, Wait Time ~`0.35`).</p>
+<p><code>monitoring = false</code> is cleaner than disabling the shape — no <code>set_deferred</code> needed (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>).</p>
+<h2 id="dealing-the-damage" class="heading"><a class="heading__anchor" href="#/melee-attacks#dealing-the-damage" aria-label="Link to this section">#</a>Dealing the damage</h2><p>Connect the Hitbox&#39;s <strong><code>body_entered</code></strong> (or <code>area_entered</code> if your enemies use hurtboxes):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hitbox_body_entered(body):
+	if body.has_method(&quot;take_damage&quot;):
+		body.take_damage(damage)
+		knockback(body)
+		hit_stop()</code></pre></div><p><code>has_method(&quot;take_damage&quot;)</code> means the same sword hurts enemies, breakable crates, and boss weak points without any special cases (<a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>).</p>
+<h2 id="the-three-things-that-make-melee-feel-good" class="heading"><a class="heading__anchor" href="#/melee-attacks#the-three-things-that-make-melee-feel-good" aria-label="Link to this section">#</a>The three things that make melee feel good</h2><p>Melee lives or dies on feedback. A sword that silently deletes an enemy feels like nothing. These three take about ten minutes total and they&#39;re the whole difference.</p>
+<p><strong>1. Knockback</strong> — shove the target away:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func knockback(target):
+	if not &quot;knockback_velocity&quot; in target:
+		return
+	var dir = (target.global_position - global_position).normalized()
+	target.knockback_velocity = dir * 350.0</code></pre></div><p>On the enemy:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var knockback_velocity = Vector2.ZERO
+
+func _physics_process(delta):
+	if knockback_velocity.length() &gt; 5:
+		velocity = knockback_velocity
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, 900 * delta)
+	else:
+		# ...normal AI movement...
+		pass
+	move_and_slide()</code></pre></div><p><strong>2. Hit-stop</strong> — freeze the whole game for a few frames on impact. This is the secret ingredient in every game that feels good to hit things in:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func hit_stop(duration = 0.06):
+	Engine.time_scale = 0.05
+	await get_tree().create_timer(duration * 0.05, true, false, true).timeout
+	Engine.time_scale = 1.0</code></pre></div><p>The <code>true</code> flags make the timer ignore <code>time_scale</code>, so it isn&#39;t slowed by the very slowdown it&#39;s timing. Sixty milliseconds is invisible as a pause and enormous as a feeling.</p>
+<p><strong>3. A flash and a sound.</strong> The enemy flashes white, a sound plays. Both are in <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>. Add a little <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> shake on a heavy hit.</p>
+<h2 id="better-timing-with-animationplayer" class="heading"><a class="heading__anchor" href="#/melee-attacks#better-timing-with-animationplayer" aria-label="Link to this section">#</a>Better timing with AnimationPlayer</h2><p>The version above uses a fixed <code>attack_duration</code>. Better: let the <strong>animation</strong> decide exactly when the blade is dangerous, using Call Method tracks (<a class="wikilink" href="#/animationplayer" data-note="animationplayer">AnimationPlayer</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># these get called by keyframes on the attack animation's timeline
+func enable_hitbox():  $SwordPivot/Hitbox.monitoring = true
+func disable_hitbox(): $SwordPivot/Hitbox.monitoring = false</code></pre></div><p>Now the designer tunes the attack by <strong>dragging keyframes</strong> — wind-up, active frames, recovery — instead of guessing at numbers. This is how fighting games are built.</p>
+<h2 id="variations" class="heading"><a class="heading__anchor" href="#/melee-attacks#variations" aria-label="Link to this section">#</a>Variations</h2><p><strong>Charge attack</strong> — hold to charge, release for more damage:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if Input.is_action_pressed(&quot;attack&quot;):
+	charge = min(charge + delta, 1.5)
+	$ChargeBar.value = charge / 1.5
+elif Input.is_action_just_released(&quot;attack&quot;) and charge &gt; 0:
+	damage = 1 + int(charge * 2)
+	attack()
+	charge = 0.0</code></pre></div><p><strong>Combo</strong> — chain up to three swings if you press again during the recovery window. Track <code>combo_index</code>, reset it with a Timer.</p>
+<p><strong>Spin attack</strong> — rotate the pivot a full <code>TAU</code> and leave the hitbox on for the whole rotation.</p>
+<p><strong>Stomp</strong> (jump on their head) — no hitbox needed; already covered in <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a>.</p>
+<p><strong>Enemy melee</strong> — the mirror image: an enemy hitbox masking <em>player</em>, telegraphed by a wind-up animation. <strong>Always telegraph.</strong> An enemy that attacks instantly is unfair; one that raises its arm for 0.4 seconds first is a fight.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/melee-attacks#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Sword hits nothing</td><td>Hitbox <code>monitoring</code> never turned on, missing <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a>, or mask doesn&#39;t include <em>mobs</em></td></tr><tr><td>One swing kills everything on screen</td><td>Hitbox is enormous, or it never turns off</td></tr><tr><td>Enemy takes damage many times per swing</td><td>Add an <code>already_hit</code> array cleared at the start of each attack</td></tr><tr><td>Sword hurts the player</td><td>Hitbox layer is <em>mobs</em>, or the player&#39;s Hurtbox masks its own hitbox</td></tr><tr><td>Attack feels floaty</td><td>You&#39;re missing knockback and hit-stop, not damage numbers</td></tr><tr><td>Can attack infinitely fast</td><td><code>AttackCooldown</code> not started, or One Shot is off</td></tr></tbody></table></div><p>The multi-hit fix:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var already_hit = []
+
+func attack():
+	already_hit.clear()
+	# ...rest of attack...
+
+func _on_hitbox_body_entered(body):
+	if body in already_hit:
+		return
+	already_hit.append(body)
+	# ...deal damage...</code></pre></div>

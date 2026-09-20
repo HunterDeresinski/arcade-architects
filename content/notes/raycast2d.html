@@ -1,0 +1,48 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-4-index" data-note="tier-4-index">Tier 4 — Worth Knowing</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐ solid · <strong>Time:</strong> 20 minutes</p>
+<p>An invisible laser pointer that reports the first thing it hits. Used for ground checks, ledge detection, line of sight, vision cones, and hitscan weapons.</p>
+<h2 id="setup" class="heading"><a class="heading__anchor" href="#/raycast2d#setup" aria-label="Link to this section">#</a>Setup</h2><p>Add a <strong>RayCast2D</strong> child. Two properties matter:</p>
+<ul>
+<li><strong>Target Position</strong> — where the ray points, <strong>relative to the node</strong>. <code>(0, 40)</code> points 40px down. You can see the line in the editor.</li>
+<li><strong>Enabled</strong> — must be checked, or it does nothing.</li>
+</ul>
+<p>Set its <strong>collision mask</strong> to what it should notice (<a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a>).</p>
+<h2 id="reading-it" class="heading"><a class="heading__anchor" href="#/raycast2d#reading-it" aria-label="Link to this section">#</a>Reading it</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if $RayCast2D.is_colliding():
+	var what  = $RayCast2D.get_collider()          # the node it hit
+	var where = $RayCast2D.get_collision_point()   # global position of the hit
+	var norm  = $RayCast2D.get_collision_normal()  # surface direction</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Rays update once per physics frame</span></div><div class="callout__body"><p>If you move or rotate a ray and check it in the same frame, you get the old answer. Call <code>$RayCast2D.force_raycast_update()</code> first.</p>
+</div></div><h2 id="what-people-actually-use-it-for" class="heading"><a class="heading__anchor" href="#/raycast2d#what-people-actually-use-it-for" aria-label="Link to this section">#</a>What people actually use it for</h2><p><strong>Ledge detection — an enemy that doesn&#39;t walk off cliffs.</strong> The single most useful raycast in a platformer. Point a ray down, just in front of the enemy&#39;s feet:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func do_patrol(_delta):
+	velocity.x = direction * speed
+	if is_on_wall() or not $LedgeCheck.is_colliding():
+		direction *= -1
+		$LedgeCheck.position.x = 12 * direction    # move the ray to the new front</code></pre></div><p>Upgrade this straight into <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a> — it&#39;s the difference between a Goomba and a Goomba that keeps falling in the pit.</p>
+<p><strong>Line of sight — an enemy that can&#39;t see through walls.</strong> Fixes the main weakness of <a class="wikilink" href="#/enemy-states" data-note="enemy-states">Enemy States</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func can_see_player():
+	if player == null:
+		return false
+	$SightRay.target_position = to_local(player.global_position)
+	$SightRay.force_raycast_update()
+	if not $SightRay.is_colliding():
+		return true
+	return $SightRay.get_collider() == player      # hit the player first = clear view</code></pre></div><p>Set the ray&#39;s mask to <em>obstacles</em> <strong>and</strong> <em>player</em>, so whichever comes first tells you the truth.</p>
+<p><strong>A vision cone (stealth games).</strong> Three or five rays fanned out, plus an angle check:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func player_in_cone():
+	var to_player = player.global_position - global_position
+	var facing = Vector2.RIGHT.rotated(rotation)
+	if to_player.length() &gt; view_distance:
+		return false
+	if facing.angle_to(to_player) &gt; deg_to_rad(35):    # 70-degree cone
+		return false
+	return can_see_player()                            # and nothing blocking</code></pre></div><p><strong>A hitscan weapon</strong> — a laser that hits instantly, no bullet to travel:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func fire_laser():
+	$Ray.target_position = Vector2(1200, 0)
+	$Ray.force_raycast_update()
+	var end = $Ray.get_collision_point() if $Ray.is_colliding() else $Ray.to_global(Vector2(1200,0))
+	$Line2D.points = [Vector2.ZERO, $Line2D.to_local(end)]
+	if $Ray.is_colliding() and $Ray.get_collider().has_method(&quot;take_damage&quot;):
+		$Ray.get_collider().take_damage(1)</code></pre></div><p>Pairs with <a class="wikilink" href="#/line2d" data-note="line2d">Line2D</a> for the visible beam.</p>
+<p><strong>Wall-jump detection</strong> — a ray each side; if it&#39;s colliding and you&#39;re not on the floor, you can wall-jump (<a class="wikilink" href="#/dash-and-double-jump" data-note="dash-and-double-jump">Dash and Double Jump</a>).</p>
+<p><strong>&quot;Press E to open&quot;</strong> — a short forward ray finds the nearest interactable, better than an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> when you want <em>the one you&#39;re facing</em> (<a class="wikilink" href="#/doors-and-keys" data-note="doors-and-keys">Doors and Keys</a>).</p>
+<h2 id="shapecast2d" class="heading"><a class="heading__anchor" href="#/raycast2d#shapecast2d" aria-label="Link to this section">#</a>ShapeCast2D</h2><p>A <strong>ShapeCast2D</strong> is the same idea with a whole shape instead of a line, and it can report <em>several</em> hits. Use it when a thin ray keeps slipping past small objects.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/raycast2d#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Always returns false</td><td><strong>Enabled</strong> unchecked, or the mask doesn&#39;t include the target&#39;s layer</td></tr><tr><td>Stale results after rotating</td><td><code>force_raycast_update()</code> before reading</td></tr><tr><td>Hits the node that owns it</td><td><code>add_exception(self)</code>, or put the parent on a layer the ray ignores</td></tr><tr><td>Ray points the wrong way</td><td>Target Position is <strong>relative</strong>, not a world coordinate</td></tr><tr><td>Ignores an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a></td><td>Check <strong>Collide With Areas</strong> in the Inspector — off by default</td></tr></tbody></table></div>

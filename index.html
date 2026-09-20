@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arcade Architects</title>
+<meta name="description" content="Arcade Architects — a five-day tiny games camp built in Godot 4. Daily lessons, a full Godot reference, and design guides.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#070b1f">
+
+<meta property="og:title" content="Arcade Architects">
+<meta property="og:description" content="A five-day tiny games camp, built in Godot 4.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23070b1f'/><rect x='18' y='34' width='64' height='40' rx='10' fill='%23ff2e88'/><rect x='28' y='48' width='14' height='5' fill='%23070b1f'/><rect x='32' y='44' width='6' height='13' fill='%23070b1f'/><circle cx='64' cy='48' r='4.5' fill='%232ae0f0'/><circle cx='73' cy='57' r='4.5' fill='%23ffc93c'/></svg>">
+</head>
+<body>
+
+<div class="scanlines" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <button class="iconbtn topbar__menu" id="menuBtn" aria-label="Open navigation" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+
+  <a class="brand" href="#/" aria-label="Arcade Architects home">
+    <svg class="brand__mark" viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="10" y="30" width="80" height="48" rx="12" class="brand__body"/>
+      <rect x="23" y="49" width="18" height="6" rx="1.5" class="brand__cut"/>
+      <rect x="29" y="43" width="6" height="18" rx="1.5" class="brand__cut"/>
+      <circle cx="64" cy="48" r="5.5" class="brand__a"/>
+      <circle cx="75" cy="59" r="5.5" class="brand__b"/>
+    </svg>
+    <span class="brand__text">
+      <span class="brand__title">Arcade Architects</span>
+      <span class="brand__sub">Tiny games camp · Godot 4</span>
+    </span>
+  </a>
+
+  <div class="topbar__spacer"></div>
+
+  <button class="searchbtn" id="searchBtn" aria-label="Search the curriculum">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+    <span class="searchbtn__label">Search</span>
+    <kbd class="searchbtn__kbd"><span id="kbdMod">Ctrl</span> K</kbd>
+  </button>
+
+  <button class="iconbtn" id="themeBtn" aria-label="Switch colour theme">
+    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>
+  </button>
+</header>
+
+<div class="shell">
+  <div class="scrim" id="scrim" hidden></div>
+
+  <nav class="sidebar" id="sidebar" aria-label="Curriculum">
+    <div class="sidebar__inner">
+      <div class="sidebar__filter">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+        <input type="search" id="navFilter" placeholder="Filter pages" aria-label="Filter pages in the sidebar" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="nav" id="nav"></div>
+    </div>
+  </nav>
+
+  <main class="main" id="main" tabindex="-1">
+    <div class="view" id="view"><div class="loading">Loading the curriculum…</div></div>
+    <footer class="sitefoot">
+      <p id="footText"></p>
+      <p class="sitefoot__meta">Built from the camp vault · <span id="stamp"></span></p>
+    </footer>
+  </main>
+
+  <aside class="toc" id="toc" aria-label="On this page"></aside>
+</div>
+
+<div class="palette" id="palette" hidden>
+  <div class="palette__scrim" data-close></div>
+  <div class="palette__box" role="dialog" aria-modal="true" aria-label="Search the curriculum">
+    <div class="palette__input">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></svg>
+      <input type="search" id="q" placeholder="Search lessons, nodes, mechanics…" autocomplete="off" spellcheck="false" aria-label="Search query">
+      <button class="iconbtn" data-close aria-label="Close search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="palette__results" id="results"></div>
+    <div class="palette__foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> move</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox__close" aria-label="Close image">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <img id="lightboxImg" alt="">
+</div>
+
+<script src="assets/js/app.js" type="module"></script>
+</body>
+</html>

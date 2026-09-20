@@ -1,0 +1,82 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a></p>
+<p>How to make something move when the player presses a key. Builds on <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a>.</p>
+<h2 id="day-1-tutorial-movement-on-an-area2d" class="heading"><a class="heading__anchor" href="#/movement-and-input#day-1-tutorial-movement-on-an-area2d" aria-label="Link to this section">#</a>Day 1 tutorial: movement on an Area2D</h2><p>Dodge the Creeps uses <code>Area2D</code> (not CharacterBody2D) for the player. The movement lives in <code>_process()</code> and moves the position directly:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var speed = 400
+var screen_size
+
+func _ready():
+	screen_size = get_viewport_rect().size
+
+func _process(delta):
+	var velocity = Vector2.ZERO
+	if Input.is_action_pressed(&quot;move_right&quot;):
+		velocity.x += 1
+	if Input.is_action_pressed(&quot;move_left&quot;):
+		velocity.x -= 1
+	if Input.is_action_pressed(&quot;move_down&quot;):
+		velocity.y += 1
+	if Input.is_action_pressed(&quot;move_up&quot;):
+		velocity.y -= 1
+
+	if velocity.length() &gt; 0:
+		velocity = velocity.normalized() * speed
+
+	position += velocity * delta
+	position = position.clamp(Vector2.ZERO, screen_size)</code></pre></div><ul>
+<li><code>velocity.normalized()</code> — keeps diagonal movement from being faster than straight movement.</li>
+<li><code>position += velocity * delta</code> — moves the node directly (no physics engine involved).</li>
+<li><code>clamp()</code> — prevents the player from leaving the screen.</li>
+</ul>
+<div class="callout callout--note"><div class="callout__head"><span class="callout__icon">🗒️</span><span class="callout__title">Why Area2D here?</span></div><div class="callout__body"><p>Dodge the Creeps uses Area2D because it only needs overlap detection (hits), not physics collision. It&#39;s a simplified setup good for a first project.</p>
+</div></div><h2 id="day-3-games-movement-on-a-characterbody2d" class="heading"><a class="heading__anchor" href="#/movement-and-input#day-3-games-movement-on-a-characterbody2d" aria-label="Link to this section">#</a>Day 3+ games: movement on a CharacterBody2D</h2><p>For your own team game, <code>CharacterBody2D</code> with <code>move_and_slide()</code> is the better pattern — it handles walls and slopes properly:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 400
+
+func _physics_process(delta):
+	var direction = Vector2.ZERO
+	if Input.is_action_pressed(&quot;ui_right&quot;):
+		direction.x += 1
+	if Input.is_action_pressed(&quot;ui_left&quot;):
+		direction.x -= 1
+	if Input.is_action_pressed(&quot;ui_down&quot;):
+		direction.y += 1
+	if Input.is_action_pressed(&quot;ui_up&quot;):
+		direction.y -= 1
+
+	velocity = direction.normalized() * speed
+	move_and_slide()</code></pre></div><ul>
+<li><code>_physics_process</code> — runs at a fixed rate, better for physics-based movement.</li>
+<li><code>move_and_slide()</code> — moves the body and handles wall collisions automatically.</li>
+</ul>
+<h2 id="a-simple-enemy-that-moves-on-its-own-patrol" class="heading"><a class="heading__anchor" href="#/movement-and-input#a-simple-enemy-that-moves-on-its-own-patrol" aria-label="Link to this section">#</a>A simple enemy that moves on its own (patrol)</h2><p>The easiest self-moving enemy: walk one direction, turn around at walls.</p>
+<p><strong>Where it goes:</strong> a new scene with <code>CharacterBody2D</code> as root (rename it <code>Enemy</code>), plus a <code>Sprite2D</code> and <code>CollisionShape2D</code> as children — same structure as your player. Attach this script to the <strong>Enemy</strong> root:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 100
+var direction = 1
+
+func _physics_process(delta):
+	velocity.x = speed * direction
+	move_and_slide()
+	if is_on_wall():
+		direction *= -1</code></pre></div><ul>
+<li><code>is_on_wall()</code> — true when <code>move_and_slide()</code> just hit something solid.</li>
+<li><code>direction *= -1</code> — flips 1 to -1 and back, reversing the walk.</li>
+<li>It needs something solid to bounce off: place two <code>StaticBody2D</code> walls (each with its own <code>CollisionShape2D</code>) at the ends of the patrol path, or use your level&#39;s edges.</li>
+<li>For up-and-down patrol, use <code>velocity.y</code> instead of <code>velocity.x</code>.</li>
+</ul>
+<p>Save the scene as <code>enemy.tscn</code> and instance it into your Main scene wherever you want a patroller.</p>
+<h2 id="detecting-a-single-press-not-held" class="heading"><a class="heading__anchor" href="#/movement-and-input#detecting-a-single-press-not-held" aria-label="Link to this section">#</a>Detecting a single press (not held)</h2><p>Use this for jumps, shooting, &quot;press to start&quot;:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(delta):
+	if Input.is_action_just_pressed(&quot;ui_accept&quot;):  # Spacebar / Enter
+		print(&quot;Jump!&quot;)</code></pre></div><p><code>is_action_pressed</code> = held down. <code>is_action_just_pressed</code> = the frame you press it. Big difference.</p>
+<h2 id="keeping-the-player-on-screen" class="heading"><a class="heading__anchor" href="#/movement-and-input#keeping-the-player-on-screen" aria-label="Link to this section">#</a>Keeping the player on screen</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var screen_size = get_viewport_rect().size
+
+func _physics_process(delta):
+	# ...movement code above...
+	position = position.clamp(Vector2.ZERO, screen_size)</code></pre></div><h2 id="make-your-own-buttons" class="heading"><a class="heading__anchor" href="#/movement-and-input#make-your-own-buttons" aria-label="Link to this section">#</a>Make your own buttons</h2><p><strong>Project → Project Settings → Input Map.</strong> Add an action (e.g. <code>flap</code>), assign a key. Then <code>Input.is_action_just_pressed(&quot;flap&quot;)</code>. Great for a <a class="wikilink" href="#/constraint-cards" data-note="constraint-cards">one-button game</a>.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">To change how fast it feels</span></div><div class="callout__body"><p>Change one number: <code>@export var speed</code>. With <code>@export</code>, you can even tune it live in the Inspector — no code edit needed.</p>
+</div></div>

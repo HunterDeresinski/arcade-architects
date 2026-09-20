@@ -1,0 +1,389 @@
+<p>⬅️ <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · ➡️ <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a></p>
+<p><strong>Today you will:</strong> set up Godot, learn how it thinks, and build a complete running game — <em>Dodge the Creeps</em> — by typing real code.</p>
+<p><strong>References today:</strong> <a class="wikilink" href="#/godot-editor-tour" data-note="godot-editor-tour">Godot Editor Tour</a> · <a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a> · <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a> · <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a> · <a class="wikilink" href="#/signals" data-note="signals">Signals</a> · <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> · <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a> · <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a></p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Use your checklist</span></div><div class="callout__body"><p>Pick up the <strong>Day 1 Student Checklist</strong> from your instructor. Check off each step as you complete it. If you fall behind, find where you are on the checklist and jump back in — you don&#39;t have to start over.</p>
+</div></div><hr>
+<h2 id="the-big-idea" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#the-big-idea" aria-label="Link to this section">#</a>The big idea</h2><p>A game in Godot is a <strong>tree of nodes</strong>. Each node does one small job — show a picture, detect a hit, play a sound. You snap them together into <strong>scenes</strong>, give them scripts, and the game runs. That&#39;s the whole engine. See <a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a>.</p>
+<p>Today we follow a tutorial step-by-step. <strong>Following first, inventing second.</strong> Tomorrow you&#39;ll change everything.</p>
+<hr>
+<h2 id="schedule" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#schedule" aria-label="Link to this section">#</a>Schedule</h2><div class="table-wrap"><table><thead><tr><th>Block</th></tr></thead><tbody><tr><td>Welcome + What is a tiny game?</td></tr><tr><td>Godot tour + project setup</td></tr><tr><td><strong>Part 1:</strong> Build the Player</td></tr><tr><td>☕ Break</td></tr><tr><td><strong>Part 2:</strong> Build the Mob</td></tr><tr><td>☕ Break</td></tr><tr><td><strong>Part 3:</strong> The Main Scene</td></tr><tr><td>Exit ticket + stand-up</td></tr><tr><td>Open Studio: HUD, sound, stretch goals</td></tr></tbody></table></div><hr>
+<h2 id="welcome-what-is-a-tiny-game" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#welcome-what-is-a-tiny-game" aria-label="Link to this section">#</a>Welcome: What is a Tiny Game?</h2><p>Play 2–3 tiny games together on the projector (good picks: anything from a Pico-8 jam, a classic arcade game, a simple web game). Ask after each one: <em>&quot;What&#39;s the one idea in this game?&quot;</em></p>
+<p>Introduce the <strong>Tiny Game Rules</strong> (post these on the wall all week):</p>
+<ul>
+<li>One core idea. If you can&#39;t say it in one sentence, it&#39;s too big.</li>
+<li>Playable in under 3 minutes.</li>
+<li>Done is better than perfect.</li>
+</ul>
+<p>Then tell students what they&#39;ll build today: <strong>Dodge the Creeps</strong> — a character you move, enemies that fly in, survive as long as you can.</p>
+<hr>
+<h2 id="godot-tour-project-setup" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#godot-tour-project-setup" aria-label="Link to this section">#</a>Godot Tour + Project Setup</h2><h3 id="get-oriented-in-the-editor" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#get-oriented-in-the-editor" aria-label="Link to this section">#</a>Get oriented in the editor</h3><p>Open Godot 4. Walk students through the 5 panels:</p>
+<ul>
+<li><strong>Scene dock</strong> (top left) — your node tree</li>
+<li><strong>FileSystem dock</strong> (bottom left) — your project files</li>
+<li><strong>Viewport</strong> (center) — where you see and build the game</li>
+<li><strong>Inspector</strong> (right) — properties of whatever is selected</li>
+<li><strong>Output</strong> (bottom center) — where errors and <code>print()</code> messages appear → <a class="wikilink" href="#/godot-editor-tour" data-note="godot-editor-tour">Godot Editor Tour</a></li>
+</ul>
+<h3 id="set-up-the-project" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#set-up-the-project" aria-label="Link to this section">#</a>Set up the project</h3><ol>
+<li>Launch Godot → <strong>New Project</strong> → choose a folder → Create.</li>
+<li><ol>
+<li>Download the assets form <a href="https://drive.google.com/drive/folders/1wqOew3DKrwz67aHwSOQ6Y7oPVz6qoGCd?usp=sharing" target="_blank" rel="noopener noreferrer" class="extlink">Here</a></li>
+</ol>
+</li>
+<li>Click Compatibility
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-compatibility-1.png" alt="Day 1 - Meet Godot - Compatibility-1" loading="lazy" decoding="async"></button></span></li>
+<li>Download the starter assets from the GwG shared drive — <a href="https://drive.google.com/drive/folders/1wqOew3DKrwz67aHwSOQ6Y7oPVz6qoGCd?usp=sharing" target="_blank" rel="noopener noreferrer" class="extlink">direct link</a> (folder: <code>Arcade Architects Assets</code>). Move the <code>art/</code> and <code>fonts/</code> folders into your project folder.</li>
+<li>Once created go to <strong>Project → Project Settings → Display → Window:</strong><ul>
+<li>Set Viewport Width: <code>480</code></li>
+<li>Set Viewport Height: <code>720</code>
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot.png" alt="Day 1 - Meet Godot" loading="lazy" decoding="async"></button></span></li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>In the same window, scroll down to <strong>Stretch:</strong><ul>
+<li>Mode: <code>canvas_items</code></li>
+<li>Aspect: <code>keep</code></li>
+</ul>
+</li>
+</ul>
+<ol start="5">
+<li>Close Project Settings.</li>
+</ol>
+<div class="callout callout--note"><div class="callout__head"><span class="callout__icon">🗒️</span><span class="callout__title">Why 480×720?</span></div><div class="callout__body"><p>It&#39;s a tall phone-style screen. All the tutorial&#39;s layout and mob paths are built for this size — changing it now breaks things later.</p>
+</div></div><hr>
+<h2 id="part-1-build-the-player" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#part-1-build-the-player" aria-label="Link to this section">#</a>Part 1: Build the Player</h2><p><em>Goal by end of this block: a character on screen that moves with arrow keys.</em></p>
+<h3 id="step-1-the-player-scene-10-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-1-the-player-scene-10-min" aria-label="Link to this section">#</a>Step 1: The Player scene (10 min)</h3><ol>
+<li>In the <strong>Scene dock</strong>, click <strong>Other Node</strong> → choose <code>Area2D</code> (You can search the bar at the top) → rename it <code>Player</code> (You can click on it and press F2 to start to rename).
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-other-node.png" alt="Day 1 - Meet Godot - Other Node" loading="lazy" decoding="async"></button></span></li>
+<li>Click the <strong>Group</strong> icon in the toolbar (the icon that looks like a box with children) so clicking child nodes in the viewport selects the root.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-group-button.png" alt="Day 1 - Meet Godot - Group Button" loading="lazy" decoding="async"></button></span></li>
+<li>Save: <strong>Scene → Save Scene</strong> (<code>Ctrl+S</code>) as <code>player.tscn</code>.</li>
+</ol>
+<p>See <a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a> for why Area2D is used here.</p>
+<h3 id="step-2-add-animations-15-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-2-add-animations-15-min" aria-label="Link to this section">#</a>Step 2: Add animations (15 min)</h3><ol>
+<li>With <strong>Player</strong> selected, press <code>Ctrl+A</code> → add <strong>AnimatedSprite2D</strong>.</li>
+<li>In the Inspector, click <code>[empty]</code> next to <strong>Sprite Frames</strong> → <strong>SpriteFrames</strong>. Click the new resource to open the SpriteFrames panel at the bottom.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-empty-sprite-frames.png" alt="Day 1 - Meet Godot - Empty Sprite Frames" loading="lazy" decoding="async"></button></span>
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-new-sprite-frames.png" alt="Day 1 - Meet Godot - New Sprite Frames" loading="lazy" decoding="async"></button></span></li>
+<li>Rename the <code>default</code> animation to <code>walk</code> (you can double click it to rename.</li>
+<li>Click <strong>Add Animation</strong> (Or <code>ctrl + n</code>) → name it <code>up</code>.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-add-animation.png" alt="Day 1 - Meet Godot - Add Animation" loading="lazy" decoding="async"></button></span></li>
+<li>Drag frames from the FileSystem into each animation:<ul>
+<li><code>walk</code>: <code>playerGrey_walk1.png</code> and <code>playerGrey_walk2.png</code></li>
+<li><code>up</code>: <code>playerGrey_up1.png</code> and <code>playerGrey_up2.png</code></li>
+</ul>
+</li>
+<li>Set <strong>AnimatedSprite2D Scale</strong> to <code>(0.5, 0.5)</code> in the Inspector (under Transform).
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-scale-player-transform-1.png" alt="Day 1 - Meet Godot - Scale Player Transform-1" loading="lazy" decoding="async"></button></span></li>
+</ol>
+<h3 id="step-3-add-a-collision-shape-5-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-3-add-a-collision-shape-5-min" aria-label="Link to this section">#</a>Step 3: Add a collision shape (5 min)</h3><ol>
+<li>With <strong>Player</strong> still selected, <code>Ctrl+A</code> → add <strong>CollisionShape2D</strong>.</li>
+<li>In the Inspector, click <code>[empty]</code> next to <strong>Shape</strong> → <strong>New CapsuleShape2D</strong>.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-add-collision-player-shape.png" alt="Day 1 - Meet Godot - Add Collision Player Shape" loading="lazy" decoding="async"></button></span></li>
+<li>Drag the orange handles in the viewport to resize the capsule to match the sprite roughly.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-player-collider.png" alt="Day 1 - Meet Godot - Player Collider" loading="lazy" decoding="async"></button></span></li>
+</ol>
+<h3 id="step-4-set-up-the-input-map-5-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-4-set-up-the-input-map-5-min" aria-label="Link to this section">#</a>Step 4: Set up the Input Map (5 min)</h3><ol>
+<li><strong>Project → Project Settings → Input Map</strong> tab.</li>
+<li>Add four actions (type each name, click <strong>Add</strong>, click the <code>+</code>, press the key, click OK):<ul>
+<li><code>move_right</code> → Right arrow or D</li>
+<li><code>move_left</code> → Left arrow or A</li>
+<li><code>move_up</code> → Up arrow or W</li>
+<li><code>move_down</code> → Down arrow or S</li>
+</ul>
+</li>
+<li>Close Project Settings.</li>
+</ol>
+<h3 id="step-5-attach-the-player-script-15-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-5-attach-the-player-script-15-min" aria-label="Link to this section">#</a>Step 5: Attach the player script (15 min)</h3><ol>
+<li>Click <strong>Player</strong> in the Scene dock → click the <strong>Attach Script</strong> icon → Create. You get <code>player.gd</code>.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-add-player-script.png" alt="Day 1 - Meet Godot - Add Player Script" loading="lazy" decoding="async"></button></span>
+Replace the contents with:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+signal hit
+
+@export var speed = 400
+var screen_size
+
+func _ready():
+	screen_size = get_viewport_rect().size
+	hide()
+
+func _process(delta):
+	var velocity = Vector2.ZERO
+	if Input.is_action_pressed(&quot;move_right&quot;):
+		velocity.x += 1
+	if Input.is_action_pressed(&quot;move_left&quot;):
+		velocity.x -= 1
+	if Input.is_action_pressed(&quot;move_down&quot;):
+		velocity.y += 1
+	if Input.is_action_pressed(&quot;move_up&quot;):
+		velocity.y -= 1
+
+	if velocity.length() &gt; 0:
+		velocity = velocity.normalized() * speed
+		$AnimatedSprite2D.play()
+	else:
+		$AnimatedSprite2D.stop()
+
+	position += velocity * delta
+	position = position.clamp(Vector2.ZERO, screen_size)
+
+	if velocity.x != 0:
+		$AnimatedSprite2D.animation = &quot;walk&quot;
+		$AnimatedSprite2D.flip_v = false
+		$AnimatedSprite2D.flip_h = velocity.x &lt; 0
+	elif velocity.y != 0:
+		$AnimatedSprite2D.animation = &quot;up&quot;
+		$AnimatedSprite2D.flip_v = velocity.y &gt; 0
+
+func _on_body_entered(_body):
+	hide()
+	hit.emit()
+	$CollisionShape2D.set_deferred(&quot;disabled&quot;, true)
+
+func start(pos):
+	position = pos
+	show()
+	$CollisionShape2D.disabled = false</code></pre></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Save!</span></div><div class="callout__body"><p>Remember to <code>Ctrl + S</code> every single time you are done editing a script. This way you wont lose progress or have unexpected behavior!</p>
+</div></div><ol>
+<li>Back in the Scene dock, select <strong>Player</strong> → open the <strong>Signals</strong> tab (next to Inspector)</li>
+<li>Double-click <code>body_entered</code> → leave defaults → <strong>Connect</strong>. Godot creates <code>_on_body_entered()</code> — it&#39;s already in the script above.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-1.png" alt="Day 1 - Meet Godot-1" loading="lazy" decoding="async"></button></span></li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Test it now</span></div><div class="callout__body"><p>Press <code>F6</code> (Run Current Scene). The player is hidden at start — that&#39;s correct. You can temporarily remove <code>hide()</code> in <code>_ready()</code> to see it move. Arrow keys should move in all directions. Close the window when done.</p>
+</div></div><p>See <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a> and <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a> for how the code works.</p>
+<hr>
+<h2 id="break" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#break" aria-label="Link to this section">#</a>☕ Break</h2><p>Lets go on a walk!</p>
+<hr>
+<h2 id="part-2-build-the-mob" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#part-2-build-the-mob" aria-label="Link to this section">#</a>Part 2: Build the Mob</h2><p><em>Goal: an enemy scene ready to be spawned.</em></p>
+<h3 id="step-1-mob-scene-setup-15-min-an" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-1-mob-scene-setup-15-min-an" aria-label="Link to this section">#</a>Step 1: Mob scene setup (15 min)An</h3><ol>
+<li><p><strong>Scene → New Scene</strong> Or <code>Ctrl + N</code>.</p>
+</li>
+<li><p>Add a <strong>RigidBody2D</strong> (Inside other again) as root → rename to <code>Mob</code>.</p>
+</li>
+<li><p>Add these three children (Remember, <code>Ctrl+A</code>):</p>
+<ul>
+<li><code>AnimatedSprite2D</code></li>
+<li><code>CollisionShape2D</code></li>
+<li><code>VisibleOnScreenNotifier2D</code></li>
+</ul>
+</li>
+<li><p>Select <strong>Mob</strong> (root) → click the Group icon in the toolbar.</p>
+</li>
+<li><p>With <strong>Mob</strong> selected in the Inspector:</p>
+<ul>
+<li>Set <strong>Gravity Scale</strong> to <code>0</code> (so it doesn&#39;t fall).
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-mob-gravity-0.png" alt="Day 1 - Meet Godot - Mob Gravity 0" loading="lazy" decoding="async"></button></span></li>
+<li>Under <strong>Collision</strong>, find the <strong>Mask</strong> row and <strong>uncheck layer 1</strong> (mobs won&#39;t collide with each other).
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-uncheck-collision-mask-mob.png" alt="Day 1 - Meet Godot = Uncheck Collision Mask Mob" loading="lazy" decoding="async"></button></span></li>
+</ul>
+</li>
+</ol>
+<h3 id="step-2-mob-animations-10-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-2-mob-animations-10-min" aria-label="Link to this section">#</a>Step 2: Mob animations (10 min)</h3><ol start="6">
+<li>Select <strong>AnimatedSprite2D</strong> → click the SpriteFrames property → New SpriteFrames. Create 3 animations:<ul>
+<li><code>fly</code>: <code>enemyFlyingAlt_1.png</code> + <code>enemyFlyingAlt_2.png</code></li>
+<li><code>swim</code>: <code>enemySwimming_1.png</code> + <code>enemySwimming_2.png</code></li>
+<li><code>walk</code>: <code>enemyWalking_1.png</code> + <code>enemyWalking_2.png</code></li>
+<li>Set <strong>Animation Speed</strong> to <code>3</code> for each one.</li>
+</ul>
+</li>
+<li>Set <strong>AnimatedSprite2D Scale</strong> to <code>(0.75, 0.75)</code>.</li>
+<li>Select <strong>CollisionShape2D</strong> → New CapsuleShape2D → set <strong>Rotation</strong> to <code>90</code> under Transform.</li>
+</ol>
+<h3 id="step-3-mob-script-5-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-3-mob-script-5-min" aria-label="Link to this section">#</a>Step 3: Mob script (5 min)</h3><ol start="9">
+<li>Attach a script to <strong>Mob</strong>. Replace contents:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends RigidBody2D
+
+func _ready():
+	var mob_types = Array($AnimatedSprite2D.sprite_frames.get_animation_names())
+	$AnimatedSprite2D.animation = mob_types.pick_random()
+	$AnimatedSprite2D.play()
+
+func _on_visible_on_screen_notifier_2d_screen_exited():
+	queue_free()</code></pre></div><ol start="10">
+<li>Select <strong>VisibleOnScreenNotifier2D</strong> → Signals tab → double-click <code>screen_exited</code> → Connect.</li>
+<li>Save scene as <code>mob.tscn</code>.</li>
+</ol>
+<p>See <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a> for how spawning works.</p>
+<hr>
+<h2 id="break-2" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#break-2" aria-label="Link to this section">#</a>☕ Break</h2><p>Take a breather. Talk to friends!</p>
+<hr>
+<h2 id="part-3-the-main-scene" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#part-3-the-main-scene" aria-label="Link to this section">#</a>Part 3: The Main Scene</h2><p><em>Goal: a playable game — mobs spawn, player dies on touch.</em></p>
+<h3 id="step-1-build-the-main-scene-10-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-1-build-the-main-scene-10-min" aria-label="Link to this section">#</a>Step 1: Build the Main scene (10 min)</h3><ol>
+<li><strong>Scene → New Scene</strong> → add a plain <strong>Node</strong> (not Node2D) → rename to <code>Main</code>.</li>
+<li>Right Click on <code>player.tscn</code> and click the <strong>Instantiate</strong> icon (chain link) → select <code>player.tscn</code>. Player is now a child of Main.</li>
+<li>Add these child nodes one at a time:</li>
+</ol>
+<div class="table-wrap"><table><thead><tr><th>Node type</th><th>Name</th><th>Settings</th></tr></thead><tbody><tr><td>Marker2D</td><td>StartPosition</td><td>Move to center-bottom of screen: <code>(240, 450)</code></td></tr><tr><td>Timer</td><td>MobTimer</td><td>Wait Time: <code>0.5</code></td></tr><tr><td>Timer</td><td>ScoreTimer</td><td>Wait Time: <code>1</code></td></tr><tr><td>Timer</td><td>StartTimer</td><td>Wait Time: <code>2</code>, <strong>One Shot: On</strong></td></tr><tr><td>Path2D</td><td>MobPath</td><td>(leave empty for now)</td></tr></tbody></table></div><ul>
+<li>It should look like this at the end</li>
+</ul>
+<p><span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-added-main-child-nodes.png" alt="Day 1 - Meet Godot - Added Main Child Nodes" loading="lazy" decoding="async"></button></span></p>
+<ol start="4">
+<li>Select <strong>MobPath</strong> → add a child <strong>PathFollow2D</strong> → rename to <code>MobSpawnLocation</code>.</li>
+</ol>
+<h3 id="step-2-draw-the-mob-path-5-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-2-draw-the-mob-path-5-min" aria-label="Link to this section">#</a>Step 2: Draw the mob path (5 min)</h3><ol>
+<li>Select <strong>MobPath</strong> in the Scene dock.</li>
+<li>In the toolbar at the top of the viewport, click <strong>Add Point</strong>.</li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Quick Tip</span></div><div class="callout__body"><p>You can hover over buttons to see the name of them!</p>
+</div></div><ol start="3">
+<li>Enable <strong>Snap to Grid</strong> (magnet icon).
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-click-magnet-icon.png" alt="Day 1 - Meet Godot click magnet icon" loading="lazy" decoding="async"></button></span></li>
+<li>Click to place 4 points clockwise around the screen edges — top-left, top-right, bottom-right, bottom-left.<ul>
+<li>The blue lines inside the 2D Tab is how you can see the edges</li>
+</ul>
+</li>
+<li>Click <strong>Close Curve</strong> to connect the last point back to the first.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-close-curve-button.png" alt="Day 1 - Meet Godot - Close Curve Button" loading="lazy" decoding="async"></button></span></li>
+</ol>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Draw clockwise</span></div><div class="callout__body"><p>If the path goes counter-clockwise, mobs will spawn pointing the wrong direction.</p>
+</div></div><h3 id="step-3-main-script-20-min" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#step-3-main-script-20-min" aria-label="Link to this section">#</a>Step 3: Main script (20 min)</h3><ol start="10">
+<li>Attach a script to <strong>Main</strong>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node
+
+@export var mob_scene: PackedScene
+var score
+
+func _ready():
+	pass
+
+func game_over():
+	$ScoreTimer.stop()
+	$MobTimer.stop()
+
+func new_game():
+	score = 0
+	$Player.start($StartPosition.position)
+	$StartTimer.start()
+
+func _on_score_timer_timeout():
+	score += 1
+
+func _on_start_timer_timeout():
+	$MobTimer.start()
+	$ScoreTimer.start()
+
+func _on_mob_timer_timeout():
+	var mob = mob_scene.instantiate()
+	var mob_spawn_location = $MobPath/MobSpawnLocation
+	mob_spawn_location.progress_ratio = randf()
+	mob.position = mob_spawn_location.position
+	var direction = mob_spawn_location.rotation + PI / 2
+	direction += randf_range(-PI / 4, PI / 4)
+	mob.rotation = direction
+	var velocity = Vector2(randf_range(150.0, 250.0), 0.0)
+	mob.linear_velocity = velocity.rotated(direction)
+	add_child(mob)</code></pre></div><ol>
+<li>With <strong>Main</strong> selected in the Scene dock, drag <code>mob.tscn</code> from the FileSystem onto the <strong>Mob Scene</strong> slot in the Inspector.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-drag-mob-scene-slot.png" alt="Day 1 - Meet Godot - Drag Mob Scene Slot" loading="lazy" decoding="async"></button></span></li>
+<li>Select <strong>Player</strong> (child of Main) → Signals tab → double-click <code>hit</code> → type <code>game_over</code> in the Receiver Method box → Connect.
+<span class="shot"><button type="button" class="shot__btn" data-zoom aria-label="Enlarge screenshot"><img src="content/images/day-1-meet-godot-game-over-method.png" alt="Day 1 - Meet Godot - game over method" loading="lazy" decoding="async"></button></span></li>
+<li>Select <strong>MobTimer</strong> → Signals tab → connect <code>timeout</code> to Main (creates <code>_on_mob_timer_timeout</code>).</li>
+<li>Repeat for <strong>ScoreTimer</strong> and <strong>StartTimer</strong>.</li>
+<li>Temporarily add <code>new_game()</code> to <code>_ready()</code>, click <strong>Play</strong>, select <code>main.tscn</code> as the Main Scene. Test: player spawns, mobs come in, player hides when hit.</li>
+<li>Remove <code>new_game()</code> from <code>_ready()</code> (change it back to <code>pass</code>).</li>
+</ol>
+<p>Save <code>main.tscn</code>.</p>
+<hr>
+<h2 id="exit-ticket-stand-up" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#exit-ticket-stand-up" aria-label="Link to this section">#</a>Exit Ticket + Stand-Up</h2><p>Go around the room — everyone gets 15 seconds:</p>
+<ul>
+<li><strong>Show your screen:</strong> working game, or wherever you are.</li>
+<li>Say: <em>&quot;One thing that works, one thing that broke.&quot;</em></li>
+</ul>
+<p>Breaking things today is the job. If you got mobs spawning and the player dying, you won. Everything after this is polish.</p>
+<p><strong>Checkpoint:</strong> ✅ Game runs, player moves, mobs spawn, player disappears on hit.</p>
+<hr>
+<h2 id="open-studio-stretch-goals-for-students-who-finish-early" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#open-studio-stretch-goals-for-students-who-finish-early" aria-label="Link to this section">#</a>Open Studio — Stretch Goals (for students who finish early)</h2><p>Work through them in order. Each one builds directly on the exact <code>main.tscn</code> / <code>main.gd</code> / <code>player.tscn</code> you already built in Parts 1–3, so the node names and code below should match what&#39;s already in your project. Nobody is expected to reach all five — get as far as you get.</p>
+<h3 id="1-add-the-hud-score-display-start-button" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#1-add-the-hud-score-display-start-button" aria-label="Link to this section">#</a>1. Add the HUD (score display + start button)</h3><p><strong>Goal:</strong> a Label that shows the score, and a Start button that begins the game.</p>
+<ol>
+<li>In the Scene dock, select <strong>Main</strong> → <code>Ctrl+A</code> → add <strong>CanvasLayer</strong> → rename <code>UI</code> (keeps the UI pinned to the screen instead of scrolling with the game world).</li>
+<li>With <strong>UI</strong> selected, <code>Ctrl+A</code> → add <strong>Label</strong> → rename <code>ScoreLabel</code>. Drag it to the top-left corner in the viewport. In the Inspector, set <strong>Text</strong> to <code>Score: 0</code> as a placeholder.</li>
+<li>With <strong>UI</strong> selected again, <code>Ctrl+A</code> → add <strong>Button</strong> → rename <code>StartButton</code>. Set its <strong>Text</strong> to <code>Start</code> in the Inspector and center it in the viewport.</li>
+<li>Open <code>main.gd</code> and update it — everything marked <code># NEW</code> below is the only thing that&#39;s different from your Part 3 script:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node
+
+@export var mob_scene: PackedScene
+var score
+
+func _ready():
+	$UI/StartButton.pressed.connect(_on_start_button_pressed)  # NEW
+
+func game_over():
+	$ScoreTimer.stop()
+	$MobTimer.stop()
+	$UI/StartButton.show()  # NEW — let the player start again
+
+func new_game():
+	score = 0
+	$UI/ScoreLabel.text = &quot;Score: 0&quot;  # NEW
+	$Player.start($StartPosition.position)
+	$StartTimer.start()
+
+func _on_score_timer_timeout():
+	score += 1
+	$UI/ScoreLabel.text = &quot;Score: &quot; + str(score)  # NEW
+
+func _on_start_timer_timeout():
+	$MobTimer.start()
+	$ScoreTimer.start()
+
+func _on_mob_timer_timeout():
+	var mob = mob_scene.instantiate()
+	var mob_spawn_location = $MobPath/MobSpawnLocation
+	mob_spawn_location.progress_ratio = randf()
+	mob.position = mob_spawn_location.position
+	var direction = mob_spawn_location.rotation + PI / 2
+	direction += randf_range(-PI / 4, PI / 4)
+	mob.rotation = direction
+	var velocity = Vector2(randf_range(150.0, 250.0), 0.0)
+	mob.linear_velocity = velocity.rotated(direction)
+	add_child(mob)
+
+func _on_start_button_pressed():  # NEW
+	$UI/StartButton.hide()
+	new_game()</code></pre></div><ol start="5">
+<li><code>Ctrl+S</code> to save the script, then delete the temporary <code>new_game()</code> call in <code>_ready()</code> from Part 3 if you still have it — the Start button calls it now.</li>
+<li>Press <strong>F6</strong> — the Start button should appear, hide when clicked, and the score should count up in the corner.</li>
+</ol>
+<p>See <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a> for more on Label and Button basics.</p>
+<h3 id="2-add-background-music-a-death-sound" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#2-add-background-music-a-death-sound" aria-label="Link to this section">#</a>2. Add background music + a death sound</h3><ol>
+<li>Drag a music file (<code>.ogg</code>) and a short sound effect (<code>.wav</code>) into the FileSystem dock — grab free ones from <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a>, or make a quick &quot;hit&quot; sound in jsfxr.</li>
+<li>Select <strong>Main</strong> → <code>Ctrl+A</code> → add <strong>AudioStreamPlayer</strong> → rename <code>Music</code>. In the Inspector, drag your music file onto <strong>Stream</strong>, then check <strong>Autoplay</strong>.</li>
+<li>Select <strong>Main</strong> again → <code>Ctrl+A</code> → add another <strong>AudioStreamPlayer</strong> → rename <code>DeathSound</code>. Drag your sound effect onto its <strong>Stream</strong> property. Leave <strong>Autoplay</strong> off — this one triggers from code, not automatically.</li>
+<li>In <code>main.gd</code>, play the death sound inside <code>game_over()</code>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	$ScoreTimer.stop()
+	$MobTimer.stop()
+	$DeathSound.play()   # NEW
+	$UI/StartButton.show()</code></pre></div><ol start="5">
+<li><code>Ctrl+S</code>, then <strong>F6</strong> — music should start automatically, and you should hear the death sound the moment a mob touches you.</li>
+</ol>
+<p>See <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> for looping music and making your own sounds with jsfxr.</p>
+<h3 id="3-add-a-background-color" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#3-add-a-background-color" aria-label="Link to this section">#</a>3. Add a background color</h3><ol>
+<li>Select <strong>Main</strong> in the Scene dock → <code>Ctrl+A</code> → add <strong>ColorRect</strong>.</li>
+<li>Drag it to the very top of Main&#39;s children list, above <strong>Player</strong> — nodes draw in list order, so it has to be first or it&#39;ll cover everything else on screen.</li>
+<li>With the ColorRect selected, in the Inspector under <strong>Layout</strong>, click <strong>Anchors Preset</strong> → <strong>Full Rect</strong> so it stretches to fill the screen at any size.</li>
+<li>Under <strong>CanvasItem → Color</strong>, pick a background color.</li>
+<li>Press <strong>F6</strong> and confirm it&#39;s sitting <em>behind</em> the player and mobs, not on top of them.</li>
+</ol>
+<h3 id="4-export-the-game" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#4-export-the-game" aria-label="Link to this section">#</a>4. Export the game</h3><p>Full walkthrough (with three different options) is in <a class="wikilink" href="#/exporting-your-game" data-note="exporting-your-game">Exporting Your Game</a>. Short version: <strong>Project → Export → Add… → pick a preset → Export Project.</strong> First time exporting, Godot will also ask you to download <strong>export templates</strong> — that needs internet, so do it now rather than at the showcase.</p>
+<h3 id="5-speed-things-up" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#5-speed-things-up" aria-label="Link to this section">#</a>5. Speed things up</h3><ol>
+<li>Select <strong>Player</strong> in the <code>main.tscn</code> scene tree (it&#39;s the instanced child under Main, not the standalone <code>player.tscn</code>) → in the Inspector, find <strong>Speed</strong> under <strong>Script Variables</strong> → change it from <code>400</code> to something like <code>600</code> or <code>800</code>.</li>
+<li>Select <strong>MobTimer</strong> (child of Main) → in the Inspector, change <strong>Wait Time</strong> from <code>0.5</code> to <code>0.3</code> — mobs will spawn more often.</li>
+<li>Press <strong>F6</strong> after each change and see how it feels. This &quot;tweak, run, observe&quot; loop is exactly what you&#39;ll be doing all day tomorrow.</li>
+</ol>
+<hr>
+<h2 id="when-you-get-stuck" class="heading"><a class="heading__anchor" href="#/day-1-meet-godot#when-you-get-stuck" aria-label="Link to this section">#</a>When you get stuck</h2><ul>
+<li><strong>Red text at the bottom (Output panel)?</strong> Read the first line — it usually names the file and line number.</li>
+<li><strong>Nothing happens when I press Play?</strong> Did you set a Main Scene? Did you connect the signals?</li>
+<li><strong>It worked a second ago and now it doesn&#39;t?</strong> Undo (<code>Ctrl+Z</code>) back to when it worked, then redo one step at a time.</li>
+<li><strong>&quot;Invalid get index&quot; error?</strong> A <code>$NodeName</code> path doesn&#39;t match the actual node name — check spelling exactly.</li>
+<li><strong>Totally lost?</strong> Find your spot on the checklist and raise your hand.</li>
+</ul>

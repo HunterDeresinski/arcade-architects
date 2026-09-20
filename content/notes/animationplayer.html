@@ -1,0 +1,49 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a></p>
+<p><strong>The most artist-friendly node in Godot.</strong> Keyframe any property of any node on a timeline, with no code.</p>
+<p>Keyframe <strong>any property of any node</strong> on a timeline, with no code. <a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a>, <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>, and <a class="wikilink" href="#/moving-platforms" data-note="moving-platforms">Moving Platforms</a> all offer it as the no-code option — this is how it works.</p>
+<p><strong>This is the most artist-friendly node in Godot.</strong> If your team has someone who thinks in pictures and timelines rather than code, hand them this note and a lot of your game gets built without them writing a line.</p>
+<h2 id="what-it-can-animate" class="heading"><a class="heading__anchor" href="#/animationplayer#what-it-can-animate" aria-label="Link to this section">#</a>What it can animate</h2><p>Nearly everything: <code>position</code>, <code>rotation</code>, <code>scale</code>, <code>modulate</code>, <code>visible</code>, <code>frame</code>, a Label&#39;s <code>text</code>, a CollisionShape2D&#39;s <code>disabled</code>, an <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a>&#39;s playback. It can also <strong>call functions</strong> at a specific moment on the timeline.</p>
+<h2 id="setting-one-up" class="heading"><a class="heading__anchor" href="#/animationplayer#setting-one-up" aria-label="Link to this section">#</a>Setting one up</h2><ol>
+<li>Add an <strong>AnimationPlayer</strong> node as a child of the thing you&#39;re animating.</li>
+<li>The <strong>Animation panel</strong> opens at the bottom. Click <strong>Animation → New</strong>, name it (<code>idle</code>, <code>attack</code>, <code>open</code>).</li>
+<li>Set the <strong>duration</strong> (the number at the top right of the timeline, in seconds).</li>
+<li>Select the node you want to animate, move the <strong>playhead</strong> to a time, change a property in the Inspector, and click the <strong>key icon</strong> next to that property. That&#39;s a keyframe.</li>
+<li>Move the playhead, change the value, key it again. Godot fills in everything between.</li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Turn on the auto-key button</span></div><div class="callout__body"><p>The key-shaped toggle in the Animation panel records a keyframe automatically whenever you change a property. It turns keyframing from four clicks into one.</p>
+</div></div><h2 id="the-two-toggles-you-ll-want" class="heading"><a class="heading__anchor" href="#/animationplayer#the-two-toggles-you-ll-want" aria-label="Link to this section">#</a>The two toggles you&#39;ll want</h2><ul>
+<li><strong>Loop</strong> (the ↻ icon next to the animation name) — plays forever. Use for <code>idle</code>, <code>walk</code>, a bobbing coin.</li>
+<li><strong>Autoplay on Load</strong> (the &quot;A&quot; icon) — starts by itself when the scene loads. Idle animations, ambient motion.</li>
+</ul>
+<p>Together they make ambient animation genuinely zero-code.</p>
+<h2 id="playing-from-code" class="heading"><a class="heading__anchor" href="#/animationplayer#playing-from-code" aria-label="Link to this section">#</a>Playing from code</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$AnimationPlayer.play(&quot;attack&quot;)
+$AnimationPlayer.play(&quot;walk&quot;)
+$AnimationPlayer.play_backwards(&quot;open&quot;)
+$AnimationPlayer.stop()
+$AnimationPlayer.speed_scale = 2.0                # double speed
+$AnimationPlayer.current_animation                # what's playing right now
+$AnimationPlayer.is_playing()</code></pre></div><p>Wait for one to end:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$AnimationPlayer.play(&quot;attack&quot;)
+await $AnimationPlayer.animation_finished
+can_attack = true</code></pre></div><p>Or connect the <strong><code>animation_finished</code></strong> <a class="wikilink" href="#/signals" data-note="signals">signal</a> in the editor.</p>
+<h2 id="call-method-tracks-the-powerful-bit" class="heading"><a class="heading__anchor" href="#/animationplayer#call-method-tracks-the-powerful-bit" aria-label="Link to this section">#</a>Call Method tracks (the powerful bit)</h2><p>An animation can <em>call your functions</em> at exact moments on the timeline. This is how you sync a sword&#39;s damage window to the frame where the blade is actually out — see <a class="wikilink" href="#/melee-attacks" data-note="melee-attacks">Melee Attacks</a>.</p>
+<ol>
+<li><strong>Add Track → Call Method Track</strong>, pick the node that owns the function.</li>
+<li>Right-click on the timeline at the moment you want → <strong>Insert Key</strong> → choose the method.</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># animation calls these at exactly the right frames
+func enable_hitbox():  $Hitbox.monitoring = true
+func disable_hitbox(): $Hitbox.monitoring = false</code></pre></div><p>The designer tunes attack timing by <strong>dragging keyframes</strong>, not by editing timer values. That&#39;s a genuinely better workflow.</p>
+<p>There&#39;s also an <strong>Audio Track</strong> for playing a sound at an exact frame — footsteps landing on the right frame of a walk cycle.</p>
+<h2 id="what-people-actually-build-with-it" class="heading"><a class="heading__anchor" href="#/animationplayer#what-people-actually-build-with-it" aria-label="Link to this section">#</a>What people actually build with it</h2><ul>
+<li><strong>A door swinging open</strong> (<a class="wikilink" href="#/doors-and-keys" data-note="doors-and-keys">Doors and Keys</a>) — rotation + a sound</li>
+<li><strong>A moving platform</strong> (<a class="wikilink" href="#/moving-platforms" data-note="moving-platforms">Moving Platforms</a>) — key <code>position</code> at each end, loop it</li>
+<li><strong>A coin&#39;s idle bob</strong> (<a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a>) — key <code>position:y</code>, loop, autoplay</li>
+<li><strong>A boss telegraph</strong> — wind-up, flash, attack, recover, all on one timeline</li>
+<li><strong>A title screen intro</strong> — logo drops in, buttons slide up, all keyframed</li>
+<li><strong>A death animation</strong> — sprite spins, fades, then a Call Method track fires <code>queue_free()</code></li>
+<li><strong>A saw blade on a path</strong> — pairs with <a class="wikilink" href="#/path2d-and-pathfollow2d" data-note="path2d-and-pathfollow2d">Path2D and PathFollow2D</a></li>
+</ul>
+<h2 id="animationplayer-vs-the-alternatives" class="heading"><a class="heading__anchor" href="#/animationplayer#animationplayer-vs-the-alternatives" aria-label="Link to this section">#</a>AnimationPlayer vs the alternatives</h2><div class="table-wrap"><table><thead><tr><th>Use</th><th>When</th></tr></thead><tbody><tr><td><strong><a class="wikilink" href="#/animatedsprite2d" data-note="animatedsprite2d">AnimatedSprite2D</a></strong></td><td>flipping through sprite frames — a hand-drawn walk cycle</td></tr><tr><td><strong>AnimationPlayer</strong></td><td>moving/rotating/fading <em>nodes</em> on a timeline; many properties at once; artist-editable</td></tr><tr><td><strong><a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a></strong></td><td>short, one-off, code-driven — a hit flash, a menu slide</td></tr></tbody></table></div><p>They combine happily: an AnimationPlayer track can drive which animation an AnimatedSprite2D is playing.</p>
+<h2 id="animationtree-and-why-to-skip-it" class="heading"><a class="heading__anchor" href="#/animationplayer#animationtree-and-why-to-skip-it" aria-label="Link to this section">#</a>AnimationTree — and why to skip it</h2><p>Godot has an <strong>AnimationTree</strong> node for blending animations with state machines. It&#39;s powerful and it is <strong>not a five-day-camp tool</strong> — see <a class="wikilink" href="#/state-machines" data-note="state-machines">State Machines</a>. Plain <code>play(&quot;name&quot;)</code> calls are fine for everything you&#39;ll build this week.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/animationplayer#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Animation plays once and freezes</td><td>Loop isn&#39;t enabled (the ↻ icon)</td></tr><tr><td>Nothing animates</td><td>You keyed a property on the wrong node — check which node each track targets</td></tr><tr><td>Animation fights your movement code</td><td>Both are setting <code>position</code>. Pick one owner per property</td></tr><tr><td>Plays on load when you didn&#39;t want it</td><td>Autoplay is on</td></tr><tr><td>Snaps between keys instead of gliding</td><td>Track set to <strong>Discrete</strong> — set the update mode to <strong>Continuous</strong></td></tr><tr><td>Movement looks stuttery</td><td>Animating a physics body&#39;s <code>position</code> — use AnimatableBody2D (<a class="wikilink" href="#/moving-platforms" data-note="moving-platforms">Moving Platforms</a>)</td></tr></tbody></table></div>

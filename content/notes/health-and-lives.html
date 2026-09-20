@@ -1,0 +1,123 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Hearts, HP, getting hurt, invincibility frames, dying, and respawning. This is the note every damage-dealing thing points at — <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>, <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a>, and <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a> all end in &quot;call <code>take_damage()</code>&quot;, and this is where that function lives.</p>
+<h2 id="where-health-should-live" class="heading"><a class="heading__anchor" href="#/health-and-lives#where-health-should-live" aria-label="Link to this section">#</a>Where health should live</h2><p>Put it <strong>on the player</strong>, in the player&#39;s own script. Not in a global, not in Main. Everything that hurts the player then calls one function, and there&#39;s only one place to debug.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player               (CharacterBody2D)  Layer: player, Mask: obstacles
+├── Sprite            (AnimatedSprite2D)
+├── Shape             (CollisionShape2D)
+├── Hurtbox           (Area2D)  Layer: none, Mask: mobs, hazards, bullets
+│   └── HurtShape     (CollisionShape2D)
+└── InvincibleTimer   (Timer)   One Shot ON, Autostart OFF, Wait Time 1.0</code></pre></div><p>Layers come from <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a>. The Hurtbox is a separate <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> so that <em>moving</em> and <em>getting hit</em> stay separate jobs.</p>
+<h2 id="the-player-health-script" class="heading"><a class="heading__anchor" href="#/health-and-lives#the-player-health-script" aria-label="Link to this section">#</a>The player health script</h2><p>Add this to your existing player script — it sits alongside your movement code, it doesn&#39;t replace it.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+signal health_changed(current, maximum)
+signal died
+
+@export var max_health = 3
+var health: int
+var invincible = false
+
+func _ready():
+	add_to_group(&quot;player&quot;)
+	health = max_health
+	health_changed.emit(health, max_health)
+
+func take_damage(amount = 1):
+	if invincible or health &lt;= 0:
+		return                      # already hurt, or already dead
+	health -= amount
+	health_changed.emit(health, max_health)
+
+	if health &lt;= 0:
+		die()
+	else:
+		start_invincibility()
+		$HurtSound.play()
+
+func heal(amount = 1):
+	health = min(health + amount, max_health)
+	health_changed.emit(health, max_health)
+
+func start_invincibility():
+	invincible = true
+	$InvincibleTimer.start()
+	flash()
+
+func _on_invincible_timer_timeout():
+	invincible = false
+	modulate.a = 1.0
+
+func die():
+	died.emit()
+	set_physics_process(false)
+	$Sprite.play(&quot;death&quot;)
+	await get_tree().create_timer(1.0).timeout
+	respawn()</code></pre></div><p>Connect <code>InvincibleTimer</code>&#39;s <strong><code>timeout</code></strong> signal to <code>_on_invincible_timer_timeout</code> (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>).</p>
+<p><strong>Why the <code>invincible</code> guard is the first line:</strong> without it, standing in lava calls <code>take_damage()</code> sixty times a second and you lose three hearts instantly. The guard is what makes damage feel fair.</p>
+<h2 id="the-hurtbox-connection" class="heading"><a class="heading__anchor" href="#/health-and-lives#the-hurtbox-connection" aria-label="Link to this section">#</a>The hurtbox connection</h2><p>Connect the Hurtbox&#39;s <strong><code>area_entered</code></strong> signal:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hurtbox_area_entered(area):
+	var amount = area.damage if &quot;damage&quot; in area else 1
+	take_damage(amount)</code></pre></div><p><code>&quot;damage&quot; in area</code> checks whether that node has a <code>damage</code> property. So a spike can <code>@export var damage = 1</code> and a boss laser can set <code>3</code>, and the player handles both without knowing what hit it.</p>
+<p>For enemies that are bodies rather than areas, connect <code>body_entered</code> the same way.</p>
+<h2 id="the-invincibility-flash" class="heading"><a class="heading__anchor" href="#/health-and-lives#the-invincibility-flash" aria-label="Link to this section">#</a>The invincibility flash</h2><p>I-frames the player can&#39;t <em>see</em> feel like a bug. Blink during them:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func flash():
+	var t = create_tween().set_loops(6)
+	t.tween_property(self, &quot;modulate:a&quot;, 0.2, 0.08)
+	t.tween_property(self, &quot;modulate:a&quot;, 1.0, 0.08)</code></pre></div><p>Six blinks at 0.16s each ≈ 1 second, matching the Timer. More options in <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>; the tween syntax itself is explained in <a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>.</p>
+<h2 id="showing-hearts" class="heading"><a class="heading__anchor" href="#/health-and-lives#showing-hearts" aria-label="Link to this section">#</a>Showing hearts</h2><p>Under a CanvasLayer, an <strong>HBoxContainer</strong> with one TextureRect per heart (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>):</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">UI            (CanvasLayer)
+└── Hearts     (HBoxContainer)
+    ├── Heart1  (TextureRect)
+    ├── Heart2  (TextureRect)
+    └── Heart3  (TextureRect)</code></pre></div><p>In your Main script, listen for the signal instead of checking every frame:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	$Player.health_changed.connect(_on_health_changed)
+	$Player.died.connect(_on_player_died)
+
+func _on_health_changed(current, _maximum):
+	for i in $UI/Hearts.get_child_count():
+		$UI/Hearts.get_child(i).visible = i &lt; current</code></pre></div><p><strong>Signals, not polling.</strong> The UI updates exactly when health changes, and the player script never needs to know the UI exists. That separation is worth pointing out — it&#39;s why the same player scene drops into any level.</p>
+<h3 id="or-a-health-bar" class="heading"><a class="heading__anchor" href="#/health-and-lives#or-a-health-bar" aria-label="Link to this section">#</a>Or a health bar</h3><p>Add a <strong>ProgressBar</strong> instead:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_health_changed(current, maximum):
+	$UI/HealthBar.max_value = maximum
+	$UI/HealthBar.value = current</code></pre></div><p>Nicer, animated:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">create_tween().tween_property($UI/HealthBar, &quot;value&quot;, current, 0.3)</code></pre></div><h2 id="respawning" class="heading"><a class="heading__anchor" href="#/health-and-lives#respawning" aria-label="Link to this section">#</a>Respawning</h2><p>Drop a <code>SpawnPoint</code> <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Marker2D</a> in the level and drag it where the player should appear.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func respawn():
+	health = max_health
+	health_changed.emit(health, max_health)
+	velocity = Vector2.ZERO
+	global_position = get_tree().current_scene.get_node(&quot;SpawnPoint&quot;).global_position
+	$Sprite.play(&quot;idle&quot;)
+	set_physics_process(true)
+	start_invincibility()      # don't respawn into the thing that killed you</code></pre></div><p>That last line matters more than it looks. Respawning without i-frames into a room full of enemies is an instant death loop.</p>
+<h3 id="checkpoints" class="heading"><a class="heading__anchor" href="#/health-and-lives#checkpoints" aria-label="Link to this section">#</a>Checkpoints</h3><p>An <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> the player walks through that moves the spawn point:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		get_tree().current_scene.get_node(&quot;SpawnPoint&quot;).global_position = global_position
+		$Sprite.play(&quot;activated&quot;)
+		set_deferred(&quot;monitoring&quot;, false)</code></pre></div><h2 id="lives-on-top-of-health" class="heading"><a class="heading__anchor" href="#/health-and-lives#lives-on-top-of-health" aria-label="Link to this section">#</a>Lives on top of health</h2><p>Health is per-attempt; lives are how many attempts you get. Keep them in Main, not the player:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var lives = 3
+
+func _on_player_died():
+	lives -= 1
+	$UI/LivesLabel.text = &quot;Lives: %d&quot; % lives
+	if lives &lt;= 0:
+		get_tree().change_scene_to_file(&quot;res://game_over.tscn&quot;)   # see Scene Switching</code></pre></div><p>Since the player already respawns itself, Main only decides whether that&#39;s allowed to happen again.</p>
+<h2 id="enemies-with-health-too" class="heading"><a class="heading__anchor" href="#/health-and-lives#enemies-with-health-too" aria-label="Link to this section">#</a>Enemies with health too</h2><p>Same idea, smaller:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var health = 3
+
+func take_damage(amount = 1):
+	health -= amount
+	modulate = Color.RED
+	await get_tree().create_timer(0.1).timeout
+	modulate = Color.WHITE
+	if health &lt;= 0:
+		queue_free()</code></pre></div><p>A bullet then works on anything: <code>if body.has_method(&quot;take_damage&quot;): body.take_damage(damage)</code>. Player, enemy, breakable crate — all the same call (<a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>).</p>
+<h2 id="falling-out-of-the-world" class="heading"><a class="heading__anchor" href="#/health-and-lives#falling-out-of-the-world" aria-label="Link to this section">#</a>Falling out of the world</h2><p>A wide, thin <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> under the whole level:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_death_zone_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		body.take_damage(99)</code></pre></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/health-and-lives#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Lose all hearts in one touch</td><td>Missing the <code>if invincible: return</code> guard</td></tr><tr><td>Never take damage</td><td>Hurtbox mask doesn&#39;t include the attacker&#39;s layer (<a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a>)</td></tr><tr><td>Hearts don&#39;t update</td><td><code>health_changed</code> never connected, or connected after <code>_ready()</code> already emitted</td></tr><tr><td>Player respawns and dies instantly</td><td>Respawn without i-frames, or the spawn point is inside a hazard</td></tr><tr><td>Stays half-transparent after i-frames</td><td>Reset <code>modulate.a = 1.0</code> in the timeout handler</td></tr><tr><td>Errors after dying</td><td>Code kept running on a freed node — use <code>set_physics_process(false)</code>, not <code>queue_free()</code></td></tr></tbody></table></div>

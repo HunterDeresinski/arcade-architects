@@ -1,0 +1,32 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>A node that counts down and then fires a <a class="wikilink" href="#/signals" data-note="signals">signal</a>. It&#39;s how anything in your game happens <em>later</em> or <em>repeatedly</em> — spawning, cooldowns, invincibility, &quot;you win after 30 seconds.&quot;</p>
+<h2 id="the-three-inspector-settings-that-matter" class="heading"><a class="heading__anchor" href="#/timer#the-three-inspector-settings-that-matter" aria-label="Link to this section">#</a>The three Inspector settings that matter</h2><div class="table-wrap"><table><thead><tr><th>Property</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Wait Time</strong></td><td>seconds to count down</td></tr><tr><td><strong>Autostart</strong></td><td>starts by itself when the scene loads</td></tr><tr><td><strong>One Shot</strong></td><td><strong>on</strong> = fires once and stops. <strong>off</strong> = repeats forever</td></tr></tbody></table></div><p>Then connect the <strong><code>timeout</code></strong> signal to a function (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>).</p>
+<h2 id="pattern-1-repeat-forever" class="heading"><a class="heading__anchor" href="#/timer#pattern-1-repeat-forever" aria-label="Link to this section">#</a>Pattern 1: repeat forever</h2><p>Wait Time <code>1.0</code>, Autostart <strong>on</strong>, One Shot <strong>off</strong>.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_spawn_timer_timeout():
+	spawn_enemy()   # runs every 1 second, forever</code></pre></div><p>This is the backbone of <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>.</p>
+<h2 id="pattern-2-do-something-once-later" class="heading"><a class="heading__anchor" href="#/timer#pattern-2-do-something-once-later" aria-label="Link to this section">#</a>Pattern 2: do something once, later</h2><p>Autostart <strong>off</strong>, One Shot <strong>on</strong>. Start it from code:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	$RestartTimer.start()   # uses Wait Time from the Inspector
+
+func _on_restart_timer_timeout():
+	get_tree().reload_current_scene()</code></pre></div><p><code>start()</code> also accepts an override: <code>$Timer.start(2.5)</code> counts 2.5 seconds regardless of Wait Time.</p>
+<h2 id="pattern-3-a-cooldown-can-i-shoot-yet" class="heading"><a class="heading__anchor" href="#/timer#pattern-3-a-cooldown-can-i-shoot-yet" aria-label="Link to this section">#</a>Pattern 3: a cooldown (can I shoot yet?)</h2><p>The most useful Timer pattern in the whole reference. One Shot <strong>on</strong>, Autostart <strong>off</strong>.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	if Input.is_action_pressed(&quot;shoot&quot;) and $ShootCooldown.is_stopped():
+		shoot()
+		$ShootCooldown.start()</code></pre></div><p><code>is_stopped()</code> returns <code>true</code> when the timer isn&#39;t running — so &quot;is the cooldown over?&quot; Change Wait Time to change fire rate. Same shape as the dash cooldown in <a class="wikilink" href="#/dash-and-double-jump" data-note="dash-and-double-jump">Dash and Double Jump</a> and the i-frames in <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>.</p>
+<h2 id="useful-methods" class="heading"><a class="heading__anchor" href="#/timer#useful-methods" aria-label="Link to this section">#</a>Useful methods</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$Timer.start()          # begin (or restart from the top)
+$Timer.stop()           # cancel; timeout will NOT fire
+$Timer.is_stopped()     # true if not currently running
+$Timer.paused = true    # freeze without cancelling
+$Timer.time_left        # seconds remaining -- great for a countdown Label
+$Timer.wait_time = 0.5  # change the duration from code</code></pre></div><p>A countdown display, using <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	$UI/TimeLabel.text = &quot;Time: &quot; + str(int($GameTimer.time_left))</code></pre></div><h2 id="the-one-line-version-await" class="heading"><a class="heading__anchor" href="#/timer#the-one-line-version-await" aria-label="Link to this section">#</a>The one-line version: <code>await</code></h2><p>For a quick pause you don&#39;t want a whole node for:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func flash():
+	modulate = Color.RED
+	await get_tree().create_timer(0.2).timeout
+	modulate = Color.WHITE</code></pre></div><p><code>await</code> pauses <em>just this function</em> for 0.2 seconds while the rest of the game keeps running. Perfect for hit flashes and short delays. Use a real Timer node when you need to check, restart, or cancel it — use <code>await</code> for fire-and-forget.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">A gotcha with <code>await</code></span></div><div class="callout__body"><p>If the node gets <code>queue_free()</code>d during the wait, the code after <code>await</code> runs on a dead node and errors. Guard it: <code>if not is_instance_valid(self): return</code>.</p>
+</div></div><h2 id="making-the-game-get-harder" class="heading"><a class="heading__anchor" href="#/timer#making-the-game-get-harder" aria-label="Link to this section">#</a>Making the game get harder</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_difficulty_timer_timeout():
+	$SpawnTimer.wait_time = max(0.2, $SpawnTimer.wait_time - 0.1)</code></pre></div><p>A second Timer that speeds up the first one. <code>max()</code> stops it becoming impossible.</p>

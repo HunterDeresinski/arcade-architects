@@ -1,0 +1,32 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/foundations-index" data-note="foundations-index">Foundations Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a></p>
+<p><strong>GDScript</strong> is Godot&#39;s coding language. It looks a lot like Python. A script is attached to a node and gives it behavior. If you&#39;ve used Pico-8 (Lua), the ideas are the same; the spelling is different.</p>
+<div class="callout callout--important"><div class="callout__head"><span class="callout__icon">❗</span><span class="callout__title">Indentation matters</span></div><div class="callout__body"><p>GDScript uses <strong>tabs</strong> to group code, like Python. Lines inside a function are indented one tab. Wrong indentation = error.</p>
+</div></div><h2 id="attaching-a-script" class="heading"><a class="heading__anchor" href="#/gdscript-basics#attaching-a-script" aria-label="Link to this section">#</a>Attaching a script</h2><p>Select a node → click the <strong>Attach Script</strong> icon (scroll/page icon) in the Scene dock → Create. You get a file like <code>player.gd</code>.</p>
+<h2 id="variables-store-a-value" class="heading"><a class="heading__anchor" href="#/gdscript-basics#variables-store-a-value" aria-label="Link to this section">#</a>Variables — store a value</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var speed = 400          # a number you can change
+var score = 0
+var player_name = &quot;Fern&quot; # text (a String)
+var is_alive = true      # true/false (a bool)</code></pre></div><p>Change <code>speed</code> and the whole feel of the game changes — variables are your <strong>dials</strong>.</p>
+<h2 id="constants-and-exported-variables" class="heading"><a class="heading__anchor" href="#/gdscript-basics#constants-and-exported-variables" aria-label="Link to this section">#</a>Constants and exported variables</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">const MAX_LIVES = 3        # never changes
+
+@export var speed = 400    # shows up in the Inspector so you can tweak without code</code></pre></div><p><code>@export</code> is great for teammates: the Artist can change <code>speed</code> in the Inspector without touching code.</p>
+<h2 id="the-two-functions-you-ll-use-most" class="heading"><a class="heading__anchor" href="#/gdscript-basics#the-two-functions-you-ll-use-most" aria-label="Link to this section">#</a>The two functions you&#39;ll use most</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	# runs ONCE when this node enters the game
+	print(&quot;Game started!&quot;)
+
+func _process(delta):
+	# runs EVERY frame (about 60x per second)
+	# 'delta' = seconds since the last frame; multiply movement by it
+	pass</code></pre></div><h2 id="if-statements-make-decisions" class="heading"><a class="heading__anchor" href="#/gdscript-basics#if-statements-make-decisions" aria-label="Link to this section">#</a>If statements — make decisions</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if score &gt;= 10:
+	print(&quot;You win!&quot;)
+elif score &gt; 0:
+	print(&quot;Keep going&quot;)
+else:
+	print(&quot;Score is zero&quot;)</code></pre></div><p>Comparisons: <code>==</code> equal, <code>!=</code> not equal, <code>&gt;</code> <code>&lt;</code> <code>&gt;=</code> <code>&lt;=</code>. Combine with <code>and</code> / <code>or</code> / <code>not</code>.</p>
+<h2 id="functions-your-own-named-actions" class="heading"><a class="heading__anchor" href="#/gdscript-basics#functions-your-own-named-actions" aria-label="Link to this section">#</a>Functions — your own named actions</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func add_points(amount):
+	score += amount        # += means &quot;add to&quot;
+	print(&quot;Score is now &quot;, score)</code></pre></div><p>Call it with <code>add_points(10)</code>.</p>
+<h2 id="math-shortcuts" class="heading"><a class="heading__anchor" href="#/gdscript-basics#math-shortcuts" aria-label="Link to this section">#</a>Math shortcuts</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">score += 1   # add 1
+speed -= 50  # subtract 50
+lives = lives - 1</code></pre></div><h2 id="printing-to-debug" class="heading"><a class="heading__anchor" href="#/gdscript-basics#printing-to-debug" aria-label="Link to this section">#</a>Printing to debug</h2><p><code>print(&quot;anything&quot;)</code> shows in the <strong>Output</strong> panel (<a class="wikilink" href="#/godot-editor-tour" data-note="godot-editor-tour">Godot Editor Tour</a>). When something&#39;s wrong, sprinkle prints to see what your code is actually doing.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">You don&#39;t need to memorize this</span></div><div class="callout__body"><p>Keep this note open while you work. Copy a block, change the names, run it. That&#39;s real coding.</p>
+</div></div>

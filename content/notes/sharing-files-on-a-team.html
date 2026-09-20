@@ -1,0 +1,21 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How a team of 3–4 works on one Godot project without GitHub. Decide your method on Day 3 <em>before</em> you start building.</p>
+<h2 id="the-method-one-main-computer-bring-pieces-in" class="heading"><a class="heading__anchor" href="#/sharing-files-on-a-team#the-method-one-main-computer-bring-pieces-in" aria-label="Link to this section">#</a>The method: one main computer + bring pieces in</h2><p>GitHub is powerful but too heavy for one week (accounts, setup, merge conflicts). Instead:</p>
+<ol>
+<li><strong>Pick one &quot;main&quot; computer.</strong> The Godot <strong>project lives here</strong>, and the <a class="wikilink" href="#/team-roles" data-note="team-roles">Engineer</a> builds in it. This is the source of truth.</li>
+<li><strong>Everyone else makes <em>pieces</em> on their own machines</strong> — art, sounds, a sketched scene, a bit of script in a text file.</li>
+<li><strong>Bring pieces to the main computer</strong> via a shared drive / USB / cloud folder, and the Engineer drops them into the project.</li>
+</ol>
+<p>This avoids two people editing the same file and overwriting each other.</p>
+<h2 id="adding-pieces-to-the-project" class="heading"><a class="heading__anchor" href="#/sharing-files-on-a-team#adding-pieces-to-the-project" aria-label="Link to this section">#</a>Adding pieces to the project</h2><ul>
+<li><strong>Art &amp; sound:</strong> copy the image/audio file into the project&#39;s folder (or drag it into the FileSystem dock). <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a></li>
+<li><strong>A whole scene someone built:</strong> copy their <code>.tscn</code> <strong>and</strong> any files it uses into the project, then instance it (<a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a>).</li>
+<li><strong>A bit of code:</strong> paste it into the right script on the main computer (don&#39;t email whole <code>.gd</code> files around — copy the snippet).</li>
+</ul>
+<h2 id="back-up-every-day-do-not-skip" class="heading"><a class="heading__anchor" href="#/sharing-files-on-a-team#back-up-every-day-do-not-skip" aria-label="Link to this section">#</a>Back up every day (do not skip)</h2><p>At the end of each day, <strong>copy the entire project folder</strong> to a USB or cloud drive. The project folder contains <em>everything</em>. Losing it the night before the showcase is the worst-case scenario.</p>
+<ul>
+<li>A Godot project = one folder with a <code>project.godot</code> file inside. Copy the <strong>whole folder</strong>, not just one file.</li>
+</ul>
+<h2 id="working-in-parallel-without-collisions" class="heading"><a class="heading__anchor" href="#/sharing-files-on-a-team#working-in-parallel-without-collisions" aria-label="Link to this section">#</a>Working in parallel without collisions</h2><div class="table-wrap"><table><thead><tr><th>Role</th><th>Works on</th><th>Where</th></tr></thead><tbody><tr><td>Engineer</td><td>the actual project</td><td>main computer</td></tr><tr><td>Artist/Sound</td><td>art &amp; audio files</td><td>their machine → transfer</td></tr><tr><td>Playtest Lead</td><td>bug list, testing builds</td><td>their machine</td></tr><tr><td>Producer</td><td>checklist, helping</td><td>floats</td></tr></tbody></table></div><p>Then merge pieces onto the main computer. See <a class="wikilink" href="#/team-roles" data-note="team-roles">Team Roles</a>.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Name your files clearly</span></div><div class="callout__body"><p><code>player_v2.png</code>, <code>coin_sound.wav</code>, <code>enemy_scene.tscn</code>. &quot;Untitled (3).png&quot; helps no one. Future-you on Friday will be grateful.</p>
+</div></div><hr>

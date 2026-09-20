@@ -1,0 +1,29 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-5-index" data-note="tier-5-index">Tier 5 — After Camp</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐⭐⭐ hard · <strong>Camp verdict:</strong> ⚠️ copy-paste only · <strong>Do instead:</strong> <a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>, <a class="wikilink" href="#/particles" data-note="particles">Particles</a>, <a class="wikilink" href="#/lights-and-canvasmodulate" data-note="lights-and-canvasmodulate">Lights and CanvasModulate</a></p>
+<h2 id="what-it-is" class="heading"><a class="heading__anchor" href="#/shaders#what-it-is" aria-label="Link to this section">#</a>What it is</h2><p>Small programs that run on the graphics card, once per pixel. They&#39;re how you get a white flash on hit, water ripples, dissolve effects, outlines, screen distortion, and CRT scanlines.</p>
+<p>Written in a separate language (Godot Shading Language, close to GLSL), with its own math and its own mental model.</p>
+<h2 id="why-not-this-week" class="heading"><a class="heading__anchor" href="#/shaders#why-not-this-week" aria-label="Link to this section">#</a>Why not this week</h2><p>Shaders are a <strong>whole second language</strong> on top of GDScript, and the debugging story is bad — a mistake usually produces a blank screen or a pink rectangle rather than an error message pointing at a line. A student who&#39;s still getting comfortable with <code>if</code> statements will not have a good time.</p>
+<p>The bigger issue is opportunity cost. Almost everything a camp game wants from a shader has a non-shader answer that takes five minutes: <code>modulate</code> for a tint flash, <a class="wikilink" href="#/particles" data-note="particles">Particles</a> for effects, <a class="wikilink" href="#/lights-and-canvasmodulate" data-note="lights-and-canvasmodulate">Lights and CanvasModulate</a> for mood, <a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a> for motion.</p>
+<h2 id="the-exception-copy-paste-a-hit-flash" class="heading"><a class="heading__anchor" href="#/shaders#the-exception-copy-paste-a-hit-flash" aria-label="Link to this section">#</a>The exception: copy-paste a hit flash</h2><p>If a team wants the white-flash-on-hit effect specifically, hand them this. Don&#39;t teach it — hand it over.</p>
+<p>Create a new <strong>Shader</strong> resource on the sprite&#39;s <strong>Material</strong> slot:</p>
+<div class="codeblock" data-lang="GLSL"><pre><code class="lang-glsl">shader_type canvas_item;
+
+uniform float flash_amount : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 flash_color : source_color = vec4(1.0);
+
+void fragment() {
+	vec4 tex = texture(TEXTURE, UV);
+	COLOR = mix(tex, vec4(flash_color.rgb, tex.a), flash_amount);
+}</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func flash():
+	$Sprite.material.set_shader_parameter(&quot;flash_amount&quot;, 1.0)
+	await get_tree().create_timer(0.08).timeout
+	$Sprite.material.set_shader_parameter(&quot;flash_amount&quot;, 0.0)</code></pre></div><p>This looks noticeably better than <code>modulate = Color.WHITE</code> because it preserves the sprite&#39;s silhouette instead of washing it out. It&#39;s the one shader worth the trouble in a camp game — great for <a class="wikilink" href="#/melee-attacks" data-note="melee-attacks">Melee Attacks</a> and <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>.</p>
+<h2 id="where-to-send-a-curious-student" class="heading"><a class="heading__anchor" href="#/shaders#where-to-send-a-curious-student" aria-label="Link to this section">#</a>Where to send a curious student</h2><ul>
+<li><strong><a href="https://godotshaders.com" target="_blank" rel="noopener noreferrer" class="extlink">godotshaders.com</a></strong> — a large library of free, ready-to-paste shaders. Genuinely the best resource, and using someone else&#39;s shader is a legitimate skill.</li>
+<li><strong>The Book of Shaders</strong> (thebookofshaders.com) — the classic gentle introduction, though it&#39;s not Godot-specific.</li>
+<li>Godot docs → <strong>Shading</strong> section.</li>
+</ul>
+<p>Encourage <strong>using</strong> shaders from the library now, and <strong>writing</strong> them later. Downloading a water shader and tweaking its parameters is a real, satisfying skill that requires none of the math.</p>
+<h2 id="what-to-say-in-the-moment" class="heading"><a class="heading__anchor" href="#/shaders#what-to-say-in-the-moment" aria-label="Link to this section">#</a>What to say in the moment</h2><blockquote>
+<p>&quot;You can absolutely use shaders — grab one from godotshaders.com and change the numbers. Writing your own is a summer project; it&#39;s a whole second language and the error messages are unhelpful. What effect are you actually going for? There&#39;s probably a five-minute version.&quot;</p>
+</blockquote>

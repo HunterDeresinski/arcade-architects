@@ -1,0 +1,108 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-3-index" data-note="tier-3-index">Tier 3 — Genre Unlocks</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ high · <strong>Time:</strong> 30 minutes</p>
+<p>An enemy that patrols until it notices you, chases you, attacks when close, then gives up and goes home. <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a> and <a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">Homing Enemies</a> are the two halves; this is the note that joins them into something that feels <strong>alive</strong>.</p>
+<h2 id="the-idea" class="heading"><a class="heading__anchor" href="#/enemy-states#the-idea" aria-label="Link to this section">#</a>The idea</h2><p>An enemy is in exactly <strong>one state at a time</strong>, and each state has its own behaviour and its own rules for switching. That&#39;s it — no framework required, just an <code>enum</code> and a <code>match</code>.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">IDLE ──sees you──&gt; CHASE ──close enough──&gt; ATTACK
+  ↑                  │                        │
+  └──lost you────────┘&lt;───────────────────────┘</code></pre></div><h2 id="the-whole-thing" class="heading"><a class="heading__anchor" href="#/enemy-states#the-whole-thing" aria-label="Link to this section">#</a>The whole thing</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+enum State { IDLE, PATROL, CHASE, ATTACK, HURT }
+
+@export var patrol_speed = 60.0
+@export var chase_speed = 140.0
+@export var attack_range = 40.0
+@export var give_up_distance = 400.0
+
+var state = State.PATROL
+var player: Node2D = null
+var patrol_direction = 1
+
+func _physics_process(delta):
+	match state:
+		State.IDLE:    do_idle(delta)
+		State.PATROL:  do_patrol(delta)
+		State.CHASE:   do_chase(delta)
+		State.ATTACK:  do_attack(delta)
+		State.HURT:    do_hurt(delta)
+	move_and_slide()
+
+func change_state(new_state):
+	if state == new_state:
+		return
+	state = new_state
+	match state:                        # things that happen ONCE on entering
+		State.PATROL: $Sprite.play(&quot;walk&quot;)
+		State.CHASE:  $Sprite.play(&quot;run&quot;);    $AlertSound.play()
+		State.ATTACK: $Sprite.play(&quot;attack&quot;); velocity = Vector2.ZERO
+		State.IDLE:   $Sprite.play(&quot;idle&quot;);   velocity = Vector2.ZERO
+		State.HURT:   $Sprite.play(&quot;hurt&quot;)</code></pre></div><p><strong><code>enum</code></strong> creates named numbers — <code>State.CHASE</code> instead of <code>2</code>. <strong><code>match</code></strong> is GDScript&#39;s switch: it runs only the branch that matches.</p>
+<p><code>change_state()</code> is where &quot;entry actions&quot; go — the alert sound plays <em>once</em> when the chase begins, not sixty times a second. That separation is the whole reason to write it as a function.</p>
+<h2 id="the-states" class="heading"><a class="heading__anchor" href="#/enemy-states#the-states" aria-label="Link to this section">#</a>The states</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func do_patrol(_delta):
+	velocity.x = patrol_direction * patrol_speed
+	if is_on_wall():
+		patrol_direction *= -1              # same as Patrol Enemies
+		$Sprite.flip_h = patrol_direction &lt; 0
+	if can_see_player():
+		change_state(State.CHASE)
+
+func do_chase(_delta):
+	if player == null:
+		change_state(State.PATROL)
+		return
+	var to_player = player.global_position - global_position
+	velocity = to_player.normalized() * chase_speed
+	$Sprite.flip_h = to_player.x &lt; 0
+
+	if to_player.length() &lt; attack_range:
+		change_state(State.ATTACK)
+	elif to_player.length() &gt; give_up_distance:
+		player = null
+		change_state(State.PATROL)
+
+func do_attack(_delta):
+	velocity = Vector2.ZERO             # committed -- can't move while swinging
+
+func do_idle(_delta):
+	velocity = Vector2.ZERO
+	if can_see_player():
+		change_state(State.CHASE)
+
+func do_hurt(_delta):
+	pass                                 # knockback code moves us; just wait</code></pre></div><h2 id="seeing-the-player" class="heading"><a class="heading__anchor" href="#/enemy-states#seeing-the-player" aria-label="Link to this section">#</a>Seeing the player</h2><p>The simplest version — an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> &quot;aggro zone&quot; child:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_aggro_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		player = body
+
+func _on_aggro_body_exited(body):
+	if body == player:
+		pass          # don't clear immediately -- give_up_distance handles it
+
+func can_see_player():
+	return player != null</code></pre></div><p>A better version that can&#39;t see through walls uses a <a class="wikilink" href="#/raycast2d" data-note="raycast2d">RayCast2D</a> — that note covers vision cones and line-of-sight properly.</p>
+<h2 id="making-states-end" class="heading"><a class="heading__anchor" href="#/enemy-states#making-states-end" aria-label="Link to this section">#</a>Making states end</h2><p><code>ATTACK</code> and <code>HURT</code> need to finish and hand control back:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func attack_finished():                    # called by the animation, or a Timer
+	change_state(State.CHASE)
+
+func take_damage(amount):
+	health -= amount
+	change_state(State.HURT)
+	await get_tree().create_timer(0.3).timeout
+	if health &lt;= 0:
+		die()
+	else:
+		change_state(State.CHASE)</code></pre></div><p>Connect <a class="wikilink" href="#/animationplayer" data-note="animationplayer">AnimationPlayer</a>&#39;s <code>animation_finished</code> signal, or use a <a class="wikilink" href="#/timer" data-note="timer">Timer</a> — either works.</p>
+<h2 id="why-this-is-worth-the-extra-code" class="heading"><a class="heading__anchor" href="#/enemy-states#why-this-is-worth-the-extra-code" aria-label="Link to this section">#</a>Why this is worth the extra code</h2><p>Compare a plain <a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">chaser</a> to this:</p>
+<div class="table-wrap"><table><thead><tr><th>Plain chaser</th><th>State-based enemy</th></tr></thead><tbody><tr><td>Beelines at you from across the level</td><td>Patrols its own area until it notices you</td></tr><tr><td>Attacks constantly while touching</td><td>Winds up, strikes, recovers — you can dodge it</td></tr><tr><td>Follows forever</td><td>Loses interest and goes home</td></tr><tr><td>Same behaviour always</td><td>Reacts to being hit</td></tr></tbody></table></div><p>The second one reads as a <em>creature with intentions</em>. Players describe it as &quot;smart&quot; even though it&#39;s about forty lines.</p>
+<h2 id="variations" class="heading"><a class="heading__anchor" href="#/enemy-states#variations" aria-label="Link to this section">#</a>Variations</h2><p><strong>Add a <code>SEARCH</code> state</strong> — walk to where it last saw you, look around for two seconds, then give up. Enormous perceived-intelligence gain for one extra state.</p>
+<p><strong>Add a <code>FLEE</code> state</strong> — run away below 25% health. Instantly memorable.</p>
+<p><strong>A boss with phases</strong> — <code>PHASE_1</code>, <code>PHASE_2</code>, <code>ENRAGED</code>, switching on health thresholds. Same pattern, bigger enemy:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func take_damage(amount):
+	health -= amount
+	if health &lt; max_health * 0.5 and state != State.PHASE_2:
+		change_state(State.PHASE_2)</code></pre></div><p><strong>A guard on a timer</strong> — <code>IDLE</code> for 3 seconds, <code>PATROL</code> for 5, repeat. Feels far more natural than constant motion.</p>
+<p><strong>A sleeping enemy</strong> — starts <code>IDLE</code>, wakes on noise or proximity. Great with a stealth <a class="wikilink" href="#/raycast2d" data-note="raycast2d">RayCast2D</a> vision cone.</p>
+<h2 id="debugging-states" class="heading"><a class="heading__anchor" href="#/enemy-states#debugging-states" aria-label="Link to this section">#</a>Debugging states</h2><p>Put the state on screen while you build it:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	$StateLabel.text = State.keys()[state]</code></pre></div><p><code>State.keys()</code> gives the names as text. This turns &quot;why is it doing that?&quot; into something you can just <em>look</em> at, and it&#39;s the fastest debugging trick in this note.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/enemy-states#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Sound plays every frame</td><td>Entry actions are in <code>_physics_process</code> instead of <code>change_state()</code></td></tr><tr><td>Enemy freezes forever</td><td>A state with no exit — <code>ATTACK</code> and <code>HURT</code> must lead somewhere</td></tr><tr><td>Flickers between two states</td><td>Chase and give-up thresholds are the same number. Make give-up distance clearly larger</td></tr><tr><td>Never notices the player</td><td>Aggro <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> missing a shape, or wrong mask</td></tr><tr><td>Ignores damage</td><td><code>take_damage</code> doesn&#39;t call <code>change_state(State.HURT)</code></td></tr><tr><td>Chases through walls</td><td>Add a <a class="wikilink" href="#/raycast2d" data-note="raycast2d">RayCast2D</a> line-of-sight check</td></tr></tbody></table></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Hysteresis, in one sentence</span></div><div class="callout__body"><p>Make the distance to <em>stop</em> chasing bigger than the distance to <em>start</em>. Equal thresholds cause an enemy that rapidly flickers between states at the boundary. This applies to almost every threshold in game AI.</p>
+</div></div>

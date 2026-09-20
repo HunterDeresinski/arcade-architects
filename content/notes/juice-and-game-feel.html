@@ -1,0 +1,66 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p>&quot;Juice&quot; = small effects that make the game <em>feel</em> alive — screen shake, pops, flashes, particles. None of it changes the rules; all of it changes how the game feels to play.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Juice comes last</span></div><div class="callout__body"><p>Only add juice once your game runs without crashing and the full start → play → lose → restart loop works. Juice added in a hurry is the #1 way to break a working game right before a showcase.</p>
+</div></div><p>Each effect below is self-contained: it plugs into a script you already have (your hit/game-over function, your pickup script, etc.). Node names are examples — swap in your project&#39;s actual names.</p>
+<h2 id="camera-shake-when-the-player-is-hit" class="heading"><a class="heading__anchor" href="#/juice-and-game-feel#camera-shake-when-the-player-is-hit" aria-label="Link to this section">#</a>Camera shake when the player is hit</h2><p><strong>Where it goes:</strong> the script on whatever node owns your camera — usually the Player.</p>
+<ol>
+<li>Select your <strong>Player</strong> in the Scene dock → <code>Ctrl+A</code> → add <strong>Camera2D</strong> (if you don&#39;t already have one). In the Inspector, make sure <strong>Enabled</strong> is checked.</li>
+<li>Add this function to that node&#39;s script:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func screen_shake():
+	var tween = create_tween()
+	for i in 6:
+		var offset = Vector2(randf_range(-8, 8), randf_range(-8, 8))
+		tween.tween_property($Camera2D, &quot;offset&quot;, offset, 0.03)
+	tween.tween_property($Camera2D, &quot;offset&quot;, Vector2.ZERO, 0.03)</code></pre></div><ol start="3">
+<li>Call <code>screen_shake()</code> from wherever the hit happens — e.g. inside your <code>_on_body_entered</code> or <code>game_over()</code> function.</li>
+<li>Press <strong>F5</strong> and get hit — the screen should jitter for a fraction of a second, then settle.</li>
+</ol>
+<ul>
+<li><code>create_tween()</code> — animates a property over time from code, no animation editor needed.</li>
+<li>The last line resets the camera to center so the game doesn&#39;t stay crooked.</li>
+</ul>
+<h2 id="a-quick-scale-pop-when-a-pickup-is-collected" class="heading"><a class="heading__anchor" href="#/juice-and-game-feel#a-quick-scale-pop-when-a-pickup-is-collected" aria-label="Link to this section">#</a>A quick scale pop when a pickup is collected</h2><p><strong>Where it goes:</strong> your pickup&#39;s script (the <code>Area2D</code> from <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>).</p>
+<p>Replace the instant <code>queue_free()</code> with a short grow-then-shrink tween first:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(_body):
+	collected.emit()
+	var tween = create_tween()
+	tween.tween_property($Sprite2D, &quot;scale&quot;, Vector2(1.4, 1.4), 0.1)
+	tween.tween_property($Sprite2D, &quot;scale&quot;, Vector2(1.0, 1.0), 0.1)
+	await tween.finished
+	queue_free()</code></pre></div><ul>
+<li><code>await tween.finished</code> — waits for the pop to finish before deleting the node, so the player actually sees it.</li>
+<li>If your pickup uses <code>AnimatedSprite2D</code> instead of <code>Sprite2D</code>, change the node path to match.</li>
+</ul>
+<h2 id="a-flashing-player-when-in-danger" class="heading"><a class="heading__anchor" href="#/juice-and-game-feel#a-flashing-player-when-in-danger" aria-label="Link to this section">#</a>A flashing player when in danger</h2><p><strong>Where it goes:</strong> your Player&#39;s script.</p>
+<ol>
+<li>Select <strong>Player</strong> → <code>Ctrl+A</code> → add <strong>Timer</strong> → rename <code>DangerTimer</code> → set <strong>Wait Time</strong> to <code>0.1</code> in the Inspector.</li>
+<li>Select <strong>DangerTimer</strong> → <strong>Signals</strong> tab → double-click <code>timeout</code> → <strong>Connect</strong> to the Player&#39;s script.</li>
+<li>In the connected function, toggle visibility; start/stop the timer whenever &quot;danger&quot; begins and ends in your game:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_danger_timer_timeout():
+	$AnimatedSprite2D.visible = not $AnimatedSprite2D.visible
+
+func start_danger():
+	$DangerTimer.start()
+
+func end_danger():
+	$DangerTimer.stop()
+	$AnimatedSprite2D.visible = true</code></pre></div><ul>
+<li>The <code>end_danger()</code> reset matters — without it the player can end up invisible forever.</li>
+</ul>
+<h2 id="a-particle-burst-on-death" class="heading"><a class="heading__anchor" href="#/juice-and-game-feel#a-particle-burst-on-death" aria-label="Link to this section">#</a>A particle burst on death</h2><p>Full node reference: <a class="wikilink" href="#/particles" data-note="particles">Particles</a>.</p>
+<p><strong>Where it goes:</strong> your <strong>Main</strong> scene (not the Player — the burst has to survive even when the player is hidden).</p>
+<ol>
+<li>Select <strong>Main</strong> → <code>Ctrl+A</code> → add <strong>GPUParticles2D</strong> → rename <code>DeathParticles</code>.</li>
+<li>In the Inspector: uncheck <strong>Emitting</strong>, check <strong>One Shot</strong>, set <strong>Amount</strong> to <code>16</code>, <strong>Lifetime</strong> to <code>0.6</code>.</li>
+<li>Under <strong>Process Material</strong>, click <code>[empty]</code> → <strong>New ParticleProcessMaterial</strong> → expand it → set <strong>Spread</strong> to <code>180</code> and <strong>Initial Velocity Min/Max</strong> to about <code>100</code>/<code>200</code> for an even outward burst.</li>
+<li>Trigger it in <strong>main.gd</strong>, wherever your game-over logic runs:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	$DeathParticles.global_position = $Player.global_position
+	$DeathParticles.restart()
+	$DeathParticles.emitting = true
+	# ...then whatever else your game_over already does</code></pre></div><ol start="5">
+<li>Press <strong>F5</strong> and die on purpose — you should see a burst of particles right where the player was.</li>
+</ol>

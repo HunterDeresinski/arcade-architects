@@ -1,0 +1,122 @@
+<p>A 5-day game development camp modeled on CU Boulder&#39;s <em>Tiny Game Studio</em> (ATLS 4060) philosophy: <strong>tiny games</strong> — short games with tight technical constraints, built quickly, around a single idea. Instead of Bitsy/PuzzleScript/Pico-8, campers use one engine (<strong>Godot 4</strong>) and progress from guided template games to a fully original team game presented on the final day.</p>
+<p><strong>Structure:</strong> Each day = Teaching Block (~3 hrs, required) + Open Studio (optional work time)
+<strong>Team size:</strong> 3–4 per team</p>
+<div class="callout callout--note"><div class="callout__head"><span class="callout__icon">ℹ️</span><span class="callout__title">This is the overview. The full lesson-by-lesson curriculum, student references, and instructor notes live in the <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a>.</span></div><div class="callout__body"></div></div><hr>
+<h2 id="camp-goals" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#camp-goals" aria-label="Link to this section">#</a>Camp Goals</h2><p>By Friday, every camper can:</p>
+<ol>
+<li>Navigate Godot: scenes, nodes, the editor, running a game</li>
+<li>Read and modify GDScript (variables, signals, <code>_process</code>, simple conditionals)</li>
+<li>Build 1–3 tiny games from tutorials/templates</li>
+<li>Design within constraints: scope a game idea down to one mechanic</li>
+<li>Ship one <strong>original team game</strong> and present it at the Friday Arcade Showcase</li>
+</ol>
+<p><strong>The Tiny Game Rules</strong> (post these on the wall all week):</p>
+<ul>
+<li>One core idea. If you can&#39;t say it in one sentence, it&#39;s too big.</li>
+<li>Playable in under 3 minutes.</li>
+<li>Done is better than perfect. Cut features, not deadlines.</li>
+</ul>
+<hr>
+<h2 id="week-at-a-glance" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#week-at-a-glance" aria-label="Link to this section">#</a>Week at a Glance</h2><div class="table-wrap"><table><thead><tr><th>Day</th><th>Theme</th><th>Output</th></tr></thead><tbody><tr><td>Mon</td><td>Meet Godot — build Game #1 from a tutorial</td><td>Dodge the Creeps (everyone)</td></tr><tr><td>Tue</td><td>Make it yours — remix Game #1 into Game #2</td><td>Personal remix</td></tr><tr><td>Wed</td><td>Design day — pitch, form teams, prototype</td><td>Team pitch + paper prototype + project setup</td></tr><tr><td>Thu</td><td>Production day — build the team game</td><td>Playable MVP</td></tr><tr><td>Fri</td><td>Polish + Arcade Showcase (4–6 PM for parents)</td><td>Final game + presentation</td></tr></tbody></table></div><p>Games #1 and #2 are individual/pair skill-builders. Game #3 is the original team game. (Fast campers may squeeze in an extra micro-game during Open Studio — that&#39;s the &quot;1–3 games&quot; range.)</p>
+<hr>
+<h2 id="day-1-mon-meet-godot" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#day-1-mon-meet-godot" aria-label="Link to this section">#</a>Day 1 (Mon) — Meet Godot</h2><blockquote>
+<p>📓 Full lesson + student reference: <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>
+🖨️ Print before camp: <span class="link-missing" title="Not published on this site">Day 1 Student Checklist</span> (one per student)</p>
+</blockquote>
+<p><strong>Goal:</strong> Everyone leaves with a complete, running game they typed themselves — <em>Dodge the Creeps</em> in Godot 4.</p>
+<h3 id="teaching-block-schedule" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#teaching-block-schedule" aria-label="Link to this section">#</a>Teaching Block Schedule</h3><div class="table-wrap"><table><thead><tr><th>Time</th><th>Block</th></tr></thead><tbody><tr><td>9:00–9:15</td><td>Welcome + What is a Tiny Game?</td></tr><tr><td>9:15–9:40</td><td>Godot Editor Tour + Project Setup</td></tr><tr><td>9:40–10:20</td><td><strong>Part 1:</strong> Build the Player (nodes, animations, script)</td></tr><tr><td>10:20–10:30</td><td>☕ Break</td></tr><tr><td>10:30–11:00</td><td><strong>Part 2:</strong> Build the Mob (enemy scene)</td></tr><tr><td>11:00–11:10</td><td>☕ Break</td></tr><tr><td>11:10–11:45</td><td><strong>Part 3:</strong> Main Scene (wire everything together)</td></tr><tr><td>11:45–12:00</td><td>Stand-up close + exit ticket</td></tr></tbody></table></div><p><strong>This is our own Godot 4 walkthrough</strong> — not the official docs video (which uses Godot 3). See <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a> for the inspiration video link.</p>
+<h3 id="what-students-are-building" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#what-students-are-building" aria-label="Link to this section">#</a>What students are building</h3><p>Dodge the Creeps: a character you move with arrow keys, enemies that fly in from the edges, survive as long as you can. It covers: scenes, nodes, AnimatedSprite2D, GDScript, movement, signals, collision, and spawning with timers.</p>
+<h3 id="open-studio-optional" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#open-studio-optional" aria-label="Link to this section">#</a>Open Studio (optional)</h3><p>HUD (score + start button), background color, background music, death sound, stretch goals. See the Stretch Goals section in <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>.</p>
+<h2 id="day-2-tue-make-it-yours-remix" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#day-2-tue-make-it-yours-remix" aria-label="Link to this section">#</a>Day 2 (Tue) — Make It Yours (Remix)</h2><blockquote>
+<p>📓 Full lesson + student reference: <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a></p>
+</blockquote>
+<p><strong>Goal:</strong> Move from <em>following</em> code to <em>changing</em> code. Game #2 = a personal remix of Game #1.</p>
+<h3 id="teaching-block" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#teaching-block" aria-label="Link to this section">#</a>Teaching Block</h3><p><strong>0:00–0:15 — Warm-up: read the code</strong>
+Project a chunk of yesterday&#39;s player script. Ask: &quot;What happens if I change this number? Delete this line?&quot; Change it live. Normalize breaking things.</p>
+<p><strong>0:15–0:45 — Mini-lessons (pick 3, ~10 min each)</strong></p>
+<ul>
+<li>Swapping sprites and sounds (importing assets, AnimatedSprite2D)</li>
+<li>Variables as game-feel dials: speed, spawn rate, scale</li>
+<li>Adding a new rule with <code>if</code> (e.g., touching a star = +10 points)</li>
+<li>Timers and signals (e.g., speed up every 10 seconds)</li>
+</ul>
+<p><strong>0:45–2:30 — Remix sprint</strong>
+Each camper (or pair) remixes Dodge the Creeps into a new game. Require <strong>at least 3 changes across 2 categories</strong>:</p>
+<ul>
+<li><em>Look/sound:</em> new art, new audio, new title</li>
+<li><em>Rules:</em> new pickup, lives, win condition, second enemy behavior</li>
+<li><em>Feel:</em> speed, gravity, spawn rates, screen size</li>
+</ul>
+<p>Remix prompts for the stuck: &quot;the player is a fish,&quot; &quot;dodging is collecting,&quot; &quot;the game speeds up forever,&quot; &quot;two-button game only.&quot;</p>
+<p><strong>2:30–3:00 — Playtest carousel</strong>
+Rotate seats every 3 minutes, play each other&#39;s remixes, leave one sticky note: Something you liked + One question.</p>
+<h3 id="open-studio-optional-2" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#open-studio-optional-2" aria-label="Link to this section">#</a>Open Studio (optional)</h3><p>Keep remixing, or start the optional micro-game challenge: a one-screen, one-button game from scratch (this is the path to &quot;3 games&quot;).</p>
+<h2 id="day-3-wed-design-day-pitch-teams-prototype" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#day-3-wed-design-day-pitch-teams-prototype" aria-label="Link to this section">#</a>Day 3 (Wed) — Design Day: Pitch, Teams, Prototype</h2><blockquote>
+<p>📓 Full lesson + student reference: <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a></p>
+</blockquote>
+<p><strong>Goal:</strong> Shift from learning the engine to making something original. Leave with teams, a locked one-sentence pitch, a paper prototype, and an empty-but-set-up Godot project.</p>
+<h3 id="teaching-block-2" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#teaching-block-2" aria-label="Link to this section">#</a>Teaching Block</h3><p><strong>0:00–0:30 — Tiny game design crash course</strong>
+Core loop (&quot;what does the player do every 5 seconds?&quot;), constraints breed creativity, scope (&quot;your idea ÷ 4&quot;). Show examples of jam games made in 48 hours.</p>
+<p><strong>0:30–1:00 — Brainstorm with constraints</strong>
+Roll the <strong>constraint dice</strong> (or draw cards). Every game must satisfy the camp constraint set:</p>
+<ul>
+<li>One screen OR one mechanic OR one button (pick at least one)</li>
+<li>Playable in under 3 minutes</li>
+<li>Buildable with skills from Days 1–2 (movement, collision, pickups, score, timers)</li>
+</ul>
+<p>Solo silent brainstorm (8 min, sticky notes) → cluster ideas on the wall → dot-vote.</p>
+<p><strong>1:00–1:30 — Form teams + pitch</strong>
+Teams of 3–4 form around the top ideas. Each team writes its <strong>one-sentence pitch</strong> (&quot;You are a ___ who ___ until ___&quot;) and gets it approved by an instructor. Instructor&#39;s job here: <em>cut scope ruthlessly.</em></p>
+<p><strong>1:30–2:15 — Paper prototype</strong>
+Draw the screen, the player, the obstacles. Walk through 30 seconds of play out loud. Another team plays the paper version and asks questions.</p>
+<p><strong>2:15–3:00 — Project setup + roles</strong>
+Create the team Godot project, build the main scene skeleton, get a player moving on screen before the block ends. Assign rotating roles:</p>
+<ul>
+<li><strong>Lead/Producer</strong> — keeps the task list, watches scope</li>
+<li><strong>Engineer(s)</strong> — scripts and scenes</li>
+<li><strong>Artist/Sound</strong> — sprites, palette, audio (Kenney, jsfxr/BeepBox)</li>
+<li><strong>Playtest lead</strong> — runs tests, logs bugs</li>
+</ul>
+<p>Sharing work on one project: simplest is <strong>one &quot;main&quot; computer</strong> + others build pieces (scenes, art, sounds) and transfer via Google Drive. I thought about using GitHub but its too complicated for this and everyone would need an account or we would have to have all this setup before hand.</p>
+<h3 id="open-studio-optional-3" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#open-studio-optional-3" aria-label="Link to this section">#</a>Open Studio (optional)</h3><p>Start building. Teams that move fast: get the core mechanic playable today.</p>
+<hr>
+<h2 id="day-4-thu-production-day" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#day-4-thu-production-day" aria-label="Link to this section">#</a>Day 4 (Thu) — Production Day</h2><blockquote>
+<p>📓 Full lesson + student reference: <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+</blockquote>
+<p><strong>Goal:</strong> A playable Minimal Viable Project (MVP) by end of teaching block. Ugly is fine; playable is &quot;mandatory&quot;.</p>
+<h3 id="teaching-block-3" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#teaching-block-3" aria-label="Link to this section">#</a>Teaching Block</h3><p><strong>0:00–0:10 — Stand-up</strong>
+Each team, 60 seconds: done yesterday / doing today / what&#39;s blocking us.</p>
+<p><strong>0:10–0:20 — MVP talk</strong>
+Define MVP: player can play, win or lose, and restart. <em>That&#39;s it.</em> Everything else is polish. Have each team write their MVP checklist on an index card; tape it to the monitor.</p>
+<p><strong>0:20–2:20 — Build sprint</strong>
+Instructors float and unblock. Run <strong>on-demand micro-lessons</strong> at a side table as needs emerge (typical requests: scene switching for a title/game-over screen, score labels, restart button, background music, simple enemy AI).</p>
+<p><strong>2:20–2:50 — Mandatory playtest exchange</strong>
+Teams swap machines and play each other&#39;s MVPs for 10 minutes, then deliver: 2 things that work, 1 confusing thing, 1 suggestion. Teams triage feedback into <em>fix tomorrow</em> vs. <em>cut</em>.</p>
+<p><strong>2:50–3:00 — Scope check</strong>
+Each team crosses off anything on their list they won&#39;t finish by tomorrow&#39;s 3 PM build deadline. Instructor signs off.</p>
+<h3 id="open-studio-optional-4" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#open-studio-optional-4" aria-label="Link to this section">#</a>Open Studio (optional)</h3><p>This is the high-value work session — expect most teams to stay. Hard rule: no <em>new</em> features after today. Tomorrow is polish only.</p>
+<hr>
+<h2 id="day-5-fri-polish-arcade-showcase" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#day-5-fri-polish-arcade-showcase" aria-label="Link to this section">#</a>Day 5 (Fri) — Polish + Arcade Showcase</h2><blockquote>
+<p>📓 Full lesson + student reference: <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+</blockquote>
+<p><strong>Goal:</strong> Finish, present, celebrate. <strong>Showcase is 4:00–6:00 PM</strong> so parents can attend after work (adjust as needed) — which makes Friday the one day where Open Studio time is effectively part of the schedule.</p>
+<h3 id="teaching-block-morning" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#teaching-block-morning" aria-label="Link to this section">#</a>Teaching Block (morning)</h3><p><strong>0:00–0:10 — Stand-up + freeze warning</strong>
+Feature freeze is already in effect. Today: bug fixes, title screen, sounds, juice (screen shake, particles — only if stable).</p>
+<p><strong>0:10–2:00 — Polish sprint</strong>
+Must-haves before the showcase: title screen with the game&#39;s name and team names, a way to restart, no crashes in 3 minutes of play.</p>
+<p><strong>2:00–2:30 — Presentation prep</strong>
+Each team preps a 3–4 minute presentation: game name + one-sentence pitch, live demo (a teammate plays while another talks), one thing that was hard and how they solved it, one thing they&#39;d add with another week.</p>
+<p><strong>2:30–3:00 — Dress rehearsal</strong>
+Each team runs its presentation once for the room. Fix timing, decide who talks/who plays.</p>
+<h3 id="afternoon-before-doors-open" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#afternoon-before-doors-open" aria-label="Link to this section">#</a>Afternoon (before doors open)</h3><ul>
+<li>Final bug fixes only — no new anything</li>
+<li><strong>3:00 — hard deadline:</strong> working builds on the demo machine(s) (export or run-from-editor)</li>
+<li>3:00–4:00: set up arcade stations (team game + Day 2 remixes), voting tickets, certificates; teams take a break</li>
+</ul>
+<h3 id="arcade-showcase-4-00-6-00-pm" class="heading"><a class="heading__anchor" href="#/arcade-architects-v1#arcade-showcase-4-00-6-00-pm" aria-label="Link to this section">#</a>🕹️ Arcade Showcase — 4:00–6:00 PM</h3><ul>
+<li><strong>4:00–4:15</strong> — Doors open, parents arrive, games on attract-mode at stations</li>
+<li><strong>4:15–5:00</strong> — Team presentations (3–4 min each + applause)</li>
+<li><strong>5:00–5:45</strong> — <strong>Open arcade:</strong> all games playable at stations, parents and campers vote with tickets for superlatives — Most Creative, Best Feel, Funniest, Best Title Screen. Every team wins something.</li>
+<li><strong>5:45–6:00</strong> — Awards, certificates, where to keep going (Godot docs, GDQuest, 20 Games Challenge, itch.io game jams), and how to take projects home (USB/email/itch.io upload)</li>
+</ul>
+<hr>

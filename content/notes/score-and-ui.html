@@ -1,0 +1,40 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to show score, lives, and messages on screen. UI = the text and buttons layered on top of the game.</p>
+<h2 id="showing-text-the-label-node" class="heading"><a class="heading__anchor" href="#/score-and-ui#showing-text-the-label-node" aria-label="Link to this section">#</a>Showing text: the Label node</h2><ol>
+<li>Add a <strong><code>CanvasLayer</code></strong> node (keeps UI fixed on screen, not moving with the world).</li>
+<li>Under it, add a <strong><code>Label</code></strong> node. Type placeholder text, position it, set font size in the Inspector.</li>
+</ol>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Player
+└── UI            (CanvasLayer)
+	├── ScoreLabel  (Label)
+	└── Message     (Label)</code></pre></div><h2 id="updating-the-score-from-code" class="heading"><a class="heading__anchor" href="#/score-and-ui#updating-the-score-from-code" aria-label="Link to this section">#</a>Updating the score from code</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node
+
+var score = 0
+
+func _ready():
+	update_score_label()
+
+func add_points(amount):
+	score += amount
+	update_score_label()
+
+func update_score_label():
+	$UI/ScoreLabel.text = &quot;Score: &quot; + str(score)</code></pre></div><ul>
+<li><code>str(score)</code> turns the number into text so you can join it with <code>&quot;Score: &quot;</code>.</li>
+<li><code>$UI/ScoreLabel</code> = &quot;the Label named ScoreLabel, inside UI.&quot;</li>
+</ul>
+<h2 id="score-that-ticks-up-over-time" class="heading"><a class="heading__anchor" href="#/score-and-ui#score-that-ticks-up-over-time" aria-label="Link to this section">#</a>Score that ticks up over time</h2><p>Use a repeating <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Timer</a> (Wait Time <code>1.0</code>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_score_timer_timeout():
+	add_points(1)</code></pre></div><h2 id="receiving-points-from-a-coin" class="heading"><a class="heading__anchor" href="#/score-and-ui#receiving-points-from-a-coin" aria-label="Link to this section">#</a>Receiving points from a coin</h2><p>If your coin emits a <code>collected</code> signal (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>), connect it here:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_coin_collected():
+	add_points(10)</code></pre></div><h2 id="show-a-message-game-over-you-win" class="heading"><a class="heading__anchor" href="#/score-and-ui#show-a-message-game-over-you-win" aria-label="Link to this section">#</a>Show a message (Game Over / You Win)</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func show_message(text):
+	$UI/Message.text = text
+	$UI/Message.show()
+
+func hide_message():
+	$UI/Message.hide()</code></pre></div><h2 id="a-start-restart-button" class="heading"><a class="heading__anchor" href="#/score-and-ui#a-start-restart-button" aria-label="Link to this section">#</a>A start/restart button</h2><p>Add a <strong><code>Button</code></strong> node, connect its <code>pressed</code> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_start_button_pressed():
+	get_tree().reload_current_scene()   # restart the game</code></pre></div><p>More on screens and restarting: <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>. To make a score survive closing the game, see <a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a>.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Keep UI separate</span></div><div class="callout__body"><p>Put all score/lives/message Labels under one <code>CanvasLayer</code> named UI. It keeps them pinned to the screen and easy to find.</p>
+</div></div>

@@ -1,0 +1,56 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>The go-to node for anything the player controls (or any enemy that walks around and hits walls). It&#39;s a physics body that <em>you</em> move with code — the engine handles the &quot;don&#39;t walk through walls&quot; part. Builds on <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a> and <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>.</p>
+<h2 id="what-characterbody2d-is-and-isn-t" class="heading"><a class="heading__anchor" href="#/characterbody2d#what-characterbody2d-is-and-isn-t" aria-label="Link to this section">#</a>What CharacterBody2D is (and isn&#39;t)</h2><p>Godot has three kinds of 2D physics bodies:</p>
+<ul>
+<li><strong><code>StaticBody2D</code></strong> — never moves. Walls, floors, <a class="wikilink" href="#/obstacles" data-note="obstacles">Obstacles</a>. No script needed.</li>
+<li><strong><code>CharacterBody2D</code></strong> — moved by <em>your code</em> via <code>move_and_slide()</code>. Players, enemies.</li>
+<li><strong><code>RigidBody2D</code></strong> — moved by the <em>physics engine</em> (gravity, bouncing). Skip it for camp games — it fights you.</li>
+</ul>
+<p>An <code>Area2D</code> is <strong>not</strong> a body — it detects overlaps but can&#39;t be blocked by anything. That&#39;s why the Day 1 Area2D player can&#39;t have solid walls (see <a class="wikilink" href="#/obstacles" data-note="obstacles">Obstacles</a>).</p>
+<h2 id="scene-setup-step-by-step" class="heading"><a class="heading__anchor" href="#/characterbody2d#scene-setup-step-by-step" aria-label="Link to this section">#</a>Scene setup, step by step</h2><ol>
+<li><strong>Scene → New Scene</strong>, click <strong>Other Node</strong>, pick <strong>CharacterBody2D</strong>. Rename it <code>Player</code>.</li>
+<li>Add a child: <strong>Sprite2D</strong> (or <a class="wikilink" href="#/animatedsprite2d" data-note="animatedsprite2d">AnimatedSprite2D</a>). Drag a texture into its <strong>Texture</strong> slot.</li>
+<li>Add a child: <strong>CollisionShape2D</strong>. In the Inspector, set <strong>Shape</strong> to a <strong>CapsuleShape2D</strong> (or Rectangle/Circle) and size it to roughly match the sprite.</li>
+<li>Save as <code>player.tscn</code>.</li>
+</ol>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player          (CharacterBody2D)   ← script goes here
+├── Sprite      (Sprite2D or AnimatedSprite2D)
+└── Shape       (CollisionShape2D)  ← must have an actual shape assigned</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">The yellow warning triangle</span></div><div class="callout__body"><p>A CharacterBody2D with no CollisionShape2D (or a CollisionShape2D with an empty Shape) shows a ⚠️ in the Scene dock and won&#39;t collide with anything. Same #1 mistake as <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>.</p>
+</div></div><h2 id="setting-up-input-actions" class="heading"><a class="heading__anchor" href="#/characterbody2d#setting-up-input-actions" aria-label="Link to this section">#</a>Setting up input actions</h2><p>Before writing movement code, name your inputs. <strong>Project → Project Settings → Input Map</strong>:</p>
+<ol>
+<li>Type <code>move_left</code> in the &quot;Add New Action&quot; box, click <strong>Add</strong>.</li>
+<li>Click the <strong>+</strong> next to the action, press the key (A or ←), click <strong>OK</strong>.</li>
+<li>Repeat for <code>move_right</code>, <code>move_up</code>, <code>move_down</code> (and <code>jump</code> if you need it — see <a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>).</li>
+</ol>
+<h2 id="basic-movement-top-down" class="heading"><a class="heading__anchor" href="#/characterbody2d#basic-movement-top-down" aria-label="Link to this section">#</a>Basic movement (top-down)</h2><p>Attach a script to the Player root:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 400
+
+func _physics_process(delta):
+	# get_vector reads all four actions and returns a normalized direction
+	var direction = Input.get_vector(&quot;move_left&quot;, &quot;move_right&quot;, &quot;move_up&quot;, &quot;move_down&quot;)
+	velocity = direction * speed
+	move_and_slide()</code></pre></div><p>That&#39;s the whole thing. Notes:</p>
+<ul>
+<li><code>velocity</code> is <strong>built into</strong> CharacterBody2D — don&#39;t declare <code>var velocity</code>, it already exists.</li>
+<li><code>move_and_slide()</code> uses <code>velocity</code> automatically (no arguments) and slides along walls instead of stopping dead.</li>
+<li><code>Input.get_vector()</code> is already normalized — diagonals aren&#39;t faster. It replaces the four <code>if</code> statements from <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a>.</li>
+<li>Movement goes in <code>_physics_process</code>, not <code>_process</code> — it runs in sync with the physics engine.</li>
+</ul>
+<p>For jumping and gravity instead of top-down, see <a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>.</p>
+<h2 id="what-people-actually-do-with-a-characterbody2d" class="heading"><a class="heading__anchor" href="#/characterbody2d#what-people-actually-do-with-a-characterbody2d" aria-label="Link to this section">#</a>What people actually do with a CharacterBody2D</h2><ul>
+<li><strong>The player</strong>, top-down or platformer (<a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>).</li>
+<li><strong>Walking enemies</strong> — a <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">patroller</a> that turns at walls, or a <a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">chaser</a> that steers at you every frame.</li>
+<li><strong>Anything that must not pass through walls but isn&#39;t controlled by physics</strong> — an escort NPC, a pushable-but-scripted crate.</li>
+</ul>
+<p>Three helpers you get for free after calling <code>move_and_slide()</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">is_on_floor()    # standing on ground -- the heart of jumping
+is_on_wall()     # touching a wall -- how a patroller knows to turn around
+is_on_ceiling()  # bonked your head</code></pre></div><p>And for reacting to <em>what</em> you hit:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">for i in get_slide_collision_count():
+	var c = get_slide_collision(i)
+	print(&quot;bumped into &quot;, c.get_collider().name)</code></pre></div><h2 id="collision-layers-and-masks" class="heading"><a class="heading__anchor" href="#/characterbody2d#collision-layers-and-masks" aria-label="Link to this section">#</a>Collision layers and masks</h2><p>Every physics body has a <strong>Layer</strong> (&quot;what am I?&quot;) and a <strong>Mask</strong> (&quot;what do I look at?&quot;), set in <strong>Inspector → Collision</strong>. A collision happens only if <strong>A&#39;s mask includes B&#39;s layer</strong>.</p>
+<p>The full scheme — the layer names to use, the layer/mask table for every scene type in this reference, the Hurtbox pattern, and the debugging table — lives in one place: <strong><a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a></strong>. For a Day 1 or Day 2 game the defaults are fine; go read that note the first time something passes through a wall it shouldn&#39;t.</p>
+<p>The short version for a player:</p>
+<div class="table-wrap"><table><thead><tr><th>Scene</th><th>Layer</th><th>Mask</th></tr></thead><tbody><tr><td>Player (CharacterBody2D)</td><td>player</td><td>obstacles</td></tr><tr><td>Player&#39;s Hurtbox (child Area2D)</td><td><em>(none)</em></td><td>mobs, hazards</td></tr></tbody></table></div><p>Give the body a child <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> named <code>Hurtbox</code> to detect damage. Moving solidly and noticing hits are two different jobs — don&#39;t make one node do both.</p>

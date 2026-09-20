@@ -1,0 +1,61 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-2-index" data-note="tier-2-index">Tier 2 — Showcase Payoff</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ huge (on Friday) · <strong>Time:</strong> 20 minutes</p>
+<p>Two people playing at once, and controller support. <a class="wikilink" href="#/bouncing-ball" data-note="bouncing-ball">Bouncing Ball</a> builds a two-player Pong; this is the general technique for any game.</p>
+<h2 id="why-bother" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#why-bother" aria-label="Link to this section">#</a>Why bother</h2><p>At a showcase, <strong>a two-player game draws a crowd and a single-player game draws a line.</strong> People wait their turn for one and gather around the other. If a team is undecided about their pitch on Day 3, this is a strong argument for versus or co-op.</p>
+<h2 id="the-core-idea-one-scene-exported-action-names" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#the-core-idea-one-scene-exported-action-names" aria-label="Link to this section">#</a>The core idea: one scene, exported action names</h2><p>Don&#39;t build <code>player1.tscn</code> and <code>player2.tscn</code>. Build <strong>one</strong> player scene whose input action names are <code>@export</code>ed, then set them per instance in the Inspector.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var up_action    = &quot;p1_up&quot;
+@export var down_action  = &quot;p1_down&quot;
+@export var left_action  = &quot;p1_left&quot;
+@export var right_action = &quot;p1_right&quot;
+@export var fire_action  = &quot;p1_fire&quot;
+
+@export var speed = 400.0
+
+func _physics_process(_delta):
+	var dir = Input.get_vector(left_action, right_action, up_action, down_action)
+	velocity = dir * speed
+	move_and_slide()
+
+	if Input.is_action_just_pressed(fire_action):
+		shoot()</code></pre></div><p>Drag the scene in twice, change five strings on the second one, done. One script to fix bugs in, two players.</p>
+<h2 id="setting-up-the-input-map" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#setting-up-the-input-map" aria-label="Link to this section">#</a>Setting up the Input Map</h2><p><strong>Project → Project Settings → Input Map.</strong> Create both sets:</p>
+<div class="table-wrap"><table><thead><tr><th>Player 1</th><th>Keys</th><th>Player 2</th><th>Keys</th></tr></thead><tbody><tr><td><code>p1_up</code></td><td>W</td><td><code>p2_up</code></td><td>↑</td></tr><tr><td><code>p1_down</code></td><td>S</td><td><code>p2_down</code></td><td>↓</td></tr><tr><td><code>p1_left</code></td><td>A</td><td><code>p2_left</code></td><td>←</td></tr><tr><td><code>p1_right</code></td><td>D</td><td><code>p2_right</code></td><td>→</td></tr><tr><td><code>p1_fire</code></td><td>Space</td><td><code>p2_fire</code></td><td>Enter</td></tr></tbody></table></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Sit them apart</span></div><div class="callout__body"><p>WASD and the arrow keys are far enough apart that two people can share one keyboard without fighting for elbow room. Don&#39;t put both players on the same half.</p>
+</div></div><h2 id="adding-controllers" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#adding-controllers" aria-label="Link to this section">#</a>Adding controllers</h2><p>An action can hold <strong>several</strong> events at once — keyboard <em>and</em> gamepad. In the Input Map, click <strong>+</strong> next to an action and choose <strong>Joypad Button</strong> or <strong>Joypad Axis</strong>.</p>
+<p>The key field is <strong>Device</strong>:</p>
+<ul>
+<li><strong>Device 0</strong> = first controller, <strong>Device 1</strong> = second, and so on.</li>
+<li><strong>Device -1 / &quot;All Devices&quot;</strong> = any controller. Fine for single-player, <strong>wrong for two-player</strong> — both players would move on either pad.</li>
+</ul>
+<p>So for real two-player controller support: <code>p1_*</code> actions get gamepad events on <strong>Device 0</strong>, <code>p2_*</code> actions get the same buttons on <strong>Device 1</strong>.</p>
+<h3 id="analog-sticks" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#analog-sticks" aria-label="Link to this section">#</a>Analog sticks</h3><p><code>Input.get_vector()</code> already returns analog values, so a stick gives you smooth 0–1 movement for free. Add <strong>Joypad Axis → Left Stick</strong> events to your directional actions and it just works.</p>
+<p><strong>Deadzone</strong> (a field on each action, default <code>0.2</code>) stops a worn stick from drifting. Raise it to <code>0.3</code> if a controller creeps on its own.</p>
+<h2 id="detecting-connected-controllers" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#detecting-connected-controllers" aria-label="Link to this section">#</a>Detecting connected controllers</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	print(&quot;Controllers: &quot;, Input.get_connected_joypads())
+
+func _input(event):
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		show_gamepad_prompts()
+	elif event is InputEventKey:
+		show_keyboard_prompts()</code></pre></div><p>Swapping the button prompts on screen when a player picks up a controller is a small touch that reads as very polished.</p>
+<p>Godot also emits a signal when a pad is plugged in mid-game:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	Input.joy_connection_changed.connect(_on_joy_changed)
+
+func _on_joy_changed(device, connected):
+	print(&quot;Device %d %s&quot; % [device, &quot;connected&quot; if connected else &quot;disconnected&quot;])</code></pre></div><h2 id="rumble" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#rumble" aria-label="Link to this section">#</a>Rumble</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">Input.start_joy_vibration(0, 0.4, 0.7, 0.25)   # device, weak, strong, seconds</code></pre></div><p>Fire it when the player takes damage (<a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>) or lands a hit. Costs one line and feels great — see <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>.</p>
+<h2 id="co-op-vs-versus" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#co-op-vs-versus" aria-label="Link to this section">#</a>Co-op vs versus</h2><p><strong>Versus</strong> is easier to design and better at a showcase. Pong, a shooting duel, a race, a king-of-the-hill. Scoring is obvious and matches end quickly, so the queue moves.</p>
+<p><strong>Co-op</strong> needs more thought — a shared <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> has to frame both players. The cheap fix is a fixed camera on one screen; the real fix is a camera that follows the midpoint and zooms out as they separate:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Camera2D
+
+@export var p1: NodePath
+@export var p2: NodePath
+
+func _process(_delta):
+	var a = get_node(p1).global_position
+	var b = get_node(p2).global_position
+	global_position = (a + b) / 2.0
+	var dist = a.distance_to(b)
+	zoom = Vector2.ONE * clamp(700.0 / max(dist, 1.0), 0.5, 1.0)</code></pre></div><p><strong>Simplest co-op of all:</strong> keep both players on one screen and don&#39;t let them leave it. Clamp their positions to the viewport and skip cameras entirely.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/two-player-and-gamepad#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Both players move together</td><td>Both instances still use <code>p1_*</code> — set the exports on player 2</td></tr><tr><td>Both pads control both players</td><td>Device is <code>-1</code> (All Devices). Set 0 and 1 explicitly</td></tr><tr><td>Controller does nothing</td><td>Plug it in <strong>before</strong> launching; check <code>Input.get_connected_joypads()</code></td></tr><tr><td>Character drifts on its own</td><td>Raise the action&#39;s deadzone</td></tr><tr><td>Keys &quot;stick&quot; with 3+ pressed at once</td><td>Cheap keyboards have limited rollover — this is hardware, not code. Use controllers</td></tr><tr><td>Player 2 falls off screen in co-op</td><td>Clamp positions, or use the midpoint camera</td></tr></tbody></table></div>

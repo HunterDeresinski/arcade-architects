@@ -1,0 +1,90 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-3-index" data-note="tier-3-index">Tier 3 — Genre Unlocks</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐ solid · <strong>Time:</strong> 30 minutes</p>
+<p>Asteroids movement: you rotate, you thrust forward, you drift, and you wrap around the screen edges. It&#39;s a completely different feel from the eight-directional movement in <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a> — and it&#39;s the single most <em>arcade</em> control scheme there is.</p>
+<p><strong>Arcade Architects, after all.</strong> If a team wants to build something that feels like it belongs in a cabinet, this is it.</p>
+<h2 id="rotate-and-thrust-movement" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#rotate-and-thrust-movement" aria-label="Link to this section">#</a>Rotate-and-thrust movement</h2><p>The key difference: <strong>the direction you face and the direction you&#39;re travelling are not the same thing.</strong> That gap is the entire skill of the genre.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var thrust_power = 500.0
+@export var rotation_speed = 3.5
+@export var max_speed = 600.0
+@export var friction = 0.4          # 0 = true space, higher = more drag
+
+func _physics_process(delta):
+	# turning
+	var turn = Input.get_axis(&quot;move_left&quot;, &quot;move_right&quot;)
+	rotation += turn * rotation_speed * delta
+
+	# thrusting -- push in the direction the nose is pointing
+	if Input.is_action_pressed(&quot;move_up&quot;):
+		velocity += Vector2.RIGHT.rotated(rotation) * thrust_power * delta
+		$Flame.emitting = true
+	else:
+		$Flame.emitting = false
+		velocity = velocity.move_toward(Vector2.ZERO, friction * 60 * delta)
+
+	velocity = velocity.limit_length(max_speed)
+	move_and_slide()
+	wrap_screen()</code></pre></div><ul>
+<li><strong><code>Vector2.RIGHT.rotated(rotation)</code></strong> is the ship&#39;s facing direction as a unit vector. This assumes your sprite&#39;s nose points <strong>right</strong> at rotation 0 — draw it that way, or add <code>- PI/2</code> to correct art that points up.</li>
+<li><strong>Adding to velocity</strong> rather than setting it is what creates momentum. You can be facing forward and still sliding backward, which is the whole game.</li>
+<li><strong><code>friction = 0</code></strong> gives you true frictionless space — authentic, and much harder. Start around <code>0.4</code> and let playtesters decide (<a class="wikilink" href="#/playtesting" data-note="playtesting">Playtesting</a>).</li>
+<li><code>$Flame</code> is a <a class="wikilink" href="#/particles" data-note="particles">particle emitter</a> on the back of the ship. One line, and thrusting <em>reads</em>.</li>
+</ul>
+<h2 id="screen-wrap" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#screen-wrap" aria-label="Link to this section">#</a>Screen wrap</h2><p>Fly off the left edge, appear on the right.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func wrap_screen():
+	var screen = get_viewport_rect().size
+	if global_position.x &lt; 0:          global_position.x += screen.x
+	elif global_position.x &gt; screen.x: global_position.x -= screen.x
+	if global_position.y &lt; 0:          global_position.y += screen.y
+	elif global_position.y &gt; screen.y: global_position.y -= screen.y</code></pre></div><p>Or the one-liner version:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func wrap_screen():
+	var screen = get_viewport_rect().size
+	global_position.x = wrapf(global_position.x, 0, screen.x)
+	global_position.y = wrapf(global_position.y, 0, screen.y)</code></pre></div><p><code>wrapf()</code> wraps a float into a range — the same helper used for cycling letters in <a class="wikilink" href="#/high-scores-that-persist" data-note="high-scores-that-persist">High Scores That Persist</a>.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">The pop-in problem</span></div><div class="callout__body"><p>The ship vanishes at one edge and appears at the other with nothing in between, which looks abrupt. The proper arcade fix is to draw a <em>second</em> copy of the ship near the opposite edge while it&#39;s straddling the boundary. It&#39;s fiddly. <strong>The cheap fix that&#39;s almost as good:</strong> wrap based on the sprite&#39;s centre but let it travel half a sprite-width past the edge before wrapping, so it exits fully before reappearing.</p>
+</div></div><h2 id="shooting-forward" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#shooting-forward" aria-label="Link to this section">#</a>Shooting forward</h2><p>Bullets inherit the ship&#39;s facing, not the ship&#39;s velocity (<a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func shoot():
+	var b = BulletScene.instantiate()
+	get_tree().current_scene.add_child(b)
+	b.global_position = $Muzzle.global_position       # see Node2D and Marker2D
+	b.rotation = rotation
+	b.velocity = Vector2.RIGHT.rotated(rotation) * bullet_speed</code></pre></div><p>Give the bullet the same <code>wrap_screen()</code> and it circles the screen too — which is very Asteroids, and occasionally lets you shoot yourself in the back. That&#39;s a feature.</p>
+<h2 id="splitting-asteroids" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#splitting-asteroids" aria-label="Link to this section">#</a>Splitting asteroids</h2><p>The genre&#39;s other signature mechanic. One asteroid scene, an exported size, and it spawns smaller copies of itself when destroyed:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+const AsteroidScene = preload(&quot;res://asteroid.tscn&quot;)
+
+@export var size = 3                  # 3 = big, 2 = medium, 1 = small
+@export var speed = 100.0
+
+func _ready():
+	var angle = randf() * TAU
+	velocity = Vector2.RIGHT.rotated(angle) * speed
+	scale = Vector2.ONE * (size * 0.35)
+
+func _physics_process(_delta):
+	move_and_slide()
+	wrap_screen()
+
+func destroy():
+	if size &gt; 1:
+		for i in 2:
+			var a = AsteroidScene.instantiate()
+			a.size = size - 1
+			a.speed = speed * 1.3        # smaller pieces move faster
+			get_parent().add_child(a)
+			a.global_position = global_position
+	Global.add_score(size * 10)
+	queue_free()</code></pre></div><p>A scene that <strong>instantiates itself</strong> is a genuinely lovely idea to show students — one scene file produces the entire cascade of an asteroid field breaking apart. <code>TAU</code> is a full circle in radians (2π), which is nicer than typing <code>2 * PI</code>.</p>
+<p>Win when no asteroids remain:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if get_tree().get_nodes_in_group(&quot;asteroids&quot;).is_empty():
+	next_wave()</code></pre></div><h2 id="other-games-with-this-movement" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#other-games-with-this-movement" aria-label="Link to this section">#</a>Other games with this movement</h2><ul>
+<li><strong>Asteroids</strong> — the original</li>
+<li><strong>Lunar Lander</strong> — same thrust, add gravity, land gently</li>
+<li><strong>Spacewar!</strong> — two ships, a star pulling both in (<a class="wikilink" href="#/two-player-and-gamepad" data-note="two-player-and-gamepad">Two-Player and Gamepad</a>)</li>
+<li><strong>Agar-style drifting</strong> — thrust toward the mouse instead of facing</li>
+<li><strong>A submarine or hovercraft</strong> — heavy friction, slow turning, feels weighty</li>
+</ul>
+<p>Thrust toward the mouse instead of a fixed facing:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">rotation = global_position.angle_to_point(get_global_mouse_position())</code></pre></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/screen-wrap-and-thrust#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Ship moves sideways instead of forward</td><td>Sprite art points up, not right. Draw it pointing right or subtract <code>PI/2</code></td></tr><tr><td>Impossible to control</td><td><code>friction = 0</code> is authentic and brutal. Raise it, or lower <code>thrust_power</code></td></tr><tr><td>Ship spins wildly</td><td><code>rotation_speed</code> too high — 3–4 rad/s is comfortable</td></tr><tr><td>Wrapping flickers at the edge</td><td>Wrapping every frame while sitting exactly on the boundary. Use the <code>wrapf</code> version</td></tr><tr><td>Asteroids spawn inside each other</td><td>Offset each child slightly on spawn</td></tr><tr><td>Ship accelerates forever</td><td>Missing <code>limit_length(max_speed)</code></td></tr></tbody></table></div>

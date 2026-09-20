@@ -1,0 +1,135 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-3-index" data-note="tier-3-index">Tier 3 — Genre Unlocks</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ high · <strong>Time:</strong> 45 minutes</p>
+<p>Moving one tile at a time instead of freely. This unlocks <strong>puzzle games</strong> — Sokoban, Bomberman, Snake, roguelikes, Pokémon-style overworlds.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">The best genre for a 5-day camp</span></div><div class="callout__body"><p>Puzzle games are <em>finishable</em>. There&#39;s no game feel to tune, no enemy AI to balance, no juice required — a puzzle either works or it doesn&#39;t. A team that builds ten good Sokoban levels ships a complete game. A team building a platformer ships one level and a wish list. If a team is anxious about scope on Day 3, point them here.</p>
+</div></div><h2 id="the-core-idea" class="heading"><a class="heading__anchor" href="#/grid-based-movement#the-core-idea" aria-label="Link to this section">#</a>The core idea</h2><p>The player has a <strong>grid position</strong> (<code>Vector2i(3, 5)</code> = column 3, row 5) which is the truth, and a <strong>pixel position</strong> that animates to catch up. Movement is a series of discrete, validated steps — not continuous physics.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+const TILE_SIZE = 32
+
+var grid_pos = Vector2i(0, 0)
+var is_moving = false
+
+func _ready():
+	position = Vector2(grid_pos) * TILE_SIZE
+
+func _unhandled_input(_event):
+	if is_moving:
+		return                      # ignore input mid-step
+
+	var dir = Vector2i.ZERO
+	if Input.is_action_just_pressed(&quot;move_right&quot;):   dir = Vector2i.RIGHT
+	elif Input.is_action_just_pressed(&quot;move_left&quot;):  dir = Vector2i.LEFT
+	elif Input.is_action_just_pressed(&quot;move_down&quot;):  dir = Vector2i.DOWN
+	elif Input.is_action_just_pressed(&quot;move_up&quot;):    dir = Vector2i.UP
+
+	if dir != Vector2i.ZERO:
+		try_move(dir)
+
+func try_move(dir):
+	var target = grid_pos + dir
+	if not is_walkable(target):
+		return
+	grid_pos = target
+	animate_to(target)
+
+func animate_to(target):
+	is_moving = true
+	var t = create_tween()
+	t.tween_property(self, &quot;position&quot;, Vector2(target) * TILE_SIZE, 0.12)
+	await t.finished
+	is_moving = false</code></pre></div><p>Use <strong><code>Vector2i</code></strong> (integer vectors) for grid coordinates and <code>Vector2</code> for pixels. Keeping them separate prevents a whole category of rounding bugs.</p>
+<p>The <code>is_moving</code> guard makes movement feel deliberate and stops inputs queuing into a slide.</p>
+<h2 id="checking-what-s-walkable-with-a-tilemaplayer" class="heading"><a class="heading__anchor" href="#/grid-based-movement#checking-what-s-walkable-with-a-tilemaplayer" aria-label="Link to this section">#</a>Checking what&#39;s walkable with a TileMapLayer</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var walls: TileMapLayer
+
+func is_walkable(cell: Vector2i) -&gt; bool:
+	return walls.get_cell_source_id(cell) == -1     # -1 means empty</code></pre></div><p><code>get_cell_source_id()</code> returns <code>-1</code> for an empty cell, so &quot;no wall tile here&quot; means you can walk. Drag your wall <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a> into the export slot. <strong>Set the TileMapLayer&#39;s tile size to match <code>TILE_SIZE</code>.</strong></p>
+<h2 id="sokoban-pushing-boxes" class="heading"><a class="heading__anchor" href="#/grid-based-movement#sokoban-pushing-boxes" aria-label="Link to this section">#</a>Sokoban: pushing boxes</h2><p>The genre-defining mechanic, and it&#39;s about fifteen lines.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func try_move(dir):
+	var target = grid_pos + dir
+
+	if not is_walkable(target):
+		return
+
+	var box = box_at(target)
+	if box:
+		var behind = target + dir
+		# a box can only be pushed into empty floor -- not a wall, not another box
+		if not is_walkable(behind) or box_at(behind):
+			return
+		box.push_to(behind)
+
+	grid_pos = target
+	animate_to(target)
+
+func box_at(cell: Vector2i):
+	for box in get_tree().get_nodes_in_group(&quot;boxes&quot;):
+		if box.grid_pos == cell:
+			return box
+	return null</code></pre></div><p>And on the box:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+const TILE_SIZE = 32
+var grid_pos = Vector2i.ZERO
+
+func push_to(cell):
+	grid_pos = cell
+	create_tween().tween_property(self, &quot;position&quot;, Vector2(cell) * TILE_SIZE, 0.12)</code></pre></div><p>Win when every box is on a goal tile:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func check_win():
+	for box in get_tree().get_nodes_in_group(&quot;boxes&quot;):
+		if not box.grid_pos in goal_cells:
+			return
+	win()</code></pre></div><h2 id="undo-do-this-it-s-what-makes-a-puzzle-game-playable" class="heading"><a class="heading__anchor" href="#/grid-based-movement#undo-do-this-it-s-what-makes-a-puzzle-game-playable" aria-label="Link to this section">#</a>Undo (do this — it&#39;s what makes a puzzle game playable)</h2><p>A puzzle game without undo is a puzzle game where every mistake means restarting. Players quit instead.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var history = []
+
+func record():
+	var snapshot = {&quot;player&quot;: grid_pos, &quot;boxes&quot;: []}
+	for box in get_tree().get_nodes_in_group(&quot;boxes&quot;):
+		snapshot[&quot;boxes&quot;].append(box.grid_pos)
+	history.append(snapshot)
+
+func undo():
+	if history.is_empty():
+		return
+	var s = history.pop_back()
+	$Player.snap_to(s[&quot;player&quot;])
+	var boxes = get_tree().get_nodes_in_group(&quot;boxes&quot;)
+	for i in boxes.size():
+		boxes[i].snap_to(s[&quot;boxes&quot;][i])</code></pre></div><p>Call <code>record()</code> <strong>before</strong> every successful move. <code>snap_to()</code> sets both <code>grid_pos</code> and <code>position</code> with no tween.</p>
+<p><strong>Ten lines, and your game becomes forgiving enough that people finish levels.</strong> Best effort-to-quality ratio on this page.</p>
+<h2 id="snake" class="heading"><a class="heading__anchor" href="#/grid-based-movement#snake" aria-label="Link to this section">#</a>Snake</h2><p>Same grid, different rules — the body is a list of cells:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var body = [Vector2i(5,5), Vector2i(4,5), Vector2i(3,5)]
+var direction = Vector2i.RIGHT
+
+func step():
+	var head = body[0] + direction
+	if head in body or not is_walkable(head):
+		game_over()
+		return
+	body.push_front(head)
+	if head == food_cell:
+		spawn_food()          # grew -- don't remove the tail
+	else:
+		body.pop_back()
+	redraw()</code></pre></div><p>Drive <code>step()</code> from a repeating <a class="wikilink" href="#/timer" data-note="timer">Timer</a> rather than input — input only changes <code>direction</code>. That&#39;s the whole game.</p>
+<h2 id="turn-based-enemies" class="heading"><a class="heading__anchor" href="#/grid-based-movement#turn-based-enemies" aria-label="Link to this section">#</a>Turn-based enemies</h2><p>The real payoff of a grid: <strong>enemies move only when you do.</strong> No reflexes, all planning.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func animate_to(target):
+	is_moving = true
+	var t = create_tween()
+	t.tween_property(self, &quot;position&quot;, Vector2(target) * TILE_SIZE, 0.12)
+	await t.finished
+	is_moving = false
+	get_tree().call_group(&quot;enemies&quot;, &quot;take_turn&quot;)   # now they move</code></pre></div><p>A simple chaser that steps one tile toward you:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func take_turn():
+	var to_player = player.grid_pos - grid_pos
+	var step = Vector2i.ZERO
+	if abs(to_player.x) &gt; abs(to_player.y):
+		step.x = sign(to_player.x)
+	else:
+		step.y = sign(to_player.y)
+	if is_walkable(grid_pos + step):
+		grid_pos += step
+		create_tween().tween_property(self, &quot;position&quot;, Vector2(grid_pos) * TILE_SIZE, 0.1)</code></pre></div><p>That&#39;s a complete roguelike enemy.</p>
+<h2 id="converting-between-grid-and-pixels" class="heading"><a class="heading__anchor" href="#/grid-based-movement#converting-between-grid-and-pixels" aria-label="Link to this section">#</a>Converting between grid and pixels</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var pixels = Vector2(grid_pos) * TILE_SIZE          # grid  -&gt; pixels
+var cell   = Vector2i(position / TILE_SIZE)         # pixels -&gt; grid
+var cell2  = tilemap.local_to_map(position)         # using the TileMapLayer</code></pre></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/grid-based-movement#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Player drifts off the grid over time</td><td>You&#39;re adding to <code>position</code> directly. <code>grid_pos</code> is the truth; always recompute pixels from it</td></tr><tr><td>Holding a key slides the player</td><td>Use <code>is_action_just_pressed</code>, and keep the <code>is_moving</code> guard</td></tr><tr><td>Walks through walls</td><td>TileMapLayer tile size doesn&#39;t match <code>TILE_SIZE</code>, or the wrong layer is in the export slot</td></tr><tr><td>Boxes push through each other</td><td>Missing the <code>box_at(behind)</code> check</td></tr><tr><td>Movement feels sluggish</td><td>Tween duration too long — 0.10–0.15s is the sweet spot</td></tr><tr><td>Everything is off by half a tile</td><td>Tile origin is the corner, not the centre — offset the sprite, not the position</td></tr></tbody></table></div>

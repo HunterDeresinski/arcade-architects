@@ -1,0 +1,37 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>The two most boring nodes in Godot, and two of the most useful. <strong>Node2D</strong> is an empty thing with a position — every other 2D node is built on it. <strong>Marker2D</strong> is a Node2D you can actually see in the editor, used to mark a spot.</p>
+<h2 id="node2d-what-every-2d-node-inherits" class="heading"><a class="heading__anchor" href="#/node2d-and-marker2d#node2d-what-every-2d-node-inherits" aria-label="Link to this section">#</a>Node2D: what every 2D node inherits</h2><p>Every property below works on <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>, <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>, <code>Sprite2D</code>, all of them — because they&#39;re all Node2Ds underneath.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">position          # Vector2, relative to the parent
+global_position   # Vector2, relative to the world
+rotation          # radians. rotation_degrees if you prefer degrees
+scale             # Vector2(1, 1) is normal size
+visible           # true/false -- or use show() / hide()
+modulate          # Color tint. Color.RED to flash, Color(1,1,1,0.5) for half-transparent
+z_index           # draw order. Higher draws on top</code></pre></div><div class="callout callout--important"><div class="callout__head"><span class="callout__icon">❗</span><span class="callout__title"><code>position</code> vs <code>global_position</code></span></div><div class="callout__body"><p><code>position</code> is measured from the <strong>parent</strong>. If your Bullet is a child of the Gun, setting <code>position = Vector2.ZERO</code> puts it <em>on the gun</em>, not at the world origin. When something looks like it teleported to the top-left corner, this is almost always why. Use <code>global_position</code> when you mean &quot;this exact spot in the world.&quot;</p>
+</div></div><h2 id="what-people-actually-do-with-a-plain-node2d" class="heading"><a class="heading__anchor" href="#/node2d-and-marker2d#what-people-actually-do-with-a-plain-node2d" aria-label="Link to this section">#</a>What people actually do with a plain Node2D</h2><p><strong>1. As a container to organize the scene tree.</strong> Free, costs nothing, makes a messy scene readable:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── World         (Node2D)
+│   ├── TileMapLayer
+│   └── Obstacles
+├── Enemies       (Node2D)   ← spawn every enemy in here
+├── Bullets       (Node2D)   ← and every bullet in here
+└── UI            (CanvasLayer)</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$Enemies.add_child(new_enemy)   # tidy tree instead of 200 loose nodes</code></pre></div><p><strong>2. As a group handle — move the parent, move everything.</strong> This is the trick behind <a class="wikilink" href="#/enemy-formations" data-note="enemy-formations">Enemy Formations</a>: put fifty aliens under one Node2D, move the Node2D, and all fifty march in perfect formation with one script instead of fifty.</p>
+<p><strong>3. To clear a whole category at once:</strong></p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">for bullet in $Bullets.get_children():
+	bullet.queue_free()</code></pre></div><p><strong>4. As a pivot to rotate around.</strong> Rotating a child rotates it in place; rotating its parent swings the child around the parent. That&#39;s how you make an orbiting shield or a swinging spike ball:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># script on the pivot Node2D, spike is a child offset 80px to the right
+func _process(delta):
+	rotation += 2.0 * delta</code></pre></div><h2 id="marker2d-an-x-on-the-map" class="heading"><a class="heading__anchor" href="#/node2d-and-marker2d#marker2d-an-x-on-the-map" aria-label="Link to this section">#</a>Marker2D: an X on the map</h2><p>A Node2D that draws a little cross in the editor so you can see and drag it. It has <strong>no</strong> effect on the running game — it&#39;s purely a named position.</p>
+<h2 id="what-people-actually-do-with-a-marker2d" class="heading"><a class="heading__anchor" href="#/node2d-and-marker2d#what-people-actually-do-with-a-marker2d" aria-label="Link to this section">#</a>What people actually do with a Marker2D</h2><p><strong>Spawn points.</strong> Add <code>Muzzle</code> as a child of the gun, drag it to the barrel tip:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var b = BulletScene.instantiate()
+get_tree().current_scene.add_child(b)
+b.global_position = $Muzzle.global_position</code></pre></div><p>Now a designer moves the barrel tip by dragging in the editor — no code change. See <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>.</p>
+<p><strong>Patrol endpoints.</strong> Drop <code>PointA</code> and <code>PointB</code>, drag them where you want the enemy to walk. Full build in <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a>.</p>
+<p><strong>Player start / respawn point.</strong> Drop a <code>SpawnPoint</code> marker in each level:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">player.global_position = $SpawnPoint.global_position</code></pre></div><p>Used by <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a> and <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>.</p>
+<p><strong>Camera anchors, door destinations, checkpoints</strong> — anywhere you&#39;d otherwise hardcode <code>Vector2(347, 812)</code> and regret it.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Make markers children of the level, not the moving thing</span></div><div class="callout__body"><p>A patrol marker parented to the enemy travels <em>with</em> the enemy, so the enemy chases a target it can never reach. Parent patrol and spawn markers to the level root. (Muzzle markers are the exception — those <em>should</em> ride along with the gun.)</p>
+</div></div><h2 id="two-useful-node2d-methods" class="heading"><a class="heading__anchor" href="#/node2d-and-marker2d#two-useful-node2d-methods" aria-label="Link to this section">#</a>Two useful Node2D methods</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">look_at(target.global_position)                       # point at something
+var angle = global_position.angle_to_point(target)    # get the angle without turning
+var dist  = global_position.distance_to(target)       # how far away
+var dir   = global_position.direction_to(target)      # normalized Vector2 toward it</code></pre></div><p><code>direction_to()</code> is the one line behind <a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">Homing Enemies</a> and aimed shots in <a class="wikilink" href="#/making-bullets" data-note="making-bullets">Making Bullets</a>.</p>

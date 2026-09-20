@@ -1,0 +1,75 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to make the screen follow the player. The moment a team&#39;s level (<a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a>) is bigger than one screen, they need this. Zero code required for the basic version.</p>
+<h2 id="the-zero-code-version" class="heading"><a class="heading__anchor" href="#/camera2d#the-zero-code-version" aria-label="Link to this section">#</a>The zero-code version</h2><ol>
+<li>Open your <strong>Player scene</strong> (<a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>).</li>
+<li>Add a <strong>Camera2D</strong> as a <strong>child of the Player</strong>.</li>
+<li>Done. A Camera2D in the scene tree is active automatically, and because it&#39;s a child, it goes wherever the player goes.</li>
+</ol>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player          (CharacterBody2D)
+├── Sprite
+├── Shape       (CollisionShape2D)
+└── Camera      (Camera2D)         ← screen now follows the player</code></pre></div><div class="callout callout--note"><div class="callout__head"><span class="callout__icon">🗒️</span><span class="callout__title">Only one camera wins</span></div><div class="callout__body"><p>If two Camera2Ds are active, the most recently entered one takes over. If the view snaps somewhere weird, search the scene tree for a second camera (often left in Main from an earlier experiment).</p>
+</div></div><h2 id="stop-showing-the-void-limits" class="heading"><a class="heading__anchor" href="#/camera2d#stop-showing-the-void-limits" aria-label="Link to this section">#</a>Stop showing the void: limits</h2><p>Without limits, the camera happily shows the empty gray space past the edge of your level. Clamp it, in the Inspector under <strong>Limit</strong>:</p>
+<ul>
+<li><strong>Left:</strong> <code>0</code>, <strong>Top:</strong> <code>0</code> (if your level starts at the origin)</li>
+<li><strong>Right:</strong> level width in pixels, <strong>Bottom:</strong> level height in pixels</li>
+</ul>
+<p>How to find the numbers: level width = tiles across × tile size. A 100-tile-wide level of 16px tiles → Right = <code>1600</code>. Or click the far edge of your level in the editor and read the position in the toolbar.</p>
+<p>The camera now stops at the edges while the player walks up to them — like Mario.</p>
+<h2 id="smoothing-the-difference-between-camera-and-glued-to-head" class="heading"><a class="heading__anchor" href="#/camera2d#smoothing-the-difference-between-camera-and-glued-to-head" aria-label="Link to this section">#</a>Smoothing (the difference between &quot;camera&quot; and &quot;glued to head&quot;)</h2><p>Inspector → <strong>Position Smoothing → Enabled ✓</strong>. The camera now eases toward the player instead of tracking it rigidly.</p>
+<ul>
+<li><strong>Speed</strong> ≈ <code>5</code> = dreamy, ≈ <code>10</code> = default-ish, ≈ <code>15+</code> = tight.</li>
+<li>This one checkbox is a big <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a> win.</li>
+</ul>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Smoothing + limits jitter</span></div><div class="callout__body"><p>If the camera stutters at level edges, also check <strong>Limit → Smoothed ✓</strong>.</p>
+</div></div><h2 id="platformer-camera-recipe" class="heading"><a class="heading__anchor" href="#/camera2d#platformer-camera-recipe" aria-label="Link to this section">#</a>Platformer camera recipe</h2><p>Side-scrollers (<a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>) need more than &quot;glued to the player&quot; — jumping makes a rigid camera bounce nauseatingly. Three Inspector tweaks fix it:</p>
+<p><strong>1. Drag margins — stop tracking every jump.</strong> Inspector → <strong>Drag</strong>:</p>
+<ul>
+<li><strong>Vertical Enabled ✓</strong>, then set <strong>Top Margin</strong> ≈ <code>0.7</code> and <strong>Bottom Margin</strong> ≈ <code>0.2</code>.</li>
+<li>Now the camera ignores small vertical moves (normal jumps stay inside the margin box) and only scrolls when the player actually climbs or falls far. This one change is 80% of a good platformer camera.</li>
+<li>Leave <strong>Horizontal Enabled</strong> off — you <em>do</em> want tight left/right tracking.</li>
+<li>Turn on <strong>Editor → Draw Drag Margin ✓</strong> to see the box while tuning.</li>
+</ul>
+<p><strong>2. Offset the view upward.</strong> Players care about what&#39;s ahead and above, not the ground under their feet. Inspector → <strong>Offset</strong> → y = <code>-40</code> (or so) shifts the view up.</p>
+<p><strong>3. Smoothing on</strong>, as in the section above — Speed ≈ <code>8</code> for platformers.</p>
+<p><strong>Look-ahead (optional, scripted):</strong> shift the camera toward where the player is <em>heading</em> so they can see what&#39;s coming. Attach to the Camera2D:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Camera2D
+
+@export var look_ahead = 80.0    # pixels ahead of the player
+@export var shift_speed = 3.0    # how fast the view slides over
+
+func _process(delta):
+	var player = get_parent()    # camera is a child of the player
+	var target_x = 0.0
+	if player.velocity.x != 0:
+		target_x = look_ahead * sign(player.velocity.x)
+	offset.x = lerp(offset.x, target_x, shift_speed * delta)</code></pre></div><ul>
+<li><code>sign()</code> — returns -1 or 1, so the offset flips with the run direction.</li>
+<li><code>lerp()</code> — eases the offset over instead of snapping it. Turn <code>shift_speed</code> down if direction changes feel swimmy.</li>
+<li>If you also used the screen-shake script below, put both in one script — they both write to <code>offset</code> (shake wins while shaking is fine: add the shake to <code>offset.y</code> instead of overwriting).</li>
+</ul>
+<p>Full platformer settings at a glance: <strong>child of Player · Limits set · Position Smoothing ✓ (8) · Drag Vertical ✓ (0.7 / 0.2) · Offset y −40</strong>.</p>
+<h2 id="zoom" class="heading"><a class="heading__anchor" href="#/camera2d#zoom" aria-label="Link to this section">#</a>Zoom</h2><p>Inspector → <strong>Zoom</strong>. <code>(2, 2)</code> = twice as close (pixel-art games usually want this), <code>(0.5, 0.5)</code> = zoomed out. Keep x and y equal.</p>
+<p>For pixel art that looks blurry when zoomed: Project Settings → <strong>Rendering → Textures → Default Texture Filter → Nearest</strong>.</p>
+<h2 id="screen-shake-tiny-code-big-payoff" class="heading"><a class="heading__anchor" href="#/camera2d#screen-shake-tiny-code-big-payoff" aria-label="Link to this section">#</a>Screen shake (tiny code, big payoff)</h2><p>The one camera feature worth scripting. Attach to the Camera2D:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Camera2D
+
+var shake_amount = 0.0
+
+func _process(delta):
+	if shake_amount &gt; 0:
+		offset = Vector2(randf_range(-shake_amount, shake_amount),
+						 randf_range(-shake_amount, shake_amount))
+		shake_amount -= 60 * delta   # calm down over time
+	else:
+		offset = Vector2.ZERO
+
+func shake(amount = 8.0):
+	shake_amount = amount</code></pre></div><p>Call it from anywhere via the player, e.g. in a hit handler (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hurtbox_body_entered(body):
+	$Camera.shake(10)
+	# ...damage code...</code></pre></div><ul>
+<li><code>offset</code> shakes the <em>view</em> without touching the camera&#39;s real position — limits and following keep working.</li>
+<li>Bigger <code>amount</code> = harder hit. 4 for a coin, 10 for damage, 20 for an explosion. More ideas in <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>.</li>
+</ul>
+<h2 id="fixed-camera-single-screen-games" class="heading"><a class="heading__anchor" href="#/camera2d#fixed-camera-single-screen-games" aria-label="Link to this section">#</a>Fixed camera (single-screen games)</h2><p>Making a one-screen arcade game (like Day 1&#39;s)? You don&#39;t need a Camera2D at all — the default view <em>is</em> the screen. Only add one when the level outgrows the window.</p>

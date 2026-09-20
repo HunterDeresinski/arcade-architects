@@ -1,0 +1,224 @@
+<p>⬅️ <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a> · ➡️ <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a></p>
+<p><strong>Today you will:</strong> stop <em>following</em> code and start <em>changing</em> it. You&#39;ll turn yesterday&#39;s Dodge the Creeps into <strong>your own</strong> game by tweaking variables, swapping sprites, and adding at least one new rule.</p>
+<p><strong>References today:</strong> <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a> · <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a> · <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a> · <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a> · <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> · <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a> · <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> · <a class="wikilink" href="#/playtesting" data-note="playtesting">Playtesting</a></p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Use your checklist</span></div><div class="callout__body"><p>Pick up the <strong>Day 2 Student Checklist</strong> from your instructor. Check off each step as you complete it. If you fall behind, find where you are on the checklist and jump back in — you don&#39;t have to start over.</p>
+</div></div><hr>
+<h2 id="the-big-idea" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#the-big-idea" aria-label="Link to this section">#</a>The big idea</h2><p>You already have a working game. A <em>remix</em> means: keep what works, change what&#39;s yours. Most of game development is changing numbers and rules in something that already runs — not writing from a blank page.</p>
+<p>A good first instinct: <strong>change one number, press Play, see what happened.</strong> That loop — tweak, run, observe — is how you&#39;ll learn the engine faster than any tutorial can teach you.</p>
+<p>INSERT IMAGE HERE</p>
+<hr>
+<h2 id="schedule" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#schedule" aria-label="Link to this section">#</a>Schedule</h2><div class="table-wrap"><table><thead><tr><th>Block</th></tr></thead><tbody><tr><td>Warm-up: read your own code</td></tr><tr><td>Mini-lessons (3 demos × ~15 min)</td></tr><tr><td>☕ Break</td></tr><tr><td>Remix sprint (make your 3 changes)</td></tr><tr><td>Playtest carousel + exit ticket</td></tr><tr><td>Open Studio: micro-game challenge</td></tr></tbody></table></div><hr>
+<h2 id="warm-up-read-your-own-code" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#warm-up-read-your-own-code" aria-label="Link to this section">#</a>Warm-Up: Read Your Own Code</h2><p>Open your <strong>player.gd</strong> from yesterday. Before you change anything, read it.</p>
+<ol>
+<li>Find the line <code>@export var speed = 400</code>. What does <code>400</code> mean? (Answer: pixels per second.)</li>
+<li>Change <code>speed</code> to <code>1000</code>. Press <strong>F5</strong> to run. What changed?</li>
+<li>Change <code>speed</code> to <code>100</code>. Run again. Try to survive. Change it back to something that feels good — <code>speed = 600</code> is a nice sweet spot, or whatever <em>you</em> like.</li>
+<li>Find <code>score += 1</code> inside <code>_on_score_timer_timeout()</code>. Change it to <code>score += 10</code>. Run and watch the score.</li>
+<li>Find the <code>MobTimer</code> node in your Main scene. In the <strong>Inspector</strong>, change <strong>Wait Time</strong> from <code>0.5</code> to <code>0.2</code>. Run — how does it feel?</li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">You just did game design</span></div><div class="callout__body"><p>Those three changes — speed, score value, and spawn rate — are the same knobs that professional game designers turn. The difference is they have spreadsheets. You have F5.</p>
+</div></div><hr>
+<h2 id="mini-lessons" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#mini-lessons" aria-label="Link to this section">#</a>Mini-Lessons</h2><p>Your instructor will demo <strong>three techniques</strong> live. Watch, then try each one before moving to the next.</p>
+<h3 id="mini-lesson-1-9-15-9-30-swapping-a-sprite" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#mini-lesson-1-9-15-9-30-swapping-a-sprite" aria-label="Link to this section">#</a>Mini-lesson 1 (9:15–9:30): Swapping a Sprite</h3><p>You don&#39;t have to use the grey player or the bug enemies. Here&#39;s how to swap:</p>
+<ol>
+<li>In the FileSystem dock, find a new image — or drag one in from the <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a> folder on the shared drive.</li>
+<li>Select <strong>AnimatedSprite2D</strong> under your Player in the Scene dock.</li>
+<li>In the Inspector, open <strong>Sprite Frames</strong> → click on the <code>walk</code> animation.</li>
+<li>Click the trash icon to clear the old frames. Drag your new images in.</li>
+<li>Repeat for the <code>up</code> animation if you want a side view.</li>
+<li>Press <strong>F5</strong> — your player should now be whatever you dragged in.</li>
+<li>Same steps work for the enemies: open <code>mob.tscn</code> from the FileSystem dock and swap the frames in <em>its</em> AnimatedSprite2D (it has three animations — <code>fly</code>, <code>swim</code>, <code>walk</code> — replace whichever ones you want).</li>
+</ol>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Image size matters</span></div><div class="callout__body"><p>If your new sprite looks tiny or huge, select <strong>AnimatedSprite2D</strong> and adjust <strong>Scale</strong> under Transform in the Inspector. <code>(1.0, 1.0)</code> = original size. <code>(0.5, 0.5)</code> = half size.</p>
+</div></div><h3 id="mini-lesson-2-9-30-9-45-variables-as-dials" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#mini-lesson-2-9-30-9-45-variables-as-dials" aria-label="Link to this section">#</a>Mini-lesson 2 (9:30–9:45): Variables as Dials</h3><p>Variables are the knobs of your game. Open <strong>main.gd</strong> and add one at the top:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var score_per_second = 1</code></pre></div><p>Then down in <code>_on_score_timer_timeout()</code>, replace <code>score += 1</code> with:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">score += score_per_second</code></pre></div><p>Now save and go back to the Inspector with <strong>Main</strong> selected — you&#39;ll see <code>Score Per Second</code> right there. You can change it without touching code. Change it to <code>5</code>, run the game.</p>
+<p>This is the <code>@export</code> keyword at work — see <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a> for more.</p>
+<h3 id="mini-lesson-3-9-45-10-00-adding-a-rule-with-if" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#mini-lesson-3-9-45-10-00-adding-a-rule-with-if" aria-label="Link to this section">#</a>Mini-lesson 3 (9:45–10:00): Adding a Rule with <code>if</code></h3><p>Want to add lives? Find the <code>_on_body_entered</code> function in <strong>player.gd</strong>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(_body):
+	hide()
+	hit.emit()
+	$CollisionShape2D.set_deferred(&quot;disabled&quot;, true)</code></pre></div><p>You could add a lives variable in <strong>main.gd</strong>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var lives = 3</code></pre></div><p>And in <code>game_over()</code> in <strong>main.gd</strong>, subtract a life instead of ending immediately:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	lives -= 1
+	if lives &lt;= 0:
+		$ScoreTimer.stop()
+		$MobTimer.stop()
+	else:
+		$Player.start($StartPosition.position)</code></pre></div><p>See <a class="wikilink" href="#/gdscript-basics" data-note="gdscript-basics">GDScript Basics</a> for how <code>if</code> works and <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> for more collision ideas.</p>
+<hr>
+<h2 id="break" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#break" aria-label="Link to this section">#</a>☕ Break</h2><p>Stand up, stretch, look away from the screen.</p>
+<hr>
+<h2 id="remix-sprint" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#remix-sprint" aria-label="Link to this section">#</a>Remix Sprint</h2><p>Make <strong>at least 3 changes across at least 2 of these categories.</strong> Write your 3 changes on a sticky note and stick it to your monitor before you start.</p>
+<div class="table-wrap"><table><thead><tr><th>Category</th><th>Easy ideas</th></tr></thead><tbody><tr><td>👀 Look &amp; sound</td><td>New player sprite, new enemy sprite, new background, music, a death sound → <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a></td></tr><tr><td>📏 Rules</td><td>Add lives, add a pickup that gives +50 points, add a win condition, add a second enemy type</td></tr><tr><td>🎚️ Feel</td><td>Speed, spawn rate, player size, screen size, score rate</td></tr></tbody></table></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Stuck for an idea? Draw a remix prompt card</span></div><div class="callout__body"><ul>
+<li>&quot;The player is a fish.&quot;</li>
+<li>&quot;Dodging is actually <em>collecting</em>.&quot;</li>
+<li>&quot;The game speeds up forever.&quot;</li>
+<li>&quot;Everything is twice as big.&quot;</li>
+<li>&quot;You only get one mistake.&quot;</li>
+</ul>
+</div></div><h3 id="how-to-do-the-common-changes" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#how-to-do-the-common-changes" aria-label="Link to this section">#</a>How to do the common changes</h3><p><strong>New background color:</strong> In your Main scene, add a <code>ColorRect</code> as the <em>first</em> child (drag it to the top of the tree in the Scene dock). In the Inspector, set <strong>Color</strong> to whatever you want. Then click <strong>Layout</strong> → <strong>Anchors Preset</strong> → <strong>Full Rect</strong> so it fills the screen. See <a class="wikilink" href="#/scenes-and-nodes" data-note="scenes-and-nodes">Scenes and Nodes</a>.</p>
+<p><strong>A pickup item (Area2D that gives points):</strong></p>
+<ol>
+<li><strong>Scene → New Scene</strong> → add <code>Area2D</code> as root → rename it <code>Pickup</code>.</li>
+<li><code>Ctrl+A</code> → add <code>Sprite2D</code> (drag in your pickup image) and <code>CollisionShape2D</code> (give it a shape in the Inspector — an empty CollisionShape2D detects nothing).</li>
+<li>Attach a script to <strong>Pickup</strong>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+signal collected
+
+func _on_body_entered(_body):
+	collected.emit()
+	queue_free()</code></pre></div><ol start="4">
+<li>With <strong>Pickup</strong> selected → <strong>Signals</strong> tab → double-click <code>body_entered</code> → <strong>Connect</strong> (this wires up <code>_on_body_entered</code>, already in the script above). Save as <code>pickup.tscn</code>.</li>
+<li>Open <code>main.tscn</code> and drag <code>pickup.tscn</code> from the FileSystem dock into the scene. Position it in the viewport.</li>
+<li>Select the Pickup instance → <strong>Signals</strong> tab → double-click <code>collected</code> → connect it to <strong>Main</strong>. In the new function in <strong>main.gd</strong>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_pickup_collected():
+	score += 50
+	$UI/ScoreLabel.text = &quot;Score: &quot; + str(score)  # only if you built Day 1's HUD stretch goal</code></pre></div><ol start="7">
+<li>Press <strong>F5</strong> and walk into it — it should vanish and the score should jump.
+See <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> for the full pattern.</li>
+</ol>
+<p><strong>Speed up over time:</strong></p>
+<ol>
+<li>Select <strong>Main</strong> in <code>main.tscn</code> → <code>Ctrl+A</code> → add a <strong>Timer</strong> → rename it <code>SpeedUpTimer</code> → in the Inspector set <strong>Wait Time</strong> to <code>5</code> and check <strong>Autostart</strong>.</li>
+<li>Select <strong>SpeedUpTimer</strong> → <strong>Signals</strong> tab → double-click <code>timeout</code> → connect it to <strong>Main</strong>. In the new function in <strong>main.gd</strong>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_speed_up_timer_timeout():
+	$Player.speed += 50</code></pre></div><ol start="3">
+<li>Press <strong>F5</strong> — every 5 seconds the player gets faster. (To make <em>mobs</em> come faster instead, change <code>$MobTimer.wait_time</code> the same way.)
+See <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>.</li>
+</ol>
+<p><strong>Add background music:</strong></p>
+<ol>
+<li>Select <strong>Main</strong> → <code>Ctrl+A</code> → add an <code>AudioStreamPlayer</code> → rename it <code>Music</code>.</li>
+<li>In the Inspector, drag a <code>.ogg</code> audio file from <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a> onto the <strong>Stream</strong> property.</li>
+<li>Enable <strong>Autoplay</strong> in the Inspector, then press <strong>F5</strong> — music should start with the game.</li>
+<li>See <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> for loop settings.</li>
+</ol>
+<p><strong>Add a death sound:</strong></p>
+<ol>
+<li>Select <strong>Main</strong> → <code>Ctrl+A</code> → add another <code>AudioStreamPlayer</code> → rename it <code>DeathSound</code>.</li>
+<li>Drag a short <code>.wav</code> sound effect onto its <strong>Stream</strong> property. Leave <strong>Autoplay</strong> off — this one is triggered from code.</li>
+<li>In <strong>main.gd</strong>, play it inside <code>game_over()</code>:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	$ScoreTimer.stop()
+	$MobTimer.stop()
+	$DeathSound.play()   # NEW</code></pre></div><ol start="4">
+<li>Press <strong>F5</strong> and get hit — you should hear it the moment a mob touches you. See <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> for making your own sound in jsfxr.</li>
+</ol>
+<p><strong>Add a win condition (reach a score and win):</strong></p>
+<ol>
+<li>In <strong>main.gd</strong>, find <code>_on_score_timer_timeout()</code> and add a check after the score goes up:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_score_timer_timeout():
+	score += 1
+	if score &gt;= 100:   # NEW — pick your own winning score
+		win()</code></pre></div><ol start="2">
+<li>So the win can clear leftover enemies, put mobs in a <em>group</em>: open <code>mob.tscn</code> → select the root <strong>Mob</strong> node → <strong>Node</strong> dock (next to Inspector) → <strong>Groups</strong> tab → type <code>mobs</code> → <strong>Add</strong>.</li>
+<li>Add a <code>win()</code> function right below <code>game_over()</code> in <strong>main.gd</strong> — it&#39;s the same shape, just happier:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func win():
+	$ScoreTimer.stop()
+	$MobTimer.stop()
+	get_tree().call_group(&quot;mobs&quot;, &quot;queue_free&quot;)   # clears every node in the &quot;mobs&quot; group
+	$UI/ScoreLabel.text = &quot;You win!&quot;   # only if you built Day 1's HUD stretch goal</code></pre></div><ol start="4">
+<li>Press <strong>F5</strong> and survive to 100 — mobs should vanish and the game should stop. Tune the number until winning feels <em>earned</em> but reachable in under 3 minutes.</li>
+</ol>
+<p><strong>Add a second enemy type:</strong></p>
+<ol>
+<li>In the FileSystem dock, right-click <code>mob.tscn</code> → <strong>Duplicate</strong> → name it <code>mob2.tscn</code>.</li>
+<li>Open <code>mob2.tscn</code> and make it different: swap the sprite frames (same steps as Mini-lesson 1), or make it bigger via <strong>Scale</strong> in the Inspector.</li>
+<li>In <strong>main.gd</strong>, add a second scene slot at the top, next to the existing one:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var mob_scene: PackedScene
+@export var mob_scene_2: PackedScene   # NEW</code></pre></div><ol start="4">
+<li>Select <strong>Main</strong> in the Scene dock — in the Inspector, drag <code>mob2.tscn</code> onto the new <strong>Mob Scene 2</strong> slot (same move as Day 1 with <code>mob.tscn</code>).</li>
+<li>In <code>_on_mob_timer_timeout()</code>, replace the first line so each spawn flips a coin:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var mob
+if randf() &lt; 0.5:
+	mob = mob_scene.instantiate()
+else:
+	mob = mob_scene_2.instantiate()</code></pre></div><ol start="6">
+<li>Press <strong>F5</strong> — roughly half the spawns should be your new enemy. Change <code>0.5</code> to make one type rarer.</li>
+</ol>
+<hr>
+<h2 id="playtest-carousel-exit-ticket" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#playtest-carousel-exit-ticket" aria-label="Link to this section">#</a>Playtest Carousel + Exit Ticket</h2><h3 id="playtest-carousel-11-40-11-55" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#playtest-carousel-11-40-11-55" aria-label="Link to this section">#</a>Playtest carousel (11:40–11:55)</h3><p>Everyone rotates seats. Every ~3 minutes when your instructor says &quot;rotate,&quot; move one seat to the right. Play whoever&#39;s game is at that machine.</p>
+<p>While playing, fill out a sticky note and leave it:</p>
+<ul>
+<li>⭐ One thing you liked</li>
+<li>❓ One thing that confused you or that you&#39;d change</li>
+</ul>
+<p>You are not allowed to explain your game during the carousel. The game has to speak for itself. See <a class="wikilink" href="#/playtesting" data-note="playtesting">Playtesting</a> for what good feedback sounds like.</p>
+<h3 id="exit-ticket-11-55-12-00" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#exit-ticket-11-55-12-00" aria-label="Link to this section">#</a>Exit ticket (11:55–12:00)</h3><p>Before you leave for lunch, show your instructor:</p>
+<ol>
+<li>Three changes you made (point to them in your code or Inspector).</li>
+<li>That those changes are across at least 2 categories from the table above.</li>
+<li>Press <strong>F5</strong> — the game runs without crashing.</li>
+</ol>
+<p><strong>Checkpoint:</strong> ✅ Game runs, 3 changes made, 2 categories covered, sticky notes left at two other stations.</p>
+<hr>
+<h2 id="open-studio-micro-game-challenge" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#open-studio-micro-game-challenge" aria-label="Link to this section">#</a>Open Studio — Micro-Game Challenge</h2><p>Want a third game? Build a <strong>one-screen, one-button game</strong> from scratch — no tutorial to follow, just you and what you learned. Start by drawing a constraint card from <a class="wikilink" href="#/constraint-cards" data-note="constraint-cards">Constraint Cards</a> to limit your scope.</p>
+<h3 id="starter-scaffold-optional-one-button-flap" class="heading"><a class="heading__anchor" href="#/day-2-make-it-yours#starter-scaffold-optional-one-button-flap" aria-label="Link to this section">#</a>Starter scaffold (optional) — &quot;One-Button Flap&quot;</h3><p>Blank projects are hard to start. If you want concrete first steps instead of a blank page, here&#39;s a minimal one-button game — it reuses the exact same node types and spawning pattern as Dodge the Creeps, just wired differently. Skip this entirely if you already have your own idea.</p>
+<p><strong>1. The Player (falls with gravity, one button makes it rise)</strong></p>
+<ol>
+<li>New Scene → add <strong>Area2D</strong> as root → rename <code>Player</code>.</li>
+<li><code>Ctrl+A</code> → add <strong>Sprite2D</strong> or <strong>AnimatedSprite2D</strong> (drag in any sprite) and <strong>CollisionShape2D</strong> (New CapsuleShape2D).</li>
+<li>Attach a script to Player:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var flap_strength = -300
+@export var gravity = 800
+var velocity = 0.0
+
+func _physics_process(delta):
+	velocity += gravity * delta
+	if Input.is_action_just_pressed(&quot;ui_accept&quot;):   # Space bar or Enter
+		velocity = flap_strength
+	position.y += velocity * delta
+
+func _on_area_entered(_area):
+	get_tree().reload_current_scene()</code></pre></div><ol start="4">
+<li>In the Scene dock, select <strong>Player</strong> → <strong>Signals</strong> tab → double-click <code>area_entered</code> → <strong>Connect</strong> (this wires up <code>_on_area_entered</code>, already in the script above).</li>
+<li>Save as <code>player.tscn</code>. Press <strong>F6</strong> — Space should make the shape rise, then fall back down under gravity.</li>
+</ol>
+<p><strong>2. The Obstacle (drifts left, deletes itself off-screen)</strong></p>
+<ol>
+<li>New Scene → <strong>Area2D</strong> as root → rename <code>Obstacle</code> → add <strong>Sprite2D</strong> + <strong>CollisionShape2D</strong>.</li>
+<li>Attach a script:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var speed = 200
+
+func _process(delta):
+	position.x -= speed * delta
+	if position.x &lt; -50:
+		queue_free()</code></pre></div><ol start="3">
+<li>Save as <code>obstacle.tscn</code>.</li>
+</ol>
+<p><strong>3. The Main scene (spawns obstacles on a timer — same pattern as Day 1&#39;s <code>MobTimer</code>)</strong></p>
+<ol>
+<li>New Scene → plain <strong>Node</strong> → rename <code>Main</code>. Instance <code>player.tscn</code> as a child.</li>
+<li>Add a <strong>Timer</strong> child → rename <code>ObstacleTimer</code> → Wait Time <code>1.5</code> → Autostart on.</li>
+<li>Attach a script to Main:</li>
+</ol>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node
+
+@export var obstacle_scene: PackedScene
+
+func _on_obstacle_timer_timeout():
+	var obstacle = obstacle_scene.instantiate()
+	obstacle.position = Vector2(600, randf_range(100, 600))
+	add_child(obstacle)</code></pre></div><ol start="4">
+<li>With <strong>Main</strong> selected, drag <code>obstacle.tscn</code> onto the <strong>Obstacle Scene</strong> slot in the Inspector (same move as dragging <code>mob.tscn</code> onto Main on Day 1).</li>
+<li>Select <strong>ObstacleTimer</strong> → Signals tab → connect <code>timeout</code> to Main.</li>
+<li>Press <strong>F6</strong> — obstacles should drift in from the right on a loop; touching one restarts the scene.</li>
+</ol>
+<p>From here it&#39;s the same &quot;action + tension + failure state&quot; formula as everything else this week — swap the sprite, change <code>gravity</code>/<code>flap_strength</code>/<code>speed</code> until it feels right, and it&#39;s your game.</p>

@@ -1,0 +1,119 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-2-index" data-note="tier-2-index">Tier 2 — Showcase Payoff</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ huge (on Friday) · <strong>Time:</strong> 30 minutes</p>
+<p>A high score that survives closing the game. Then a <strong>leaderboard with names on it.</strong></p>
+<p>This is the feature that turns showcase night into an actual arcade. A game with a high score table gets played over and over by the same people; a game without one gets played once. <strong>Arcade Architects, after all.</strong></p>
+<h2 id="where-saved-files-go" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#where-saved-files-go" aria-label="Link to this section">#</a>Where saved files go</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">&quot;user://highscore.save&quot;</code></pre></div><p><code>user://</code> is a real folder Godot manages per project (<code>%APPDATA%\Godot\app_userdata\YourGame</code> on Windows). Use it for anything you write at runtime.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Never save to <code>res://</code></span></div><div class="callout__body"><p><code>res://</code> is your project folder. It&#39;s <strong>read-only in an exported game</strong>, so saving there works while you&#39;re testing in the editor and silently fails for everyone at the showcase. Always <code>user://</code>.</p>
+</div></div><h2 id="the-simplest-version-one-number" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#the-simplest-version-one-number" aria-label="Link to this section">#</a>The simplest version: one number</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># in your Global autoload -- see Autoload and Global
+const SAVE_PATH = &quot;user://highscore.save&quot;
+
+var high_score = 0
+
+func _ready():
+	load_high_score()
+
+func load_high_score():
+	if not FileAccess.file_exists(SAVE_PATH):
+		return                      # first ever run -- leave it at 0
+	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	high_score = f.get_var()
+	f.close()
+
+func save_high_score():
+	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	f.store_var(high_score)
+	f.close()
+
+func submit_score(score):
+	if score &gt; high_score:
+		high_score = score
+		save_high_score()
+		return true                 # tell the caller it was a new record
+	return false</code></pre></div><p>Use it:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func game_over():
+	var is_record = Global.submit_score(Global.score)
+	$UI/FinalScore.text = &quot;Score: %d&quot; % Global.score
+	$UI/HighScore.text  = &quot;Best: %d&quot;  % Global.high_score
+	if is_record:
+		$UI/NewRecord.show()        # make a fuss -- this is the fun part</code></pre></div><p>The <code>file_exists</code> check is the whole trick: the first time anyone plays there&#39;s no file, and reading a missing file crashes.</p>
+<h2 id="a-real-leaderboard-top-10-with-names" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#a-real-leaderboard-top-10-with-names" aria-label="Link to this section">#</a>A real leaderboard: top 10 with names</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript"># global.gd
+const SAVE_PATH = &quot;user://scores.json&quot;
+const MAX_ENTRIES = 10
+
+var scores = []      # [{&quot;name&quot;: &quot;ABC&quot;, &quot;score&quot;: 1200}, ...]
+
+func _ready():
+	load_scores()
+
+func load_scores():
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var text = f.get_as_text()
+	f.close()
+	var data = JSON.parse_string(text)
+	if data is Array:
+		scores = data               # guard against a corrupt/empty file
+
+func save_scores():
+	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	f.store_string(JSON.stringify(scores))
+	f.close()
+
+func add_score(player_name, score):
+	scores.append({&quot;name&quot;: player_name, &quot;score&quot;: score})
+	scores.sort_custom(func(a, b): return a[&quot;score&quot;] &gt; b[&quot;score&quot;])
+	if scores.size() &gt; MAX_ENTRIES:
+		scores.resize(MAX_ENTRIES)
+	save_scores()
+
+func makes_leaderboard(score):
+	return scores.size() &lt; MAX_ENTRIES or score &gt; scores[-1][&quot;score&quot;]</code></pre></div><p><strong>JSON</strong> is just text, so you can open <code>scores.json</code> in Notepad and read it — very handy for debugging, and for resetting the board between showcase sessions.</p>
+<p><code>sort_custom</code> with <code>func(a, b): return a[&quot;score&quot;] &gt; b[&quot;score&quot;]</code> is a <strong>lambda</strong> — a function written inline. It means &quot;a comes before b when a&#39;s score is higher.&quot;</p>
+<h2 id="displaying-the-board" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#displaying-the-board" aria-label="Link to this section">#</a>Displaying the board</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func show_leaderboard():
+	var text = &quot;&quot;
+	for i in Global.scores.size():
+		var entry = Global.scores[i]
+		text += &quot;%d. %s  %d\n&quot; % [i + 1, entry[&quot;name&quot;], entry[&quot;score&quot;]]
+	$UI/LeaderboardLabel.text = text</code></pre></div><p>Use a <strong>monospace font</strong> on that Label so the columns line up (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>).</p>
+<h2 id="three-letter-initials-the-arcade-way" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#three-letter-initials-the-arcade-way" aria-label="Link to this section">#</a>Three-letter initials (the arcade way)</h2><p>Don&#39;t use a keyboard text box. Three letters you cycle with up/down is the authentic arcade feel and it&#39;s more fun:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Control
+
+var letters = [&quot;A&quot;, &quot;A&quot;, &quot;A&quot;]
+var current = 0
+
+func _ready():
+	update_display()
+
+func _unhandled_input(event):
+	if event.is_action_pressed(&quot;move_up&quot;):
+		cycle(1)
+	elif event.is_action_pressed(&quot;move_down&quot;):
+		cycle(-1)
+	elif event.is_action_pressed(&quot;move_right&quot;):
+		current = min(current + 1, 2)
+	elif event.is_action_pressed(&quot;move_left&quot;):
+		current = max(current - 1, 0)
+	elif event.is_action_pressed(&quot;ui_accept&quot;):
+		submit()
+	update_display()
+
+func cycle(direction):
+	var code = letters[current].unicode_at(0) - 65     # A = 0
+	code = wrapi(code + direction, 0, 26)
+	letters[current] = char(65 + code)
+
+func update_display():
+	$Initials.text = &quot;&quot;.join(letters)
+
+func submit():
+	Global.add_score(&quot;&quot;.join(letters), Global.score)
+	get_tree().change_scene_to_file(&quot;res://leaderboard.tscn&quot;)</code></pre></div><p><code>wrapi(value, 0, 26)</code> wraps around, so past Z comes back to A.</p>
+<h2 id="saving-other-things-too" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#saving-other-things-too" aria-label="Link to this section">#</a>Saving other things too</h2><p>The same file can hold anything — swap the single value for a dictionary:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var save_data = {
+	&quot;high_score&quot;: 0,
+	&quot;levels_unlocked&quot;: 1,
+	&quot;music_volume&quot;: 0.8,
+}</code></pre></div><p>Store it with <code>JSON.stringify(save_data)</code> and read it back with <code>JSON.parse_string()</code>. That&#39;s a complete save system for a small game. (For anything bigger, see <a class="wikilink" href="#/save-systems" data-note="save-systems">Save Systems</a>.)</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/high-scores-that-persist#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Crashes on the very first run</td><td>Missing the <code>FileAccess.file_exists()</code> check</td></tr><tr><td>Works in the editor, not in the export</td><td>You saved to <code>res://</code>. Use <code>user://</code></td></tr><tr><td>Scores reset every launch</td><td><code>save_scores()</code> never actually called, or called after <code>change_scene</code> destroyed the caller</td></tr><tr><td><code>JSON.parse_string</code> returns null</td><td>The file is empty or corrupt. Guard with <code>if data is Array</code></td></tr><tr><td>Numbers come back as floats (<code>1200.0</code>)</td><td>JSON has one number type — wrap in <code>int()</code> when displaying</td></tr><tr><td>Leaderboard in the wrong order</td><td><code>&gt;</code> vs <code>&lt;</code> in <code>sort_custom</code></td></tr></tbody></table></div><div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Where the file actually is</span></div><div class="callout__body"><p><code>print(ProjectSettings.globalize_path(&quot;user://&quot;))</code> prints the real folder path. Useful for clearing the board before showcase — or for proving to a skeptical student that the file exists.</p>
+</div></div>

@@ -1,0 +1,89 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>The Goomba: an enemy that walks back and forth between two points, forever. The player&#39;s job is to time their way past it (or stomp it). Builds on <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>; the aggressive cousin is <a class="wikilink" href="#/homing-enemies" data-note="homing-enemies">Homing Enemies</a>, and <a class="wikilink" href="#/enemy-states" data-note="enemy-states">Enemy States</a> combines the two into one enemy that patrols until it spots you.</p>
+<h2 id="the-enemy-scene" class="heading"><a class="heading__anchor" href="#/patrol-enemies#the-enemy-scene" aria-label="Link to this section">#</a>The enemy scene</h2><p>Same structure as the player:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Goomba          (CharacterBody2D)   Layer: mobs, Mask: world
+├── Sprite      (AnimatedSprite2D)  ← a 2-frame &quot;walk&quot; animation sells it
+└── Shape       (CollisionShape2D)</code></pre></div><p>Save as <code>goomba.tscn</code>. See <a class="wikilink" href="#/animatedsprite2d" data-note="animatedsprite2d">AnimatedSprite2D</a> for setting up the walk frames.</p>
+<h2 id="two-patrol-points-with-markers" class="heading"><a class="heading__anchor" href="#/patrol-enemies#two-patrol-points-with-markers" aria-label="Link to this section">#</a>Two patrol points with Markers</h2><p>The cleanest way to say &quot;walk between <em>here</em> and <em>here</em>&quot; is two <strong>Marker2D</strong> nodes you can see and drag in the editor.</p>
+<p><strong>In your Main/Level scene</strong> (not inside the Goomba!):</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Level        (TileMapLayer)
+├── Player
+├── Goomba       (instance of goomba.tscn)
+├── PatrolA      (Marker2D)   ← drag to the left end of the route
+└── PatrolB      (Marker2D)   ← drag to the right end</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Markers must NOT be children of the Goomba</span></div><div class="callout__body"><p>If the points are inside the enemy, they move <em>with</em> it — the Goomba chases its own feet and moonwalks off the map. Put them in the level, as siblings of the enemy.</p>
+</div></div><p><strong>Script on the Goomba root:</strong></p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 100
+@export var gravity = 1200.0
+@export var point_a: Marker2D   # drag PatrolA here in the Inspector
+@export var point_b: Marker2D   # drag PatrolB here
+
+var target: Marker2D
+
+func _ready():
+	target = point_b
+
+func _physics_process(delta):
+	# stick to the floor (delete these two lines for a top-down game)
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
+	# walk toward the current target
+	var direction = sign(target.global_position.x - global_position.x)
+	velocity.x = direction * speed
+	move_and_slide()
+
+	# close enough? turn around
+	if abs(target.global_position.x - global_position.x) &lt; 10:
+		target = point_a if target == point_b else point_b
+
+	# face the way we're walking
+	$AnimatedSprite2D.flip_h = direction &lt; 0</code></pre></div><p>Line by line:</p>
+<ul>
+<li><strong><code>@export var point_a: Marker2D</code></strong> — after attaching the script, select the Goomba and <strong>drag PatrolA/PatrolB from the scene tree into the Inspector slots</strong>. Empty slots = instant crash on <code>target.global_position</code>.</li>
+<li><strong><code>sign(...)</code></strong> — returns -1 or 1: &quot;is my target left or right of me?&quot; Same trick as the <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> look-ahead.</li>
+<li><strong><code>&lt; 10</code></strong> — a 10-pixel &quot;close enough&quot; zone. Checking for <em>exactly</em> reaching the point fails — the enemy overshoots by a few pixels each frame and vibrates in place. Never compare positions with <code>==</code>.</li>
+<li><strong><code>target = point_a if target == point_b else point_b</code></strong> — the swap: whichever point we reached, aim at the other one.</li>
+<li><strong><code>flip_h = direction &lt; 0</code></strong> — face the walk direction (<a class="wikilink" href="#/animatedsprite2d" data-note="animatedsprite2d">AnimatedSprite2D</a>).</li>
+</ul>
+<p>Instance more Goombas and give each pair their own markers — every one can patrol a different route with zero code changes.</p>
+<h2 id="alternative-no-markers-just-a-distance" class="heading"><a class="heading__anchor" href="#/patrol-enemies#alternative-no-markers-just-a-distance" aria-label="Link to this section">#</a>Alternative: no markers, just a distance</h2><p>Fewer nodes, less visual — walk <code>patrol_distance</code> pixels from wherever it starts, then turn around:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 100
+@export var patrol_distance = 150
+var start_x = 0.0
+var direction = 1
+
+func _ready():
+	start_x = global_position.x
+
+func _physics_process(delta):
+	velocity.x = speed * direction
+	move_and_slide()
+	if abs(global_position.x - start_x) &gt; patrol_distance:
+		direction *= -1
+	$AnimatedSprite2D.flip_h = direction &lt; 0</code></pre></div><p>Good for scattering many enemies fast; the marker version is better when routes need precise placement. (Third option — turn around at walls with <code>is_on_wall()</code> — lives in <a class="wikilink" href="#/movement-and-input" data-note="movement-and-input">Movement and Input</a>.)</p>
+<h2 id="hurting-the-player" class="heading"><a class="heading__anchor" href="#/patrol-enemies#hurting-the-player" aria-label="Link to this section">#</a>Hurting the player</h2><p>The Goomba body itself only collides with <em>world</em>, so touching the player does nothing yet. Add a <strong>Hurtzone Area2D child</strong> (Layer: none, Mask: player) with its own CollisionShape2D, connect <code>body_entered</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hurtzone_body_entered(body):
+	body.take_damage()   # the player decides the consequence — see Health and Lives</code></pre></div><p>Same pattern as <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a> — the enemy reports the touch, the player&#39;s <code>take_damage()</code> handles lives/respawn/i-frames (<a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>).</p>
+<h2 id="stomping-it-the-full-goomba" class="heading"><a class="heading__anchor" href="#/patrol-enemies#stomping-it-the-full-goomba" aria-label="Link to this section">#</a>Stomping it (the full Goomba)</h2><p>Jump on its head to squish it — the head is safe, the sides hurt. Shape placement does all the work:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Goomba
+├── Sprite
+├── Shape        (CollisionShape2D)
+├── Hurtzone     (Area2D → thin shapes on the LEFT and RIGHT sides)
+└── StompZone    (Area2D → thin shape across the TOP, Mask: player)</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_stomp_zone_body_entered(body):
+	if body.velocity.y &gt; 0:            # only counts if the player is falling
+		body.velocity.y = -300         # bounce the player off the head
+		$AnimatedSprite2D.play(&quot;squish&quot;)
+		set_physics_process(false)     # stop walking
+		$Hurtzone/CollisionShape2D.set_deferred(&quot;disabled&quot;, true)
+		await $AnimatedSprite2D.animation_finished
+		queue_free()</code></pre></div><ul>
+<li><strong><code>body.velocity.y &gt; 0</code></strong> — falling means stomping. Walking into the head zone sideways won&#39;t trigger it.</li>
+<li><strong><code>set_deferred(&quot;disabled&quot;, true)</code></strong> — disables the hurtbox <em>safely</em> during physics (setting it directly mid-collision throws an error).</li>
+<li>The <code>await</code> line plays the squish animation before removal — see <a class="wikilink" href="#/animatedsprite2d" data-note="animatedsprite2d">AnimatedSprite2D</a> (one-shot animations). No squish animation? Replace the last three lines with <code>queue_free()</code>.</li>
+<li>Player bounce (<code>-300</code>) is the classic Mario feel — see <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>.</li>
+</ul>

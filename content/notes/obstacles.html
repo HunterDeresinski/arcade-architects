@@ -1,0 +1,45 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Walls, crates, pillars — things the player <strong>bumps into instead of dying to</strong>. This is the piece that turns an open field into a level. The obstacles that <em>do</em> kill you are <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>; the full layer system is in <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>.</p>
+<h2 id="the-catch-area2d-can-t-be-blocked" class="heading"><a class="heading__anchor" href="#/obstacles#the-catch-area2d-can-t-be-blocked" aria-label="Link to this section">#</a>The catch: Area2D can&#39;t be blocked</h2><p>In Dodge the Creeps the player is an <code>Area2D</code>. Areas <em>detect</em> overlaps but have no physical presence — nothing can stop them. Walk straight through your beautiful wall.</p>
+<p>The fix is to change the player&#39;s root node type:</p>
+<ol>
+<li>Right-click the <strong>Player</strong> node in the Scene dock → <strong>Change Type</strong> → <code>CharacterBody2D</code>.</li>
+<li>Update the movement script to use the built-in <code>velocity</code> and <code>move_and_slide()</code> (below).</li>
+</ol>
+<p>Everything else about the player — the sprite, the shape, the animations — stays exactly as it is.</p>
+<h2 id="step-1-name-your-collision-layers" class="heading"><a class="heading__anchor" href="#/obstacles#step-1-name-your-collision-layers" aria-label="Link to this section">#</a>Step 1: name your collision layers</h2><p><strong>Project → Project Settings → Layer Names → 2D Physics.</strong> Naming them once means you never have to remember what &quot;Layer 3&quot; was. Use the camp-wide scheme from <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a> — for this note you only need the first three: <strong>1 player, 2 mobs, 3 obstacles</strong>.</p>
+<h2 id="step-2-the-new-player-script" class="heading"><a class="heading__anchor" href="#/obstacles#step-2-the-new-player-script" aria-label="Link to this section">#</a>Step 2: the new player script</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+signal hit
+@export var speed = 400
+var screen_size
+
+func _ready():
+	screen_size = get_viewport_rect().size
+
+func _physics_process(delta):
+	var input_dir = Input.get_vector(&quot;move_left&quot;, &quot;move_right&quot;, &quot;move_up&quot;, &quot;move_down&quot;)
+	velocity = input_dir * speed
+	move_and_slide()
+	position = position.clamp(Vector2.ZERO, screen_size)
+
+	# your existing animation code stays the same
+	if velocity.length() &gt; 0:
+		$AnimatedSprite2D.play()
+	else:
+		$AnimatedSprite2D.stop()</code></pre></div><ul>
+<li><strong><code>velocity</code> is built in</strong> on <code>CharacterBody2D</code> — you don&#39;t declare it, you just set it.</li>
+<li><strong><code>move_and_slide()</code></strong> does the moving <em>and</em> the sliding along walls. Don&#39;t also set <code>position</code> from the input; pick one.</li>
+<li>Set the player&#39;s collision <strong>Mask to obstacles only</strong>. That way <code>move_and_slide()</code> stops you at walls but you don&#39;t physically shove the mobs around like bumper cars.</li>
+</ul>
+<h2 id="step-3-hit-detection-moves-to-a-hurtbox" class="heading"><a class="heading__anchor" href="#/obstacles#step-3-hit-detection-moves-to-a-hurtbox" aria-label="Link to this section">#</a>Step 3: hit detection moves to a Hurtbox</h2><p>The player no longer detects mobs by itself, so give it a child that does. Add an <code>Area2D</code> child named <strong>Hurtbox</strong> with its own <code>CollisionShape2D</code>. Set the Hurtbox&#39;s <strong>Mask to the mobs layer</strong>, connect its <code>body_entered</code> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>), and move your death code there:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_hurtbox_body_entered(body):
+	hide()
+	hit.emit()
+	$Hurtbox/CollisionShape2D.set_deferred(&quot;disabled&quot;, true)</code></pre></div><p><code>set_deferred(&quot;disabled&quot;, true)</code> turns the hurtbox off <em>safely</em> — disabling a shape directly in the middle of a collision throws an error.</p>
+<h2 id="step-4-the-obstacle-itself" class="heading"><a class="heading__anchor" href="#/obstacles#step-4-the-obstacle-itself" aria-label="Link to this section">#</a>Step 4: the obstacle itself</h2><p>Dead simple, and <strong>no script at all</strong>:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Wall            (StaticBody2D)    Layer: obstacles, Mask: (none)
+├── Sprite      (Sprite2D)
+└── Shape       (CollisionShape2D)</code></pre></div><p>Save as <code>wall.tscn</code> and drag as many copies into your level as you want. It blocks the player because the player&#39;s mask includes obstacles. It doesn&#39;t kill anyone because it isn&#39;t on the mobs layer.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Lots of walls? Use a TileMap instead</span></div><div class="callout__body"><p>Hand-placing twenty <code>StaticBody2D</code>s is slow. Once a level has more than a handful of walls, paint them with collision-enabled tiles instead — see <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a>.</p>
+</div></div>

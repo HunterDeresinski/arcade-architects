@@ -1,0 +1,50 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>How to make a character <em>animate</em> — walk cycles, idle bobs, flipping to face the direction of travel. This is the node the Day 1 player already uses; here&#39;s how to drive it yourself.</p>
+<div class="callout callout--note"><div class="callout__head"><span class="callout__icon">🗒️</span><span class="callout__title">Related nodes</span></div><div class="callout__body"><p><a class="wikilink" href="#/sprite2d" data-note="sprite2d">Sprite2D</a> for a still image, <a class="wikilink" href="#/animationplayer" data-note="animationplayer">AnimationPlayer</a> for animating <em>properties</em> (position, rotation, fade) rather than frames.</p>
+</div></div><h2 id="setting-it-up" class="heading"><a class="heading__anchor" href="#/animatedsprite2d#setting-it-up" aria-label="Link to this section">#</a>Setting it up</h2><ol>
+<li>In your Player scene, add an <strong>AnimatedSprite2D</strong> child (or use the existing one).</li>
+<li>Inspector → <strong>Sprite Frames</strong> → <code>&lt;empty&gt;</code> → <strong>New SpriteFrames</strong>, then click it. The <strong>SpriteFrames panel</strong> opens at the bottom.</li>
+<li>In the panel, the animation list starts with one animation named <code>default</code>. Double-click to rename it (<code>idle</code>), and use <strong>Add Animation</strong> (the paper icon) for more: <code>walk</code>, <code>jump</code>...</li>
+<li>Add frames to the selected animation:<ul>
+<li><strong>Separate image files</strong> — drag the PNGs from the FileSystem dock into the frame strip.</li>
+<li><strong>One sprite sheet</strong> — click <strong>Add frames from Sprite Sheet</strong> (the grid icon), open the sheet, set how many columns/rows it has, then click the frames you want in order.</li>
+</ul>
+</li>
+<li>Per-animation settings, left of the frame strip: <strong>speed</strong> (FPS — 5–10 fits chunky pixel art) and <strong>loop</strong> (on for idle/walk, <strong>off</strong> for one-shots like attack or death).</li>
+</ol>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Test without running the game</span></div><div class="callout__body"><p>Select an animation and press the ▶ in the SpriteFrames panel — it previews right in the editor.</p>
+</div></div><h2 id="playing-animations-from-code" class="heading"><a class="heading__anchor" href="#/animatedsprite2d#playing-animations-from-code" aria-label="Link to this section">#</a>Playing animations from code</h2><p>The script lives on the parent (the <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>), reaching the sprite with <code>$</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$AnimatedSprite2D.play(&quot;walk&quot;)   # start an animation (by its exact name)
+$AnimatedSprite2D.stop()         # freeze on the current frame</code></pre></div><p><code>play()</code> on an already-playing animation does nothing — safe to call every frame.</p>
+<h2 id="the-standard-pattern-match-animation-to-movement" class="heading"><a class="heading__anchor" href="#/animatedsprite2d#the-standard-pattern-match-animation-to-movement" aria-label="Link to this section">#</a>The standard pattern: match animation to movement</h2><p>Add this at the <strong>end of <code>_physics_process</code></strong>, after <code>move_and_slide()</code>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	# facing: flip the art when walking left
+	if velocity.x &lt; 0:
+		$AnimatedSprite2D.flip_h = true
+	elif velocity.x &gt; 0:
+		$AnimatedSprite2D.flip_h = false
+
+	# which animation?
+	if velocity.length() &gt; 0:
+		$AnimatedSprite2D.play(&quot;walk&quot;)
+	else:
+		$AnimatedSprite2D.play(&quot;idle&quot;)</code></pre></div><ul>
+<li><strong><code>flip_h = true</code></strong> mirrors the sprite horizontally — draw art facing <em>right</em>, get left for free. (<code>flip_v</code> exists for vertical.)</li>
+<li>The <code>elif</code> (not <code>else</code>) matters: when standing still (<code>velocity.x == 0</code>), the sprite keeps facing its last direction instead of snapping right.</li>
+<li>Exact-name gotcha: <code>play(&quot;Walk&quot;)</code> ≠ <code>play(&quot;walk&quot;)</code>. Typos here fail silently or error at runtime — copy the name from the SpriteFrames panel.</li>
+</ul>
+<p><strong>Platformer version</strong> (<a class="wikilink" href="#/platformer-physics" data-note="platformer-physics">Platformer Physics</a>) — air state wins over ground states:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	if not is_on_floor():
+		$AnimatedSprite2D.play(&quot;jump&quot;)
+	elif velocity.x != 0:
+		$AnimatedSprite2D.play(&quot;walk&quot;)
+	else:
+		$AnimatedSprite2D.play(&quot;idle&quot;)</code></pre></div><h2 id="one-shot-animations-attack-death" class="heading"><a class="heading__anchor" href="#/animatedsprite2d#one-shot-animations-attack-death" aria-label="Link to this section">#</a>One-shot animations (attack, death)</h2><p>For non-looping animations, the <strong><code>animation_finished</code></strong> signal (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>) fires when the last frame ends:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func die():
+	$AnimatedSprite2D.play(&quot;death&quot;)
+	await $AnimatedSprite2D.animation_finished
+	queue_free()   # remove after the animation completes</code></pre></div><p>Without the <code>await</code>, the node vanishes on frame 1 of its own death animation — a very common &quot;my death animation doesn&#39;t play&quot; ticket.</p>
+<h2 id="useful-extras" class="heading"><a class="heading__anchor" href="#/animatedsprite2d#useful-extras" aria-label="Link to this section">#</a>Useful extras</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$AnimatedSprite2D.animation            # name of the current animation (&quot;walk&quot;)
+$AnimatedSprite2D.is_playing()         # true / false
+$AnimatedSprite2D.speed_scale = 2.0    # play everything at double speed</code></pre></div><p><code>speed_scale</code> is a fun <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a> trick: speed up the walk cycle when the player has a speed power-up.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">&quot;My animation doesn&#39;t play&quot; checklist</span></div><div class="callout__body"><p>(1) Name matches <strong>exactly</strong> (case-sensitive). (2) The animation has more than one frame. (3) FPS isn&#39;t 0. (4) For one-shots: <strong>Loop is off</strong> and nothing calls <code>play(&quot;idle&quot;)</code> right after — the movement pattern above will stomp a one-shot unless you guard it.</p>
+</div></div>

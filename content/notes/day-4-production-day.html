@@ -1,0 +1,87 @@
+<p>⬅️ <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a> · ➡️ <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p><strong>Today you will:</strong> build a <strong>playable MVP</strong> of your team game. Ugly is fine. Playable is mandatory. The 3 PM build deadline for showcase starts tonight — most teams will stay through Open Studio.</p>
+<p><strong>References today:</strong> <a class="wikilink" href="#/mvp-checklist" data-note="mvp-checklist">MVP Checklist</a> · <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a> · <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a> · <a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a> · <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> · <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a> · <a class="wikilink" href="#/playtesting" data-note="playtesting">Playtesting</a> · <a class="wikilink" href="#/team-roles" data-note="team-roles">Team Roles</a> · <a class="wikilink" href="#/sharing-files-on-a-team" data-note="sharing-files-on-a-team">Sharing Files on a Team</a></p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Use your checklist</span></div><div class="callout__body"><p>Pick up the <strong>Day 4 Student Checklist</strong> from your instructor. Your MVP index card is today&#39;s anchor — keep it in sight all day.</p>
+</div></div><hr>
+<h2 id="the-big-idea" class="heading"><a class="heading__anchor" href="#/day-4-production-day#the-big-idea" aria-label="Link to this section">#</a>The big idea</h2><p><strong>MVP = Minimum Viable Product.</strong> The smallest version of your game that someone can actually <em>play</em>: they can start, they can win or lose, and they can restart. That&#39;s it. Everything else — extra levels, fancy art, particles — is <strong>polish</strong>, and polish is tomorrow.</p>
+<p>INSERT IMAGE HERE</p>
+<div class="callout callout--important"><div class="callout__head"><span class="callout__icon">❗</span><span class="callout__title">Today&#39;s only target</span></div><div class="callout__body"><p>A stranger can sit down, play your game, reach a win or a loss, and play again — <strong>without you explaining anything</strong>. Hit that and today is a win. Full list: <a class="wikilink" href="#/mvp-checklist" data-note="mvp-checklist">MVP Checklist</a>.</p>
+</div></div><hr>
+<h2 id="schedule" class="heading"><a class="heading__anchor" href="#/day-4-production-day#schedule" aria-label="Link to this section">#</a>Schedule</h2><div class="table-wrap"><table><thead><tr><th>Block</th></tr></thead><tbody><tr><td>Stand-up</td></tr><tr><td>Write MVP checklist on index card</td></tr><tr><td>Build sprint</td></tr><tr><td>☕ Break</td></tr><tr><td>Continue build / on-demand micro-lessons at side table</td></tr><tr><td>Scope check + instructor sign-off</td></tr><tr><td><strong>Open Studio (HIGH priority — most teams stay to build)</strong></td></tr><tr><td>🚨 Hard deadline: build on the demo machine</td></tr></tbody></table></div><hr>
+<h2 id="stand-up" class="heading"><a class="heading__anchor" href="#/day-4-production-day#stand-up" aria-label="Link to this section">#</a>Stand-Up</h2><p>Every team, 60 seconds. The <strong>Producer</strong> (<a class="wikilink" href="#/team-roles" data-note="team-roles">Team Roles</a>) speaks. The format is:</p>
+<ol>
+<li><strong>What we finished yesterday</strong> (one sentence)</li>
+<li><strong>What we&#39;re building today</strong> (one sentence)</li>
+<li><strong>What&#39;s blocking us</strong> (one thing — or &quot;nothing&quot;)</li>
+</ol>
+<p>Name your blocker out loud so an instructor can help. Blockers that stay silent stay broken.</p>
+<hr>
+<h2 id="write-your-mvp-checklist" class="heading"><a class="heading__anchor" href="#/day-4-production-day#write-your-mvp-checklist" aria-label="Link to this section">#</a>Write Your MVP Checklist</h2><p>On a fresh <strong>index card</strong>, write the <strong>3–5 things</strong> that make your game minimally playable. Tape it to your monitor. This card is your contract with your team.</p>
+<p>Good MVP items look like:</p>
+<ul>
+<li>✅ Player can move and collide with obstacles</li>
+<li>✅ Hitting an obstacle ends the game</li>
+<li>✅ A score or timer counts up during play</li>
+<li>✅ A &quot;Game Over&quot; screen appears with a restart option</li>
+<li>✅ Title screen shows the game name</li>
+</ul>
+<p>Bad MVP items:</p>
+<ul>
+<li>❌ &quot;Three different enemy types&quot; — that&#39;s not MVP, that&#39;s Day 6</li>
+<li>❌ &quot;Perfect art&quot; — functional art only, today</li>
+<li>❌ &quot;Music and sound effects&quot; — nice to have, not must-have</li>
+</ul>
+<p>See <a class="wikilink" href="#/mvp-checklist" data-note="mvp-checklist">MVP Checklist</a> for templates and examples.</p>
+<hr>
+<h2 id="build-sprint" class="heading"><a class="heading__anchor" href="#/day-4-production-day#build-sprint" aria-label="Link to this section">#</a>Build Sprint</h2><p>Everyone on the team has a job. Work from your index card down. When you finish one item, cross it off and move to the next.</p>
+<h3 id="what-to-build-first-in-order" class="heading"><a class="heading__anchor" href="#/day-4-production-day#what-to-build-first-in-order" aria-label="Link to this section">#</a>What to build first (in order)</h3><ol>
+<li><strong>Core mechanic</strong> — the player action (move, collect, dodge, stack) is working in the game scene.</li>
+<li><strong>Fail condition</strong> — something can end the game (collision, timer runs out, counter hits zero).</li>
+<li><strong>Win condition</strong> (if your game has one) — something can end the game in the player&#39;s favor.</li>
+<li><strong>Restart</strong> — pressing a key or clicking a button starts the game over.</li>
+<li><strong>Score or feedback</strong> — the player knows how they&#39;re doing.</li>
+</ol>
+<p>Everything else is polish.</p>
+<h3 id="build-sprint-reference-table" class="heading"><a class="heading__anchor" href="#/day-4-production-day#build-sprint-reference-table" aria-label="Link to this section">#</a>Build sprint reference table</h3><div class="table-wrap"><table><thead><tr><th>You need to…</th><th>Read</th></tr></thead><tbody><tr><td>Make a title screen or game-over screen</td><td><a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a></td></tr><tr><td>Show score or lives on screen</td><td><a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a></td></tr><tr><td>Add a restart button or key</td><td><a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a></td></tr><tr><td>Make things collide or get collected</td><td><a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a></td></tr><tr><td>Spawn enemies or items over time</td><td><a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a></td></tr><tr><td>Add music or sound effects</td><td><a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a></td></tr><tr><td>Share files between team members</td><td><a class="wikilink" href="#/sharing-files-on-a-team" data-note="sharing-files-on-a-team">Sharing Files on a Team</a></td></tr></tbody></table></div><p>If a side-table micro-lesson is running, go — your instructor is covering exactly what most teams need.</p>
+<h3 id="on-demand-micro-lessons-side-table-throughout-the-sprint" class="heading"><a class="heading__anchor" href="#/day-4-production-day#on-demand-micro-lessons-side-table-throughout-the-sprint" aria-label="Link to this section">#</a>On-demand micro-lessons (side table — throughout the sprint)</h3><p>Your instructor will run short demos at the side table whenever a topic clusters. Topics that usually come up today — each points to the reference note with the full code and setup steps. By Day 4 the references are your first stop, not the lesson page:</p>
+<p><strong>Scene switching</strong> — a title screen, and a way to get from it into your game:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_start_button_pressed():
+	get_tree().change_scene_to_file(&quot;res://Game.tscn&quot;)</code></pre></div><p><code>res://</code> means &quot;from the project root&quot; — the path has to match your scene&#39;s exact name in the FileSystem dock. Full three-screen flow (Title → Game → Game Over) in <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>.</p>
+<p><strong>Restart</strong> — the one-line version, works for almost every tiny game:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_retry_pressed():
+	get_tree().reload_current_scene()</code></pre></div><p><strong>Score labels</strong> — same <code>CanvasLayer</code> + <code>Label</code> pattern from Day 1&#39;s stretch goals: a <code>Label</code> node under a <code>CanvasLayer</code>, updated with <code>$UI/ScoreLabel.text = &quot;Score: &quot; + str(score)</code>. Full version in <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a>.</p>
+<p><strong>A simple moving enemy from scratch</strong> — a <code>CharacterBody2D</code> that patrols and turns around at walls. Full scene setup and script in <a class="wikilink" href="#/movement-and-input#a-simple-enemy-that-moves-on-its-own-patrol" data-note="movement-and-input">Movement and Input → A simple enemy that moves on its own (patrol)</a>.</p>
+<p><strong>Collision with Area2D</strong> — collecting vs. dying on touch, same <code>Area2D</code> + <code>CollisionShape2D</code> + signal pattern from Day 3&#39;s obstacle/pickup build-out. Full pattern in <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>.</p>
+<p>Raise your hand or walk to the side table if you need one of these.</p>
+<hr>
+<h2 id="break" class="heading"><a class="heading__anchor" href="#/day-4-production-day#break" aria-label="Link to this section">#</a>☕ Break</h2><p>Step outside if you can. Builds are easier after a real break.</p>
+<hr>
+<h2 id="continue-build" class="heading"><a class="heading__anchor" href="#/day-4-production-day#continue-build" aria-label="Link to this section">#</a>Continue Build</h2><p>Keep working from your MVP card. Your goal: every item crossed off before scope check.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Watch for these traps</span></div><div class="callout__body"><ul>
+<li><strong>Adding a new feature before finishing an existing one.</strong> Finish what&#39;s started first.</li>
+<li><strong>Everyone working on the same thing.</strong> One person per task. <a class="wikilink" href="#/team-roles" data-note="team-roles">Team Roles</a> helps with this.</li>
+<li><strong>Art before function.</strong> A beautiful broken game cannot be showcased. A working ugly game can.</li>
+</ul>
+</div></div><hr>
+<h2 id="scope-check-instructor-sign-off" class="heading"><a class="heading__anchor" href="#/day-4-production-day#scope-check-instructor-sign-off" aria-label="Link to this section">#</a>Scope Check + Instructor Sign-Off</h2><p>At 11:50, your instructor walks to your station. You show them:</p>
+<ol>
+<li>Your MVP index card. Point to each item: done or not done?</li>
+<li>Run the game from <strong>F5</strong>. They watch you play through to a loss/win and restart.</li>
+<li>Any items on the card that are <strong>not done by this point get crossed off or moved to &quot;stretch.&quot;</strong></li>
+</ol>
+<p>After the scope check, your instructor signs your index card.</p>
+<p><strong>After today: no new features.</strong> Tomorrow is polish — bugs, title screen, sound, and feel. Adding new features on Day 5 is how games break right before the showcase.</p>
+<p><strong>Checkpoint:</strong> ✅ Game runs start to finish · ✅ Player can lose and restart · ✅ Scope card signed off by instructor.</p>
+<hr>
+<h2 id="open-studio-high-priority-most-teams-stay" class="heading"><a class="heading__anchor" href="#/day-4-production-day#open-studio-high-priority-most-teams-stay" aria-label="Link to this section">#</a>Open Studio (HIGH PRIORITY — most teams stay)</h2><p>Open Studio today is not optional for most teams. If your MVP isn&#39;t fully crossed off, stay and build. The real clock for this camp is:</p>
+<ul>
+<li><strong>12:00 PM:</strong> Open Studio begins — continue building</li>
+<li><strong>3:00 PM:</strong> 🚨 Hard build deadline. Working build must be loaded on the demo machine by 3 PM. The showcase starts at 4 PM.</li>
+</ul>
+<p>Use this time to:</p>
+<ul>
+<li>Finish any MVP items that weren&#39;t signed off</li>
+<li>Add the first polish items (title screen, restart, one sound)</li>
+<li>Run an informal playtest with someone outside your team</li>
+</ul>
+<p>See <a class="wikilink" href="#/exporting-your-game" data-note="exporting-your-game">Exporting Your Game</a> if you want to build a standalone <code>.exe</code> instead of running from the editor.</p>

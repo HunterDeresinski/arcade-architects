@@ -1,0 +1,57 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-4-index" data-note="tier-4-index">Tier 4 — Worth Knowing</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐⭐ high · <strong>Time:</strong> 25 minutes</p>
+<p>Darkness, and lights that cut through it. A torch in a cave, a flashlight beam, a spooky night level, a glowing pickup. <strong>Enormous mood change for about fifteen minutes of work.</strong></p>
+<h2 id="the-two-node-trick" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#the-two-node-trick" aria-label="Link to this section">#</a>The two-node trick</h2><p>Lighting in 2D Godot is basically one idea:</p>
+<ol>
+<li><strong>CanvasModulate</strong> — tints the <em>entire</em> scene. Set it dark. Now it&#39;s night.</li>
+<li><strong>PointLight2D</strong> — adds light back in specific places.</li>
+</ol>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── CanvasModulate      Color: (0.15, 0.15, 0.3)   ← dark blue night
+├── TileMapLayer
+└── Player
+    └── PointLight2D    ← a torch that follows you</code></pre></div><p>That&#39;s it. Two nodes, and a bright level becomes a cave.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Never use pure black</span></div><div class="callout__body"><p><code>Color(0, 0, 0)</code> makes unlit areas totally invisible and unplayable. Dark blue <code>(0.15, 0.15, 0.3)</code> or dark purple reads as night while letting players still see shapes. Real night isn&#39;t black either.</p>
+</div></div><h2 id="pointlight2d" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#pointlight2d" aria-label="Link to this section">#</a>PointLight2D</h2><p><strong>It needs a texture.</strong> A PointLight2D with an empty Texture slot does nothing — this is the #1 mistake here, same shape as the empty-shape problem in <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a>.</p>
+<p>Use a <strong>soft white radial gradient</strong> (a blurry white circle on transparent). Grab one from <a class="wikilink" href="#/asset-resources" data-note="asset-resources">Asset Resources</a>, or make one in seconds: add a <code>GradientTexture2D</code>, set <strong>Fill</strong> to Radial, and make the gradient run white → transparent.</p>
+<div class="table-wrap"><table><thead><tr><th>Property</th><th>Does</th></tr></thead><tbody><tr><td><strong>Texture</strong></td><td>the light&#39;s <em>shape</em>. Required</td></tr><tr><td><strong>Texture Scale</strong></td><td>how big the light is</td></tr><tr><td><strong>Color</strong></td><td>light colour — warm orange for fire, pale blue for moonlight</td></tr><tr><td><strong>Energy</strong></td><td>brightness. Above <code>1.0</code> blows out to white</td></tr><tr><td><strong>Blend Mode</strong></td><td><strong>Add</strong> (normal light), <strong>Subtract</strong> (darkness), <strong>Mix</strong></td></tr><tr><td><strong>Shadow → Enabled</strong></td><td>lets objects cast shadows</td></tr></tbody></table></div><p>A flickering torch is three lines (<a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	var t = create_tween().set_loops()
+	t.tween_property($Light, &quot;energy&quot;, 0.85, 0.12)
+	t.tween_property($Light, &quot;energy&quot;, 1.05, 0.18)</code></pre></div><p>Or add slight randomness per frame for a real fire feel:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	$Light.energy = 0.9 + randf() * 0.2</code></pre></div><h2 id="shadows" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#shadows" aria-label="Link to this section">#</a>Shadows</h2><ol>
+<li>On the PointLight2D: <strong>Shadow → Enabled</strong> ✅.</li>
+<li>On anything that should block light: add a <strong>LightOccluder2D</strong> child.</li>
+<li>Give the occluder an <strong>Occluder Polygon</strong> and draw the outline.</li>
+</ol>
+<p>For a <a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a>, you can set occlusion per-tile in the TileSet editor (<strong>Occlusion Layers</strong>) — paint your walls and shadows just work.</p>
+<p>Shadows are expensive and fiddly. <strong>Skip them unless a team specifically wants a stealth or horror game.</strong> Lights without shadows already look great.</p>
+<h2 id="a-flashlight-cone" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#a-flashlight-cone" aria-label="Link to this section">#</a>A flashlight cone</h2><p>Use a <strong>cone-shaped texture</strong> instead of a circle, and rotate the light to face the aim direction:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	$Flashlight.rotation = (get_global_mouse_position() - global_position).angle()</code></pre></div><p>With shadows enabled and a <a class="wikilink" href="#/raycast2d" data-note="raycast2d">RayCast2D</a> vision check on the enemies, that&#39;s a stealth game.</p>
+<h2 id="day-night-cycle" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#day-night-cycle" aria-label="Link to this section">#</a>Day/night cycle</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var day_length = 60.0
+var time = 0.0
+
+func _process(delta):
+	time = fmod(time + delta, day_length)
+	var t = time / day_length
+	var brightness = 0.25 + 0.75 * (0.5 + 0.5 * cos(t * TAU))
+	$CanvasModulate.color = Color(brightness, brightness, brightness * 1.1)</code></pre></div><h2 id="making-things-glow" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#making-things-glow" aria-label="Link to this section">#</a>Making things glow</h2><p>A <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">UI</a> or sprite can glow without any lighting setup:</p>
+<ol>
+<li>Add a <strong>WorldEnvironment</strong> node.</li>
+<li><strong>Environment → New Environment → Glow → Enabled</strong> ✅.</li>
+<li>Set <strong>Glow HDR Threshold</strong> around <code>0.9</code>.</li>
+<li>Anything brighter than that threshold blooms.</li>
+</ol>
+<p>Then push a sprite&#39;s <code>modulate</code> above 1: <code>$Coin.modulate = Color(2.0, 1.8, 0.5)</code>. It now glows. Great for <a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a>, neon, and lasers.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Renderer matters</span></div><div class="callout__body"><p>Glow needs <strong>Forward+</strong> or <strong>Mobile</strong>, not <strong>Compatibility</strong>. Day 1 sets up Compatibility for school laptops, so glow may be unavailable. Lights and CanvasModulate work in all three — glow is the one to check.</p>
+</div></div><h2 id="where-to-use-it" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#where-to-use-it" aria-label="Link to this section">#</a>Where to use it</h2><ul>
+<li>A cave or dungeon level — the classic</li>
+<li>A spooky night level for a horror-ish game</li>
+<li>A torch <a class="wikilink" href="#/collectables" data-note="collectables">pickup</a> that extends your light radius (a great mechanic — light as a resource)</li>
+<li>Glowing coins, neon arcade aesthetics</li>
+<li>A boss room that darkens when the fight starts</li>
+<li>Lightning flashes: tween CanvasModulate to white for 0.05s</li>
+</ul>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/lights-and-canvasmodulate#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Light does nothing</td><td>Empty <strong>Texture</strong> slot</td></tr><tr><td>Whole scene is pitch black</td><td>CanvasModulate too dark — lift toward <code>(0.2, 0.2, 0.3)</code></td></tr><tr><td>Light is a hard-edged circle</td><td>Texture isn&#39;t a soft gradient</td></tr><tr><td>UI got dark too</td><td>CanvasModulate doesn&#39;t affect <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">CanvasLayer</a> contents — if yours dimmed, the UI isn&#39;t under one</td></tr><tr><td>Shadows look wrong</td><td>Occluder polygon doesn&#39;t match the wall shape</td></tr><tr><td>Glow does nothing</td><td>Wrong renderer — needs Forward+ or Mobile</td></tr><tr><td>Frame rate tanks</td><td>Too many shadow-casting lights. Shadows on one or two lights max</td></tr></tbody></table></div>

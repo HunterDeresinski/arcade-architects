@@ -1,0 +1,61 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧰 <a class="wikilink" href="#/extras-index" data-note="extras-index">Extras Index</a> · 📁 <a class="wikilink" href="#/tier-4-index" data-note="tier-4-index">Tier 4 — Worth Knowing</a></p>
+<p><strong>Difficulty:</strong> ⭐⭐ moderate · <strong>Payoff:</strong> ⭐⭐ solid · <strong>Time:</strong> 20 minutes</p>
+<p><strong>Draw a curve in the editor, and make something travel along it.</strong> Enemies that swoop in arcs, patrolling guards on a route, a saw blade circling a room, spawn points around the screen edge.</p>
+<p>If you&#39;ve done Day 1, you&#39;ve already used one — Dodge the Creeps spawns mobs using a Path2D around the screen border.</p>
+<h2 id="the-two-nodes" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#the-two-nodes" aria-label="Link to this section">#</a>The two nodes</h2><ul>
+<li><strong>Path2D</strong> — holds the curve you draw. Does nothing by itself.</li>
+<li><strong>PathFollow2D</strong> — a child of Path2D. Anything parented to <em>it</em> gets dragged along the curve.</li>
+</ul>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">EnemyPath          (Path2D)          ← draw the curve here
+└── Follow          (PathFollow2D)    ← script goes here
+    └── Enemy       (your scene)      ← rides along</code></pre></div><h2 id="drawing-a-curve" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#drawing-a-curve" aria-label="Link to this section">#</a>Drawing a curve</h2><ol>
+<li>Add a <strong>Path2D</strong> node.</li>
+<li>In the 2D toolbar, click the <strong>✏️ pencil</strong> (&quot;Add Point&quot;).</li>
+<li>Click in the viewport to place points.</li>
+<li><strong>Drag</strong> while placing to create curve handles instead of sharp corners.</li>
+<li>Existing point: drag to move, right-click to delete. Press <strong>Esc</strong> to leave draw mode.</li>
+</ol>
+<p>Click the <strong>Close Curve</strong> button in the toolbar for a loop (a circling saw, a racetrack).</p>
+<h2 id="moving-along-it" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#moving-along-it" aria-label="Link to this section">#</a>Moving along it</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends PathFollow2D
+
+@export var speed = 200.0
+
+func _physics_process(delta):
+	progress += speed * delta</code></pre></div><ul>
+<li><strong><code>progress</code></strong> — how far along in <strong>pixels</strong>.</li>
+<li><strong><code>progress_ratio</code></strong> — the same thing from <code>0.0</code> to <code>1.0</code>. Easier for tweening.</li>
+</ul>
+<p>Two Inspector checkboxes matter:</p>
+<ul>
+<li><strong>Loop</strong> — wraps back to the start at the end. On by default.</li>
+<li><strong>Rotates</strong> — the follower turns to face along the curve. Great for a plane or a car; turn it <strong>off</strong> for something that should stay upright.</li>
+</ul>
+<p>Tween along it instead (<a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a>) for a swoop with easing:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">create_tween().tween_property(self, &quot;progress_ratio&quot;, 1.0, 3.0)\
+	.set_trans(Tween.TRANS_SINE)</code></pre></div><h2 id="what-people-actually-use-it-for" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#what-people-actually-use-it-for" aria-label="Link to this section">#</a>What people actually use it for</h2><p><strong>Swooping enemies (Galaga).</strong> The signature move of the genre — enemies fly in along an arc, then take formation. Combine with <a class="wikilink" href="#/enemy-formations" data-note="enemy-formations">Enemy Formations</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends PathFollow2D
+
+func _ready():
+	var t = create_tween()
+	t.tween_property(self, &quot;progress_ratio&quot;, 1.0, 2.5).set_trans(Tween.TRANS_SINE)
+	await t.finished
+	# hand the enemy over to the formation
+	var enemy = $Enemy
+	var pos = enemy.global_position
+	remove_child(enemy)
+	get_tree().current_scene.get_node(&quot;Fleet&quot;).add_child(enemy)
+	enemy.global_position = pos
+	queue_free()</code></pre></div><p><strong>Spawning around the screen edge</strong> — the Day 1 pattern:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$SpawnPath/SpawnLocation.progress_ratio = randf()
+mob.global_position = $SpawnPath/SpawnLocation.global_position</code></pre></div><p>One random number gives you a random point anywhere on the border. Much tidier than four <code>if</code> branches for four edges.</p>
+<p><strong>A patrolling guard on a real route</strong> — more expressive than the two-marker version in <a class="wikilink" href="#/patrol-enemies" data-note="patrol-enemies">Patrol Enemies</a> when the route has corners.</p>
+<p><strong>A saw blade circling a room</strong> — closed curve, Rotates on, constant speed. Pairs with <a class="wikilink" href="#/hazards" data-note="hazards">Hazards</a>.</p>
+<p><strong>A moving platform on a curve</strong> — parent an AnimatableBody2D to the PathFollow2D (<a class="wikilink" href="#/moving-platforms" data-note="moving-platforms">Moving Platforms</a>).</p>
+<p><strong>A camera dolly for a title screen</strong> — put a <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> on a PathFollow2D and slowly sweep across your level behind the menu.</p>
+<h2 id="back-and-forth-instead-of-looping" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#back-and-forth-instead-of-looping" aria-label="Link to this section">#</a>Back-and-forth instead of looping</h2><p>Uncheck <strong>Loop</strong>, then:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var direction = 1
+
+func _physics_process(delta):
+	progress += speed * delta * direction
+	if progress_ratio &gt;= 1.0 or progress_ratio &lt;= 0.0:
+		direction *= -1</code></pre></div><h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/path2d-and-pathfollow2d#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Nothing moves</td><td>Script is on the Path2D instead of the PathFollow2D</td></tr><tr><td>Object spins wildly at corners</td><td>Uncheck <strong>Rotates</strong></td></tr><tr><td>Jumps back to the start abruptly</td><td><strong>Loop</strong> is on and the curve isn&#39;t closed — close it, or use back-and-forth</td></tr><tr><td>Enemy leaves the path but keeps getting dragged</td><td>Reparent it, as in the swoop example</td></tr><tr><td>Path is invisible in game</td><td>Correct — Path2D is editor-only, like <a class="wikilink" href="#/node2d-and-marker2d" data-note="node2d-and-marker2d">Marker2D</a></td></tr><tr><td>Speed varies around curves</td><td>Path2D uses even pixel spacing, so this is usually a tight-corner artifact. Add more points</td></tr></tbody></table></div>

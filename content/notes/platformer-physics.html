@@ -1,0 +1,60 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Gravity, jumping, and landing — the side-view version of movement. Requires a <a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a> player and something solid to stand on (<a class="wikilink" href="#/tilemaplayer" data-note="tilemaplayer">TileMapLayer</a> or StaticBody2D platforms).</p>
+<h2 id="setup-checklist" class="heading"><a class="heading__anchor" href="#/platformer-physics#setup-checklist" aria-label="Link to this section">#</a>Setup checklist</h2><ol>
+<li>Player scene is a <strong>CharacterBody2D</strong> with Sprite + CollisionShape2D (<a class="wikilink" href="#/characterbody2d" data-note="characterbody2d">CharacterBody2D</a>).</li>
+<li>Input Map has <code>move_left</code>, <code>move_right</code>, and <code>jump</code> (Space) — Project → Project Settings → Input Map.</li>
+<li>The floor has collision the player&#39;s mask can see (<a class="wikilink" href="#/tilemaplayer#making-tiles-solid-collision" data-note="tilemaplayer">TileMapLayer → Making tiles solid (collision)</a>).</li>
+</ol>
+<h2 id="the-complete-platformer-script" class="heading"><a class="heading__anchor" href="#/platformer-physics#the-complete-platformer-script" aria-label="Link to this section">#</a>The complete platformer script</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends CharacterBody2D
+
+@export var speed = 300.0
+@export var jump_velocity = -400.0   # negative = up! (y grows downward in 2D)
+@export var gravity = 1200.0
+
+func _physics_process(delta):
+	# 1. Gravity — pull down every frame we're in the air
+	if not is_on_floor():
+		velocity.y += gravity * delta
+
+	# 2. Jump — only when standing on something
+	if Input.is_action_just_pressed(&quot;jump&quot;) and is_on_floor():
+		velocity.y = jump_velocity
+
+	# 3. Left/right
+	var direction = Input.get_axis(&quot;move_left&quot;, &quot;move_right&quot;)  # -1, 0, or 1
+	velocity.x = direction * speed
+
+	move_and_slide()</code></pre></div><p>Line by line:</p>
+<ul>
+<li><strong><code>velocity.y += gravity * delta</code></strong> — gravity is an <em>acceleration</em>: it adds a bit of downward speed each physics frame. Skipping <code>* delta</code> makes gravity absurdly strong.</li>
+<li><strong><code>is_on_floor()</code></strong> — true right after <code>move_and_slide()</code> lands the body on something below it. This is the whole &quot;can I jump?&quot; check.</li>
+<li><strong><code>is_action_just_pressed</code></strong> (not <code>is_action_pressed</code>) — jump on the <em>press</em>, not while held, or the player pogo-sticks (<a class="wikilink" href="#/movement-and-input#detecting-a-single-press-not-held" data-note="movement-and-input">Movement and Input → Detecting a single press (not held)</a>).</li>
+<li><strong><code>jump_velocity</code> is negative</strong> — in Godot 2D, <strong>y increases downward</strong>. Up is minus. Every &quot;my jump goes down&quot; bug is a missing minus sign.</li>
+<li><strong><code>Input.get_axis(a, b)</code></strong> — returns -1 when <code>a</code> is held, +1 when <code>b</code> is held, 0 for neither/both. One line instead of two ifs.</li>
+</ul>
+<h2 id="tuning-the-feel" class="heading"><a class="heading__anchor" href="#/platformer-physics#tuning-the-feel" aria-label="Link to this section">#</a>Tuning the feel</h2><p>All three exports are live-tunable in the Inspector while the game runs (change them in the Remote scene tab):</p>
+<div class="table-wrap"><table><thead><tr><th>Feels...</th><th>Change</th></tr></thead><tbody><tr><td>Floaty, moon-like</td><td>↑ gravity (try 2000)</td></tr><tr><td>Jump too short</td><td>↓ jump_velocity (more negative, try -550)</td></tr><tr><td>Sluggish</td><td>↑ speed</td></tr></tbody></table></div><p>Rule of thumb: <strong>big gravity + big jump velocity</strong> = snappy arcade jump. Small values of both = floaty. See <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a> for what to add once it moves right.</p>
+<h2 id="nice-to-haves-only-if-the-basic-jump-works" class="heading"><a class="heading__anchor" href="#/platformer-physics#nice-to-haves-only-if-the-basic-jump-works" aria-label="Link to this section">#</a>Nice-to-haves (only if the basic jump works)</h2><p><strong>Variable jump height</strong> — release early to jump shorter, hold for full height:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">	# add after the jump code, inside _physics_process
+	if Input.is_action_just_released(&quot;jump&quot;) and velocity.y &lt; 0:
+		velocity.y *= 0.4   # cut the rest of the upward motion</code></pre></div><p><strong>Coyote time</strong> — a tiny grace period to jump just <em>after</em> walking off a ledge. Makes the game feel fair instead of strict:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">@export var coyote_time = 0.1   # seconds of grace
+var coyote_timer = 0.0
+
+func _physics_process(delta):
+	if is_on_floor():
+		coyote_timer = coyote_time
+	else:
+		coyote_timer -= delta
+		velocity.y += gravity * delta
+
+	if Input.is_action_just_pressed(&quot;jump&quot;) and coyote_timer &gt; 0:
+		velocity.y = jump_velocity
+		coyote_timer = 0.0
+
+	var direction = Input.get_axis(&quot;move_left&quot;, &quot;move_right&quot;)
+	velocity.x = direction * speed
+	move_and_slide()</code></pre></div><p>(This <em>replaces</em> the <code>is_on_floor()</code> jump check — the timer covers both cases: on the floor it&#39;s always fresh, off a ledge it&#39;s briefly still valid.)</p>
+<p><strong>One-way platforms</strong> — jump up through, stand on top: on the platform&#39;s CollisionShape2D, check <strong>One Way Collision</strong> in the Inspector. Works on tiles too (in the tile&#39;s Physics properties).</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">&quot;is_on_floor() is always false&quot;</span></div><div class="callout__body"><p>Two usual causes: (1) gravity is applied but <code>move_and_slide()</code> never runs (it must be called every frame — it&#39;s what updates the floor check), or (2) you&#39;re setting <code>position</code> directly instead of using <code>velocity</code> + <code>move_and_slide()</code>. Move only through <code>velocity</code>.</p>
+</div></div>

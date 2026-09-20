@@ -1,0 +1,39 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/node-info-index" data-note="node-info-index">Node Info Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a>, <a class="wikilink" href="#/day-5-polish-and-showcase" data-note="day-5-polish-and-showcase">Day 5 - Polish and Showcase</a></p>
+<p>The nodes that put text and buttons on the screen. <strong>CanvasLayer</strong> pins things to the screen so they don&#39;t scroll with the world. <strong>Label</strong> shows text. For the score <em>system</em> built on top of these, see <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a>.</p>
+<h2 id="always-start-with-a-canvaslayer" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#always-start-with-a-canvaslayer" aria-label="Link to this section">#</a>Always start with a CanvasLayer</h2><p>A Label placed directly in the world will slide off screen the moment your <a class="wikilink" href="#/camera2d" data-note="camera2d">Camera2D</a> moves. A CanvasLayer draws on a separate layer that ignores the camera entirely.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main
+├── Player
+├── TileMapLayer
+└── UI              (CanvasLayer)   ← everything on-screen goes under here
+    ├── ScoreLabel   (Label)
+    ├── Hearts       (HBoxContainer)
+    └── Message      (Label)</code></pre></div><p><strong>Rule: if the player should always see it, it goes under a CanvasLayer.</strong> Score, lives, timers, menus, pause screens.</p>
+<h2 id="label" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#label" aria-label="Link to this section">#</a>Label</h2><p>Add a <strong>Label</strong>, type into <strong>Text</strong> in the Inspector, drag it into place.</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$UI/ScoreLabel.text = &quot;Score: &quot; + str(score)
+$UI/Message.show()
+$UI/Message.hide()
+$UI/ScoreLabel.modulate = Color.RED     # tint it</code></pre></div><div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title"><code>str()</code> is not optional</span></div><div class="callout__body"><p><code>&quot;Score: &quot; + score</code> errors — you can&#39;t add a number to text. <code>&quot;Score: &quot; + str(score)</code> works. This is the single most common GDScript error of the week.</p>
+</div></div><p>Two nicer ways to build the string:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">$UI/ScoreLabel.text = &quot;Score: %d&quot; % score              # %d = whole number
+$UI/TimeLabel.text  = &quot;Time: %.1f&quot; % time_left         # %.1f = one decimal
+$UI/ScoreLabel.text = &quot;Score: {0}&quot;.format([score])</code></pre></div><h3 id="making-a-label-readable" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#making-a-label-readable" aria-label="Link to this section">#</a>Making a Label readable</h3><p>Default Labels are small, white, and vanish against a bright background. In the Inspector:</p>
+<ul>
+<li><strong>Theme Overrides → Font Sizes → Font Size</strong> — bump it to 32+.</li>
+<li><strong>Theme Overrides → Colors → Font Color</strong> — pick something that contrasts.</li>
+<li><strong>Theme Overrides → Constants → Outline Size</strong> = <code>4</code>, then <strong>Colors → Font Outline Color</strong> = black. An outline makes text legible over <em>any</em> background. Do this once on every Label; it&#39;s the cheapest polish in the game.</li>
+<li><strong>Horizontal/Vertical Alignment</strong> — set to Center, then size the Label box, rather than nudging position by hand.</li>
+</ul>
+<h2 id="anchors-keeping-ui-in-the-corner" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#anchors-keeping-ui-in-the-corner" aria-label="Link to this section">#</a>Anchors: keeping UI in the corner</h2><p>Select the Label → the <strong>Anchor Preset</strong> button in the toolbar (looks like a box with red pins). Pick <strong>Top Left</strong> for a score, <strong>Center</strong> for a &quot;GAME OVER&quot; message, <strong>Bottom Right</strong> for a timer. Anchored UI stays put no matter what resolution the game runs at — which matters on Friday when your game is on a projector instead of your laptop.</p>
+<h2 id="button" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#button" aria-label="Link to this section">#</a>Button</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_start_button_pressed():
+	get_tree().change_scene_to_file(&quot;res://game.tscn&quot;)</code></pre></div><p>Connect the <strong><code>pressed</code></strong> <a class="wikilink" href="#/signals" data-note="signals">signal</a>. Style it the same way as a Label via Theme Overrides. Full menu flow in <a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>.</p>
+<h2 id="other-ui-nodes-worth-knowing" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#other-ui-nodes-worth-knowing" aria-label="Link to this section">#</a>Other UI nodes worth knowing</h2><div class="table-wrap"><table><thead><tr><th>Node</th><th>Use for</th></tr></thead><tbody><tr><td><strong>TextureRect</strong></td><td>an image in the UI — a heart icon, a portrait</td></tr><tr><td><strong>ProgressBar</strong></td><td>health bars, boss HP, charge meters</td></tr><tr><td><strong>HBoxContainer</strong> / <strong>VBoxContainer</strong></td><td>auto-arrange children in a row or column — perfect for a row of hearts</td></tr><tr><td><strong>ColorRect</strong></td><td>a solid rectangle; great as a dim overlay behind a pause menu</td></tr><tr><td><strong>Panel</strong></td><td>a bordered box to sit a menu on</td></tr></tbody></table></div><p>A row of hearts that spaces itself, used by <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">UI            (CanvasLayer)
+└── Hearts     (HBoxContainer)
+    ├── Heart1  (TextureRect)
+    ├── Heart2  (TextureRect)
+    └── Heart3  (TextureRect)</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func update_hearts(lives):
+	for i in $UI/Hearts.get_child_count():
+		$UI/Hearts.get_child(i).visible = i &lt; lives</code></pre></div><h2 id="a-pause-menu" class="heading"><a class="heading__anchor" href="#/label-and-canvaslayer#a-pause-menu" aria-label="Link to this section">#</a>A pause menu</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _unhandled_input(event):
+	if event.is_action_pressed(&quot;ui_cancel&quot;):   # Escape, free by default
+		get_tree().paused = not get_tree().paused
+		$UI/PauseMenu.visible = get_tree().paused</code></pre></div><p>For the menu to still work while paused, select the CanvasLayer → Inspector → <strong>Process → Mode → Always</strong>. Otherwise the pause freezes the pause menu too, and nothing can unpause it.</p>

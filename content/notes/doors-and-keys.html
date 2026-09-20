@@ -1,0 +1,107 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>A door that won&#39;t open until you find the key. This is the smallest possible <strong>progression</strong> mechanic — and progression is what turns a room full of stuff into a <em>level</em>. Builds on <a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a> and <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>.</p>
+<h2 id="why-this-mechanic-matters" class="heading"><a class="heading__anchor" href="#/doors-and-keys#why-this-mechanic-matters" aria-label="Link to this section">#</a>Why this mechanic matters</h2><p>Coins give the player something to do. A locked door gives them a <strong>reason to explore</strong>. The instant you add one, your level has structure: this part first, then that part. Teams that add a key and a door on Day 4 almost always end up with a better-feeling game than teams that add more enemies.</p>
+<h2 id="the-key" class="heading"><a class="heading__anchor" href="#/doors-and-keys#the-key" aria-label="Link to this section">#</a>The key</h2><p>A <a class="wikilink" href="#/collectables" data-note="collectables">collectable</a> that sets a flag instead of adding score.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Key             (Area2D)   Layer: pickups, Mask: player
+├── Sprite       (Sprite2D)
+└── Shape        (CollisionShape2D)</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var key_color = &quot;gold&quot;
+
+func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		body.add_key(key_color)
+		$PickupSound.play()
+		queue_free()</code></pre></div><p><code>@export var key_color</code> means one key scene handles gold, blue, and red keys — set it per instance in the Inspector.</p>
+<h2 id="the-player-holds-the-keys" class="heading"><a class="heading__anchor" href="#/doors-and-keys#the-player-holds-the-keys" aria-label="Link to this section">#</a>The player holds the keys</h2><p>In the player script:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var keys = {}
+
+func add_key(color):
+	keys[color] = keys.get(color, 0) + 1
+	keys_changed.emit(keys)
+
+func use_key(color) -&gt; bool:
+	if keys.get(color, 0) &gt; 0:
+		keys[color] -= 1
+		keys_changed.emit(keys)
+		return true
+	return false</code></pre></div><p>A <strong>Dictionary</strong> (<code>{}</code>) maps color → how many you&#39;re carrying. <code>keys.get(color, 0)</code> reads a count and returns <code>0</code> if you&#39;ve never picked that color up, instead of erroring.</p>
+<p><code>use_key()</code> returns <code>true</code>/<code>false</code>, so the door can ask &quot;may I open?&quot; and get an answer in one line. Declare <code>signal keys_changed(keys)</code> at the top to drive a UI display (<a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>).</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Simplest possible version</span></div><div class="callout__body"><p>If dictionaries feel like too much for your team, use <code>var has_key = false</code> on the player and be done. You lose multiple key colors and gain ten minutes. That&#39;s often the right trade on Day 4.</p>
+</div></div><h2 id="the-door" class="heading"><a class="heading__anchor" href="#/doors-and-keys#the-door" aria-label="Link to this section">#</a>The door</h2><p>A door needs to do two things: <strong>block</strong> the player, and <strong>notice</strong> them. That&#39;s two nodes (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> can&#39;t block, <a class="wikilink" href="#/rigidbody2d-and-staticbody2d" data-note="rigidbody2d-and-staticbody2d">StaticBody2D</a> can&#39;t detect):</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Door              (StaticBody2D)  Layer: obstacles, Mask: none
+├── Sprite         (Sprite2D)
+├── Shape          (CollisionShape2D)
+└── Interact       (Area2D)  Layer: none, Mask: player
+    └── Shape      (CollisionShape2D)   ← a bit bigger than the door</code></pre></div><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends StaticBody2D
+
+@export var key_color = &quot;gold&quot;
+@export var auto_open = true      # false = press a key to open
+
+var player_nearby: Node = null
+var is_open = false
+
+func _on_interact_body_entered(body):
+	if not body.is_in_group(&quot;player&quot;):
+		return
+	player_nearby = body
+	if auto_open:
+		try_open(body)
+
+func _on_interact_body_exited(body):
+	if body == player_nearby:
+		player_nearby = null
+
+func _unhandled_input(event):
+	if not auto_open and player_nearby and event.is_action_pressed(&quot;interact&quot;):
+		try_open(player_nearby)
+
+func try_open(body):
+	if is_open:
+		return
+	if body.use_key(key_color):
+		open()
+	else:
+		$LockedSound.play()
+		bump()
+
+func open():
+	is_open = true
+	$OpenSound.play()
+	$Sprite.play(&quot;open&quot;)
+	$Shape.set_deferred(&quot;disabled&quot;, true)   # stop blocking
+	create_tween().tween_property($Sprite, &quot;modulate:a&quot;, 0.0, 0.3)
+
+func bump():
+	var t = create_tween()
+	t.tween_property($Sprite, &quot;position:x&quot;, 4, 0.05).as_relative()
+	t.tween_property($Sprite, &quot;position:x&quot;, -8, 0.05).as_relative()
+	t.tween_property($Sprite, &quot;position:x&quot;, 4, 0.05).as_relative()</code></pre></div><p>The three things that make this feel good:</p>
+<ul>
+<li><strong><code>set_deferred</code></strong> on the shape — disabling a <a class="wikilink" href="#/collisionshape2d" data-note="collisionshape2d">CollisionShape2D</a> during a collision callback errors without it.</li>
+<li><strong><code>bump()</code></strong> — the door <em>shakes</em> when it&#39;s locked. Without feedback, players think the game is broken. Three lines, huge difference.</li>
+<li><strong>The locked sound.</strong> A locked door that&#39;s silent reads as a bug.</li>
+</ul>
+<p>Add <code>interact</code> to <strong>Project Settings → Input Map</strong> (E is the convention) if you use manual opening.</p>
+<h2 id="showing-what-you-re-carrying" class="heading"><a class="heading__anchor" href="#/doors-and-keys#showing-what-you-re-carrying" aria-label="Link to this section">#</a>Showing what you&#39;re carrying</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_keys_changed(keys):
+	$UI/GoldKeyIcon.visible = keys.get(&quot;gold&quot;, 0) &gt; 0
+	$UI/KeyCount.text = &quot;Keys: %d&quot; % keys.get(&quot;gold&quot;, 0)</code></pre></div><p>If the player can&#39;t see they have the key, they won&#39;t think to go back to the door.</p>
+<h2 id="variations-worth-stealing" class="heading"><a class="heading__anchor" href="#/doors-and-keys#variations-worth-stealing" aria-label="Link to this section">#</a>Variations worth stealing</h2><p><strong>A door to the next level</strong> — no key, just an exit (<a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>):</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		get_tree().change_scene_to_file(&quot;res://level_2.tscn&quot;)</code></pre></div><p><strong>Collect-them-all gate</strong> — the exit opens once every coin is gone. Pairs with the counting code in <a class="wikilink" href="#/collectables" data-note="collectables">Collectables</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _process(_delta):
+	if not is_open and get_tree().get_nodes_in_group(&quot;coins&quot;).is_empty():
+		open()</code></pre></div><p><strong>A pressure plate</strong> — an <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> that opens a door while something stands on it:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+@export var door_path: NodePath
+
+func _on_body_entered(_b): get_node(door_path).open()
+func _on_body_exited(_b):
+	if get_overlapping_bodies().is_empty():
+		get_node(door_path).close()</code></pre></div><p><code>@export var door_path: NodePath</code> gives you a <strong>drag-and-drop slot in the Inspector</strong> — point the plate at its door by dragging, no code. This is the single most useful export type for level design.</p>
+<p><strong>A lever or switch</strong> — same as a plate, but toggles instead of holding.</p>
+<p><strong>A boss key</strong> — the door only opens when the boss is dead. <code>if get_tree().get_nodes_in_group(&quot;bosses&quot;).is_empty(): open()</code>.</p>
+<p><strong>A one-way door</strong> — opens, then disables its own Interact area behind you.</p>
+<h2 id="common-problems" class="heading"><a class="heading__anchor" href="#/doors-and-keys#common-problems" aria-label="Link to this section">#</a>Common problems</h2><div class="table-wrap"><table><thead><tr><th>Problem</th><th>Fix</th></tr></thead><tbody><tr><td>Player walks through the closed door</td><td>Door has no StaticBody2D shape, or its layer isn&#39;t in the player&#39;s mask</td></tr><tr><td>Door never notices the player</td><td>Interact Area2D missing a shape, or <code>body_entered</code> unconnected</td></tr><tr><td>Error when the door opens</td><td>Use <code>set_deferred(&quot;disabled&quot;, true)</code>, not direct assignment</td></tr><tr><td>Key is collected but the door stays locked</td><td>Colors don&#39;t match — check both <code>@export key_color</code> strings, exactly</td></tr><tr><td>Door opens for mobs too</td><td>Interact mask includes <em>mobs</em>; and keep the <code>is_in_group(&quot;player&quot;)</code> check</td></tr></tbody></table></div>

@@ -1,0 +1,78 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/mechanics-index" data-note="mechanics-index">Mechanics Index</a> · Used on <a class="wikilink" href="#/day-2-make-it-yours" data-note="day-2-make-it-yours">Day 2 - Make It Yours</a>, <a class="wikilink" href="#/day-3-design-day" data-note="day-3-design-day">Day 3 - Design Day</a>, <a class="wikilink" href="#/day-4-production-day" data-note="day-4-production-day">Day 4 - Production Day</a></p>
+<p>Coins, gems, stars, hearts, keys — anything the player runs into and picks up. <strong>This is the single best first mechanic to add to a game.</strong> It takes about ten minutes, it works in every genre, and it instantly gives a game a reason to explore. Built on <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> and <a class="wikilink" href="#/signals" data-note="signals">Signals</a>.</p>
+<h2 id="the-coin-scene" class="heading"><a class="heading__anchor" href="#/collectables#the-coin-scene" aria-label="Link to this section">#</a>The coin scene</h2><p><strong>Scene → New Scene → Other Node → <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a></strong>. Name it <code>Coin</code>, save as <code>coin.tscn</code>.</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Coin              (Area2D)      Layer: pickups, Mask: player
+├── Sprite         (Sprite2D or AnimatedSprite2D)
+├── Shape          (CollisionShape2D)  ← CircleShape2D
+└── PickupSound    (AudioStreamPlayer)</code></pre></div><p>Layers are from <a class="wikilink" href="#/collision-layers-and-masks" data-note="collision-layers-and-masks">Collision Layers and Masks</a> — the coin lives on <em>pickups</em> and watches <em>player</em>, so mobs can walk right over it.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Make the shape bigger than the sprite</span></div><div class="callout__body"><p>A pickup radius slightly larger than the coin art makes collecting feel generous instead of fiddly. This is a real design decision, not laziness.</p>
+</div></div><h2 id="the-coin-script" class="heading"><a class="heading__anchor" href="#/collectables#the-coin-script" aria-label="Link to this section">#</a>The coin script</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+signal collected(amount)
+
+@export var value = 1
+
+func _on_body_entered(body):
+	if body.is_in_group(&quot;player&quot;):
+		collected.emit(value)
+		queue_free()</code></pre></div><p>Connect the Area2D&#39;s <strong><code>body_entered</code></strong> signal to this function (<a class="wikilink" href="#/signals" data-note="signals">Signals</a>).</p>
+<ul>
+<li><code>@export var value</code> shows up in the Inspector — drop a coin worth <code>1</code> and a gem worth <code>10</code> from the <em>same scene</em> by changing one number per instance. No second scene needed.</li>
+<li><code>is_in_group(&quot;player&quot;)</code> — put the player in a group via <strong>Node dock → Groups → <code>player</code> → Add</strong>. More robust than checking the name (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a> explains why).</li>
+<li><code>queue_free()</code> deletes the coin so it disappears.</li>
+</ul>
+<h2 id="counting-them-the-group-approach" class="heading"><a class="heading__anchor" href="#/collectables#counting-them-the-group-approach" aria-label="Link to this section">#</a>Counting them: the group approach</h2><p>The easiest way to keep score without wiring up signals for every coin. In your Main script:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Node2D
+
+var score = 0
+
+func _ready():
+	for coin in get_tree().get_nodes_in_group(&quot;coins&quot;):
+		coin.collected.connect(_on_coin_collected)
+	update_label()
+
+func _on_coin_collected(amount):
+	score += amount
+	update_label()
+	if get_tree().get_nodes_in_group(&quot;coins&quot;).size() &lt;= 1:
+		win()   # that was the last one
+
+func update_label():
+	$UI/ScoreLabel.text = &quot;Coins: %d&quot; % score</code></pre></div><p>Add every coin to a group called <code>coins</code>: select the Coin <strong>in the coin scene</strong> → Node dock → Groups → <code>coins</code>. Every instance inherits it, so you can drag fifty coins into the level and they all wire themselves up. See <a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a> and <a class="wikilink" href="#/label-and-canvaslayer" data-note="label-and-canvaslayer">Label and CanvasLayer</a>.</p>
+<div class="callout callout--warning"><div class="callout__head"><span class="callout__icon">⚠️</span><span class="callout__title">Why <code>&lt;= 1</code> and not <code>== 0</code></span></div><div class="callout__body"><p><code>queue_free()</code> doesn&#39;t remove the node until the <em>end</em> of the frame, so the coin that just fired the signal is still in the list when you count. Off-by-one &quot;I collected them all but nothing happened&quot; bugs live here.</p>
+</div></div><h2 id="making-it-feel-good-do-this-it-takes-3-minutes" class="heading"><a class="heading__anchor" href="#/collectables#making-it-feel-good-do-this-it-takes-3-minutes" aria-label="Link to this section">#</a>Making it feel good (do this, it takes 3 minutes)</h2><p>A silent coin that blinks out is forgettable. Replace <code>queue_free()</code> with:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_body_entered(body):
+	if not body.is_in_group(&quot;player&quot;):
+		return
+	collected.emit(value)
+	$PickupSound.play()
+	$Shape.set_deferred(&quot;disabled&quot;, true)   # can't be collected twice
+	# pop and fade instead of vanishing
+	var tween = create_tween().set_parallel()
+	tween.tween_property(self, &quot;scale&quot;, Vector2(1.6, 1.6), 0.25)
+	tween.tween_property(self, &quot;modulate:a&quot;, 0.0, 0.25)
+	tween.tween_property(self, &quot;position:y&quot;, position.y - 20, 0.25)
+	await tween.finished
+	queue_free()</code></pre></div><p>The coin swells, floats up, fades out, and dings. Same three lines of tween work anywhere — see <a class="wikilink" href="#/tweens" data-note="tweens">Tweens</a> and <a class="wikilink" href="#/juice-and-game-feel" data-note="juice-and-game-feel">Juice and Game Feel</a>.</p>
+<h2 id="a-gentle-idle-bob-no-code" class="heading"><a class="heading__anchor" href="#/collectables#a-gentle-idle-bob-no-code" aria-label="Link to this section">#</a>A gentle idle bob (no code)</h2><p>Select the Coin → add an <strong>AnimationPlayer</strong> → new animation <code>idle</code>, 1 second, <strong>Loop on</strong> and <strong>Autoplay on</strong>. Key <code>position:y</code> at 0s and 1s, and <code>position:y - 6</code> at 0.5s. Now every coin in your game breathes. Coins that move catch the eye far better than coins that sit still.</p>
+<p>Or in three lines of code:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _ready():
+	var t = create_tween().set_loops()
+	t.tween_property($Sprite, &quot;position:y&quot;, -6.0, 0.6).as_relative().set_trans(Tween.TRANS_SINE)
+	t.tween_property($Sprite, &quot;position:y&quot;, 6.0, 0.6).as_relative().set_trans(Tween.TRANS_SINE)</code></pre></div><h2 id="variations" class="heading"><a class="heading__anchor" href="#/collectables#variations" aria-label="Link to this section">#</a>Variations</h2><p><strong>A magnet</strong> — coins fly toward a nearby player:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _physics_process(delta):
+	var players = get_tree().get_nodes_in_group(&quot;player&quot;)
+	if players.is_empty(): return
+	var p = players[0]
+	if global_position.distance_to(p.global_position) &lt; 120:
+		global_position = global_position.move_toward(p.global_position, 300 * delta)</code></pre></div><p><strong>A heart that heals</strong> — same scene, different script, wired to <a class="wikilink" href="#/health-and-lives" data-note="health-and-lives">Health and Lives</a>:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if body.is_in_group(&quot;player&quot;):
+	body.heal(1)
+	queue_free()</code></pre></div><p><strong>A key</strong> — see <a class="wikilink" href="#/doors-and-keys" data-note="doors-and-keys">Doors and Keys</a>.</p>
+<p><strong>A powerup with a timer</strong> — grant an ability, then take it back:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">if body.is_in_group(&quot;player&quot;):
+	body.speed *= 2
+	await get_tree().create_timer(5.0).timeout
+	body.speed /= 2</code></pre></div><p>Note this one can&#39;t <code>queue_free()</code> immediately — it has to stay alive to undo itself. Hide the sprite and disable the shape instead, then free it after.</p>
+<p><strong>Coins that spawn over time</strong> — combine with <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>.</p>
+<p><strong>A collectable that unlocks the exit</strong> — the win condition of half the games at showcase.</p>

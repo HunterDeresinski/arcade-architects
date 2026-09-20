@@ -1,0 +1,28 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/foundations-index" data-note="foundations-index">Foundations Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a></p>
+<p>A <strong>signal</strong> is how one node says &quot;hey, something just happened!&quot; and another node reacts. It&#39;s Godot&#39;s version of &quot;when this, do that.&quot;</p>
+<p>Real examples:</p>
+<ul>
+<li>A <code>Timer</code> fires its <code>timeout</code> signal → spawn an enemy (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>)</li>
+<li>An <code>Area2D</code> fires <code>body_entered</code> → the player got hit (<a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>)</li>
+<li>A <code>Button</code> fires <code>pressed</code> → start the game (<a class="wikilink" href="#/scene-switching" data-note="scene-switching">Scene Switching</a>)</li>
+</ul>
+<h2 id="connecting-a-signal-in-the-editor-the-easy-way" class="heading"><a class="heading__anchor" href="#/signals#connecting-a-signal-in-the-editor-the-easy-way" aria-label="Link to this section">#</a>Connecting a signal in the editor (the easy way)</h2><ol>
+<li>Select the node that <em>sends</em> the signal (e.g. a <code>Timer</code>).</li>
+<li>In the <strong>Node</strong> dock (right side, next to Inspector), click the <strong>Signals</strong> tab.</li>
+<li>Double-click the signal (e.g. <code>timeout</code>).</li>
+<li>Pick the node whose script should react, click <strong>Connect</strong>.</li>
+</ol>
+<p>Godot writes an empty function in that script for you. Fill it in:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">func _on_timer_timeout():
+	spawn_enemy()   # your code here</code></pre></div><p>The function name <code>_on_&lt;node&gt;_&lt;signal&gt;</code> is just Godot&#39;s naming — you can keep it.</p>
+<h2 id="connecting-a-signal-in-code" class="heading"><a class="heading__anchor" href="#/signals#connecting-a-signal-in-code" aria-label="Link to this section">#</a>Connecting a signal in code</h2><p>Sometimes you make a node while the game runs (like a spawned enemy) and must connect by code:</p>
+<div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">var enemy = enemy_scene.instantiate()
+enemy.body_entered.connect(_on_enemy_body_entered)
+add_child(enemy)</code></pre></div><h2 id="making-your-own-signal" class="heading"><a class="heading__anchor" href="#/signals#making-your-own-signal" aria-label="Link to this section">#</a>Making your own signal</h2><div class="codeblock" data-lang="GDScript"><pre><code class="lang-gdscript">extends Area2D
+
+signal coin_collected     # declare it at the top
+
+func grab():
+	coin_collected.emit()  # announce it happened</code></pre></div><p>Then anything connected to <code>coin_collected</code> runs. This is how you keep score from a coin without tangling your code together.</p>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Mental model</span></div><div class="callout__body"><p>Signals are like a doorbell. The button (sender) doesn&#39;t know or care who answers — it just rings. Anyone connected hears it and responds.</p>
+</div></div>

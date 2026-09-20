@@ -1,0 +1,30 @@
+<p>🏠 <a class="wikilink" href="#/curriculum-map" data-note="curriculum-map">Curriculum Map</a> · 🧩 <a class="wikilink" href="#/foundations-index" data-note="foundations-index">Foundations Index</a> · Used on <a class="wikilink" href="#/day-1-meet-godot" data-note="day-1-meet-godot">Day 1 - Meet Godot</a></p>
+<p>This is the most important idea in Godot. Get this and the rest is details.</p>
+<h2 id="nodes-lego-bricks" class="heading"><a class="heading__anchor" href="#/scenes-and-nodes#nodes-lego-bricks" aria-label="Link to this section">#</a>Nodes = LEGO bricks</h2><p>A <strong>node</strong> is one small building block that does one job:</p>
+<ul>
+<li><code>Sprite2D</code> / <code>AnimatedSprite2D</code> — show a picture</li>
+<li><code>Area2D</code> — detect when things overlap (see <a class="wikilink" href="#/area2d" data-note="area2d">Area2D</a>)</li>
+<li><code>CharacterBody2D</code> — a thing that moves and bumps into walls</li>
+<li><code>Label</code> — show text like a score (<a class="wikilink" href="#/score-and-ui" data-note="score-and-ui">Score and UI</a>)</li>
+<li><code>Timer</code> — wait, then do something (<a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">Spawning and Timers</a>)</li>
+<li><code>AudioStreamPlayer</code> — play a sound (<a class="wikilink" href="#/audiostreamplayer" data-note="audiostreamplayer">AudioStreamPlayer</a>)</li>
+</ul>
+<h2 id="scenes-a-tree-of-nodes" class="heading"><a class="heading__anchor" href="#/scenes-and-nodes#scenes-a-tree-of-nodes" aria-label="Link to this section">#</a>Scenes = a tree of nodes</h2><p>You snap nodes together into a <strong>tree</strong> (one parent, children underneath) to make a <strong>scene</strong>. The Day 1 Player scene looks like:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player            (Area2D)            ← the root, detects hits
+├── AnimatedSprite2D                  ← what you see
+└── CollisionShape2D                  ← its hit-box shape</code></pre></div><p>For Day 3+ team games, a CharacterBody2D player is more typical:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Player            (CharacterBody2D)   ← the root, it moves + collides
+├── AnimatedSprite2D                  ← what you see
+└── CollisionShape2D                  ← its hit-box</code></pre></div><p>Children move with their parent. Move the Player and the sprite, hit-box, and hurtbox all come along. That&#39;s why the tree matters.</p>
+<h2 id="scenes-inside-scenes-instancing" class="heading"><a class="heading__anchor" href="#/scenes-and-nodes#scenes-inside-scenes-instancing" aria-label="Link to this section">#</a>Scenes inside scenes (instancing)</h2><p>A scene can be <em>placed inside</em> another scene — that&#39;s <strong>instancing</strong>. You build one Enemy scene, then spawn 50 copies (&quot;instances&quot;) of it in the Main scene. Build once, reuse everywhere. This is how <a class="wikilink" href="#/spawning-and-timers" data-note="spawning-and-timers">spawning</a> works.</p>
+<p>Typical project:</p>
+<div class="codeblock" data-lang="TEXT"><pre><code class="lang-text">Main              ← the game itself
+├── Player        (an instance of Player.tscn)
+├── UI            (score Label, etc.)
+└── (enemies get spawned in here while playing)</code></pre></div><h2 id="how-to-do-it-in-the-editor" class="heading"><a class="heading__anchor" href="#/scenes-and-nodes#how-to-do-it-in-the-editor" aria-label="Link to this section">#</a>How to do it in the editor</h2><ul>
+<li><strong>Add a node:</strong> select the parent, click ➕ in the Scene dock, pick the type.</li>
+<li><strong>Make a node its own scene:</strong> right-click it → <strong>Save Branch as Scene</strong>. Now you can reuse it.</li>
+<li><strong>Add a saved scene into another:</strong> click the chain/instance icon in the Scene dock, or drag the <code>.tscn</code> from FileSystem into the tree.</li>
+</ul>
+<div class="callout callout--tip"><div class="callout__head"><span class="callout__icon">💡</span><span class="callout__title">Rule of thumb</span></div><div class="callout__body"><p>If you&#39;ll need more than one of something (enemies, coins, bullets), make it its <strong>own scene</strong> so you can spawn copies.</p>
+</div></div>
